@@ -3,12 +3,18 @@
 import { useEffect, useRef } from "react";
 import Lenis from "lenis";
 import { useCart } from "@/app/context/CartContext";
+import { useKiosk } from "@/app/context/KioskContext";
 
 export default function LenisProvider() {
   const { isOpen } = useCart();
+  const { isKiosk } = useKiosk();
   const lenisRef = useRef(null);
 
   useEffect(() => {
+    // On the touch kiosk, smooth scroll adds nothing and its 150ms pointer-events
+    // lock after each scroll eats the taps that land right after a swipe.
+    if (isKiosk) return undefined;
+
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
@@ -40,7 +46,7 @@ export default function LenisProvider() {
       lenis.destroy();
       lenisRef.current = null;
     };
-  }, []);
+  }, [isKiosk]);
 
   /*
    * Freeze smooth scrolling while the cart drawer is open, otherwise the page

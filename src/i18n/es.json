@@ -2291,9 +2291,81 @@
     "eyebrow": "Checkout",
     "title": "Revisá tu pedido",
     "subtitle": "Revisá todo acá abajo. No se cobra nada en este paso — confirmamos disponibilidad y la cotización final con vos antes de tu llegada.",
+    "kioskSubtitle": "Revisá todo acá abajo. No se cobra nada en este paso — confirmamos disponibilidad y la cotización final con vos durante tu estadía.",
     "yourOrder": "Tu pedido",
     "empty": "Todavía no hay nada en tu pedido",
     "emptyCta": "Explorar experiencias",
-    "detailsHeading": "Tus datos"
+    "detailsHeading": "Tus datos",
+    "submit": "Enviar pedido",
+    "sending": "Enviando…",
+    "retry": "Reintentar",
+    "error": "Algo salió mal. Intentá de nuevo.",
+    "offline": "Sin conexión — reconectá para enviar."
+  },
+  "guestForm": {
+    "firstName": "Nombre",
+    "lastName": "Apellido",
+    "name": "Nombre",
+    "email": "Correo",
+    "phone": "Teléfono",
+    "whatsappOptional": "WhatsApp (opcional)",
+    "whatsappHint": "Para responderte en tu teléfono.",
+    "casa": "Casa",
+    "casaPlaceholder": "Elegí tu casa",
+    "notes": "Notas",
+    "required": "Obligatorio",
+    "emailInvalid": "Ingresá un correo válido"
+  },
+  "kiosk": {
+    "bar": {
+      "home": "Inicio",
+      "requests": "Pedir algo",
+      "yourHome": "Tu casa"
+    },
+    "idle": {
+      "title": "¿Sigues ahí?",
+      "subtitle": "Volvemos al inicio en {seconds} segundos.",
+      "stay": "Seguir aquí"
+    },
+    "externalModal": {
+      "title": "Abrí esto en tu teléfono",
+      "whatsappTitle": "Abrí este chat en tu teléfono",
+      "telTitle": "Llamá desde tu teléfono",
+      "scanHint": "Escaneá con la cámara de tu teléfono.",
+      "close": "Cerrar"
+    },
+    "offline": {
+      "banner": "Sin conexión — reintentando…"
+    },
+    "requests": {
+      "title": "¿Qué necesitás?",
+      "hours": "Atención todos los días, de {start} a {end}.",
+      "notKiosk": "Esta sección está disponible en la tablet de tu casa.",
+      "detailLabel": "Contanos un poco más (opcional)",
+      "messageLabel": "Tu mensaje",
+      "send": "Enviar solicitud",
+      "waTitle": "¿Preferís escribirnos por WhatsApp?",
+      "waHint": "Escaneá para abrir un chat con el front desk desde tu teléfono.",
+      "waText": "Hola, estoy en {casa}",
+      "categories": {
+        "cleaning": "Limpieza extra",
+        "amenities": "Reposición de amenities",
+        "electricity": "Electricidad",
+        "wildlife": "Insectos o animales",
+        "checkout": "Check-out tardío o check-in temprano",
+        "concierge": "Recomendación o reserva",
+        "message": "Mensaje libre"
+      }
+    },
+    "response": {
+      "orderTitle": "Recibimos tu pedido",
+      "requestTitle": "Recibimos tu solicitud",
+      "officeOrder": "Recibimos tu pedido. Te confirmamos en unos minutos.",
+      "officeRequest": "Recibimos tu solicitud. Te respondemos en unos minutos.",
+      "afterHours": "Lo recibimos. Nuestro equipo atiende de {start} a {end} y lo verá a primera hora. Para una urgencia, usá los contactos de emergencia.",
+      "showContact": "Contacto fuera de horario",
+      "backHome": "Volver al inicio",
+      "autoReturn": "Volvemos solos en {seconds}s"
+    }
   }
 }

@@ -1,23 +1,81 @@
 "use client";
 
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { TbArrowLeft, TbShoppingBag, TbArrowRight, TbPencil, TbTrash } from "react-icons/tb";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/Footer";
 import { useCart } from "@/app/context/CartContext";
 import { useI18n } from "@/app/context/I18nContext";
+import { useKiosk } from "@/app/context/KioskContext";
+import { useOnlineStatus } from "@/hooks/useOnlineStatus";
 import { money, describeLine } from "@/lib/format";
 import { describeServiceForm } from "@/lib/serviceForm";
+import { buildOrderPayload } from "@/lib/orderPayload";
+import { submitOrder } from "@/lib/orderApi";
+import { isOfficeHours } from "@/lib/officeHours";
 import QtyStepper from "@/components/ui/QtyStepper";
+import GuestDetailsForm from "@/components/checkout/GuestDetailsForm";
+import SuccessScreen from "@/components/checkout/SuccessScreen";
 
 /*
- * Order review. The guest-details form and the single submit land here in the
- * next phase — see docs/ORDERS-BACKEND.md for the payload this page will build.
+ * Order review + the single guest-details submit. Builds the §4.1 payload and posts
+ * it via submitOrder. One submissionId per attempt (useRef), reused on retry so a
+ * retried send de-dupes on the backend.
  */
 
 export default function CheckoutPage() {
-  const { linesByService, subtotal, count, setQty, removeLine, serviceForms, hydrated } = useCart();
+  const { lines, linesByService, subtotal, count, setQty, removeLine, serviceForms, hydrated, clear } = useCart();
   const { t, locale } = useI18n();
+  const { isKiosk, casaSlug, pause, resume } = useKiosk();
+  const online = useOnlineStatus();
+
+  const submissionIdRef = useRef(null);
+  const [status, setStatus] = useState("idle"); // idle | sending | success | error
+  const [responseKind, setResponseKind] = useState(null); // "order" success copy context
+
+  const handleSubmit = async ({ guest, notes }) => {
+    if (status === "sending") return;
+    if (!submissionIdRef.current) submissionIdRef.current = crypto.randomUUID();
+
+    setStatus("sending");
+    pause?.();
+    const payload = buildOrderPayload({
+      lines,
+      serviceForms,
+      guest,
+      locale,
+      notes,
+      source: isKiosk ? "kiosk" : "web",
+      submissionId: submissionIdRef.current,
+    });
+
+    const result = await submitOrder(payload);
+    resume?.();
+
+    if (result?.ok) {
+      setResponseKind(isOfficeHours() ? "office" : "after");
+      setStatus("success");
+      if (!isKiosk) clear();
+    } else {
+      setStatus("error");
+    }
+  };
+
+  if (status === "success") {
+    if (isKiosk) {
+      return <SuccessScreen type="order" responseKind={responseKind} />;
+    }
+    return (
+      <>
+        <Navbar />
+        <main className="pt-24 min-h-screen flex items-center justify-center">
+          <SuccessScreen type="order" responseKind={responseKind} />
+        </main>
+        <Footer />
+      </>
+    );
+  }
 
   return (
     <>
@@ -41,7 +99,7 @@ export default function CheckoutPage() {
             {t("checkout.title")}
           </h1>
           <p className="font-sans text-sm text-[#222E2C]/55 mt-2 max-w-2xl leading-relaxed">
-            {t("checkout.subtitle")}
+            {isKiosk ? t("checkout.kioskSubtitle") : t("checkout.subtitle")}
           </p>
         </div>
 
@@ -162,23 +220,59 @@ export default function CheckoutPage() {
                 })}
               </div>
 
-              {/* Totals */}
-              <aside className="lg:sticky lg:top-28 rounded-2xl bg-[#213B2F] px-6 py-6 flex flex-col gap-5">
-                <div className="flex items-baseline justify-between gap-4">
-                  <span className="font-sans font-semibold text-sm text-[#D8DDB8]">
-                    {t("cart.subtotal")}
-                  </span>
-                  <span className="font-sans font-bold text-3xl text-[#EDE5D8] tabular-nums">
-                    {money(subtotal)}
-                  </span>
+              {/* Totals + guest details + submit */}
+              <aside className="lg:sticky lg:top-28 flex flex-col gap-5">
+                <div className="rounded-2xl bg-[#213B2F] px-6 py-6 flex flex-col gap-5">
+                  <div className="flex items-baseline justify-between gap-4">
+                    <span className="font-sans font-semibold text-sm text-[#D8DDB8]">
+                      {t("cart.subtotal")}
+                    </span>
+                    <span className="font-sans font-bold text-3xl text-[#EDE5D8] tabular-nums">
+                      {money(subtotal)}
+                    </span>
+                  </div>
+                  <p className="font-sans text-sm text-[#D8DDB8]/60 tabular-nums">
+                    {count} {count === 1 ? t("cart.itemsOne") : t("cart.itemsMany")}
+                  </p>
+                  <div className="h-px bg-[#D8DDB8]/15" />
+                  <p className="font-sans text-xs leading-relaxed text-[#D8DDB8]/60">
+                    {t("cart.estimateNote")}
+                  </p>
                 </div>
-                <p className="font-sans text-sm text-[#D8DDB8]/60 tabular-nums">
-                  {count} {count === 1 ? t("cart.itemsOne") : t("cart.itemsMany")}
-                </p>
-                <div className="h-px bg-[#D8DDB8]/15" />
-                <p className="font-sans text-xs leading-relaxed text-[#D8DDB8]/60">
-                  {t("cart.estimateNote")}
-                </p>
+
+                <div className="rounded-2xl bg-white/60 border border-[#222E2C]/8 px-6 py-6 flex flex-col gap-5">
+                  <h2 className="font-sans font-semibold text-lg text-[#222E2C] tracking-tight">
+                    {t("checkout.detailsHeading")}
+                  </h2>
+
+                  <GuestDetailsForm
+                    formId="checkout-guest-form"
+                    kiosk={isKiosk}
+                    casaSlug={casaSlug}
+                    disabled={status === "sending"}
+                    onSubmit={handleSubmit}
+                  />
+
+                  {status === "error" && (
+                    <p className="font-sans text-sm text-red-700">{t("checkout.error")}</p>
+                  )}
+                  {!online && (
+                    <p className="font-sans text-sm text-[#5C3324]">{t("checkout.offline")}</p>
+                  )}
+
+                  <button
+                    type="submit"
+                    form="checkout-guest-form"
+                    disabled={status === "sending" || !online}
+                    className="min-h-[52px] rounded-full bg-[#213B2F] font-sans text-base font-semibold text-[#D8DDB8] hover:bg-[#213B2F]/90 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {status === "sending"
+                      ? t("checkout.sending")
+                      : status === "error"
+                      ? t("checkout.retry")
+                      : t("checkout.submit")}
+                  </button>
+                </div>
               </aside>
             </div>
           )}

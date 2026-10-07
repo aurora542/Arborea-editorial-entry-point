@@ -22,12 +22,13 @@ Last updated: 2026-10-01 · Status: **front end in progress, backend not started
 | Home wired to cart (activities + vehicles) | ✅ done |
 | Spa, Chef, Full Fridge wired to cart | ✅ done |
 | Fishing tours wired to cart | ⏸ **deliberately deferred** — keeps `useOrderCart` + `OrderCheckoutForm` alive |
-| `/checkout/` page | 🟡 review section done; guest form + submit pending |
-| Payload builder (`buildOrderPayload`) | 🔜 pending |
-| **Mock submit (front end works end-to-end)** | 🔜 pending |
-| **Real Apps Script `doPost`** | ❌ **not started — this is the handoff** |
-| Google Sheet + Drive folder provisioned | ❌ not started |
-| `.env` values set in build environment | ❌ not started |
+| `/checkout/` page | ✅ review + guest form + submit (`GuestDetailsForm`, web & kiosk) |
+| Payload builder (`buildOrderPayload` / `buildRequestPayload`) | ✅ done (`src/lib/orderPayload.js`) |
+| **Mock submit (front end works end-to-end)** | ✅ dev mock in `orderApi.js` |
+| **Real Apps Script `doPost`** | ✅ already in repo (`apps-script/Code.gs`) — handles web + kiosk orders and requests |
+| Kiosk mode (Casa Ceiba tablet) | ✅ done — see "Kiosk mode" in CLAUDE.md |
+| Google Sheet + Drive folder provisioned | ⏳ manual (Andrés) — run `setup()` in Apps Script |
+| `.env` values set in build environment | ⏳ manual (Andrés) — set before `npm run build` |
 
 Progress log is at the bottom of this file. Update it as work lands.
 
@@ -52,19 +53,27 @@ Two consequences to accept up front:
 
 Everything the backend needs flows through one file: **`src/lib/orderApi.js`**.
 
-It exports `submitOrder(payload)` and returns `{ ok: true, submissionId }` or
-`{ ok: false, error }`. It currently resolves against a **mock** that waits ~1.2s
-and returns success, so the whole UI can be demoed without a backend.
+It exports `submitOrder(payload)` and `submitRequest(payload)` (kiosk quick
+requests), both over one shared `post()`. Each returns `{ ok: true, submissionId }`
+or `{ ok: false, error }`.
+
+The mock lives in `post()`: when `NEXT_PUBLIC_ORDERS_BACKEND_URL` is empty **and**
+`NODE_ENV !== "production"`, it waits ~1.2s and returns `{ ok: true, submissionId,
+mock: true }`, so the whole UI works without a backend. In production a missing URL
+returns `missing-backend-url` instead — a silent mock in prod would drop real orders.
 
 To go live:
 
-1. Provision the Sheet + Drive folder, deploy the Apps Script Web App
+1. Provision the Sheet + Drive folder: open `apps-script/Code.gs` in a **new** Apps
+   Script project under operations@ and run `setup()` (it is idempotent and stores
+   the sheet/folder/secret in script properties). Deploy as a Web App
    ("Execute as: me", "Who has access: Anyone").
 2. Set `NEXT_PUBLIC_ORDERS_BACKEND_URL` and `NEXT_PUBLIC_ORDERS_SHARED_SECRET` in
    the **build** environment (they are inlined at build time — setting them only in
    a local `.env.local` will not affect the deployed site).
-3. Flip the mock off. The switch is a single constant at the top of `orderApi.js`;
-   the real `fetch` path is already written next to the mock.
+
+Once the URL is present, `post()` uses the real `fetch` path automatically; there is
+no flag to flip.
 
 **No UI file needs to change to connect the backend.** If you find yourself editing
 a component under `src/components/sections/` to make the backend work, something has
@@ -140,12 +149,59 @@ Notes on the shape:
   preference form (transport, tours, fishing) simply don't appear.
 - `produce` uses stable `category:item` keys, not translated labels.
 
-## 5. What the Apps Script must do
+### 4.1 Kiosk extension — `source` field
 
-The existing `apps-script/Code.gs` was written for the **old flat payload**
-(`{ service, name, casa, dateNeeded, items: [{label, price}] }`) and needs a rewrite.
-Keep from it: the `json()` helper, the `LockService` lock, and the `Log`-tab dedupe
-by `submissionId`.
+Orders carry a `source` field: `"web"` | `"kiosk"`. **Absent = `"web"`** (back-compat
+with any stale cached bundle).
+
+- `source: "web"` — unchanged: `guest` has `firstName`, `lastName`, `email`, `phone`,
+  `casa`, all required.
+- `source: "kiosk"` — simplified guest, `casa` comes from the kiosk config, not the
+  guest:
+
+```jsonc
+"guest": {
+  "name":  "Ana",            // required
+  "phone": "8888 8888",      // optional, "" if omitted
+  "casa":  "casa-ceiba"      // from the kiosk URL/config
+}
+// cart / serviceForms / totals / notes unchanged
+```
+
+### 4.2 Kiosk request — `type: "request"`
+
+Quick requests (cleaning, electricity, free message, …) from the tablet, built by
+`buildRequestPayload()`:
+
+```jsonc
+{
+  "type":     "request",
+  "source":   "kiosk",
+  "submissionId": "uuid",     // one per attempt, reused on retry
+  "createdAt": "2026-10-01T18:00:00.000Z",
+  "locale":   "es",
+  "guest":    { "name": "Ana", "phone": "", "casa": "casa-ceiba" },
+  "request": {
+    "category": "electricity", // id from KIOSK_CONFIG.requestCategories, or "message"
+    "message":  "Se fue la luz" // optional, except required when category === "message"
+  }
+}
+```
+
+Backend responses for both: `{ ok: true, submissionId }` ·
+`{ ok: true, submissionId, dedup: true }` · `{ ok: false, error }`.
+
+## 5. What the Apps Script does
+
+`apps-script/Code.gs` already handles the current contract: it detects order (new
+`cart[]` shape), legacy flat order, and `type: "request"`, validates web vs kiosk
+guests, de-dupes by `submissionId` via the `Log` tab under a `LockService` lock,
+writes to the `Pedidos` / `Pedidos — Ítems` / `Solicitudes` tabs, archives the raw
+JSON to Drive, and emails operations@ + concierge@. It ships `setup()`,
+`testKioskOrder()`, `testKioskRequest()`, `testWebOrder()`. No rewrite is needed for
+this sprint; deploying it is a manual step (Andrés).
+
+**This is the concierge backend. It is unrelated to the ops PWA's `Code.gs`.**
 
 Target behaviour:
 
@@ -163,14 +219,13 @@ Target behaviour:
 4. **Notification email** — grouped by service, with the guest's contact details and
    the preference forms rendered readably.
 
-### Bugs in the current `Code.gs` to fix while rewriting
+### Deploying `Code.gs`
 
-- It **requires** `payload.name`, `payload.casa`, `payload.dateNeeded` and returns
-  `Missing required fields` otherwise. The new payload has no top-level `name` or
-  `dateNeeded` at all. Validate `guest.firstName` / `guest.lastName` /
-  `guest.email` / `guest.phone` / `guest.casa` and `cart.length > 0` instead.
-- Consider accepting the old flat shape as a fallback for one release. The site is
-  static and CDN-cached, so a stale bundle can post the old schema after you deploy.
+The current `apps-script/Code.gs` already implements all of the above (orders, legacy
+fallback, requests, dedupe, Drive, email). Two operational notes still apply:
+
+- It accepts the old flat shape as a fallback, because the site is static and
+  CDN-cached, so a stale bundle can post the old schema after a deploy.
 - **Apps Script Web Apps need a new deployment version** for code edits to take
   effect. Editing the script and saving is not enough.
 
@@ -181,7 +236,9 @@ developer real time.
 
 1. **Don't refactor UI components to make the backend work.** The seam is
    `orderApi.js` + `orderPayload.js`. Nothing under `src/components/sections/`
-   should need to change.
+   should need to change — *except* `CheckoutPage.jsx`, which the kiosk sprint
+   extended with the guest form + submit (that was always the planned next phase for
+   that one file). `OrderCheckoutForm.jsx` (fishing tours, deferred) stays untouched.
 2. **Don't switch `Content-Type` to `application/json`** in `orderApi.js` (§2).
 3. **Don't re-introduce per-service submissions** or per-page submit buttons. Pages
    add to the cart; only `/checkout/` submits.
@@ -485,3 +542,33 @@ disappear if the guest empties the field and re-commits).
 Noted: `FullFridgePage`'s `form.dietaryPreferences` is dead state — declared and read
 in the `answered` derivation but never bound to any input. It is deliberately absent
 from the committed payload.
+
+### 2026-10-02 — checkout submit wired + kiosk mode (Casa Ceiba tablet)
+
+Closed the pending checkout phase and built kiosk mode in one sprint (handoff).
+
+**Checkout submit (was the one deferred file):**
+- `src/lib/orderPayload.js` — `buildOrderPayload()` (§4.1) and `buildRequestPayload()`
+  (§4.2). Lines reduced to the whitelist + derived `lineTotal`; `totals` computed.
+- `src/lib/orderApi.js` — refactored to a shared `post()`; added the dev mock (only
+  when no URL **and** not production) and `submitRequest()`. `Content-Type: text/plain`
+  unchanged. In production, a missing URL still errors rather than silently mocking.
+- `src/components/checkout/GuestDetailsForm.jsx` — react-hook-form; web (5 required
+  fields + notes) vs kiosk (name required, WhatsApp optional, casa read-only).
+- `CheckoutPage.jsx` — mounted the form + submit; `submissionId` in a `useRef`, reused
+  on retry; idle→sending→success|error; success screen (web inline / kiosk overlay).
+
+**Kiosk mode:** activated by `/?kiosk=1&casa=casa-ceiba`, persisted in `localStorage`
+(`arborea.kiosk.v1`); everything gated on `isKiosk` so the public site is unchanged.
+New: `KioskContext`, `kioskConfig.js`, `officeHours.js`, `useOnlineStatus.js`,
+`IdleReset` (180s reset w/ 15s warning), `KioskBar`, `KioskLinkGuard` +
+`ExternalLinkModal` (QR for wa.me/tel:/foreign-origin — the 8 link components stay
+untouched), `OfflineBanner`, `SuccessScreen`, and `/solicitudes/` (`RequestsPage`).
+`LenisProvider` early-returns in kiosk. New dep: `qrcode`.
+
+**Backend:** `apps-script/Code.gs` was already the new backend (orders + requests +
+web/kiosk validation + `setup()`/test fns), so it was left as-is — not archived, not
+replaced. Only this doc + CLAUDE.md were updated.
+
+`en.json`/`es.json` stay structurally identical (494 keys each). `npm run build`,
+TypeScript, and the static export all pass; `/solicitudes` prerenders as static.
