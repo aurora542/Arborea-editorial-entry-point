@@ -1,3 +1,15 @@
 Options -Indexes
 
 ErrorDocument 404 /404.html
+
+# Serve modern image/font formats with the correct Content-Type.
+# Without this, Apache (Hostinger) serves .avif with a generic MIME type and
+# browsers refuse to render it — the images load fine in `next dev` (Next sets the
+# MIME) but break in the static export on Hostinger. The site ships 71 .avif assets.
+<IfModule mod_mime.c>
+  AddType image/avif .avif
+  AddType image/webp .webp
+  AddType image/svg+xml .svg
+  AddType font/woff2 .woff2
+  AddType font/ttf .ttf
+</IfModule>
