@@ -32,13 +32,19 @@ export function formatDateLabel(iso, locale = "en") {
 /**
  * Turns a cart line's `options` + `date` into one muted caption:
  *   { duration: "90 min", days: 3 } + "2026-10-04"  ->  "90 min · 3 days · Oct 4"
- * Values are rendered as-is; keys are never shown, so option values should read
- * as labels on their own ("90 min", not "90").
+ *
+ * Keys starting with `_` are treated as INTERNAL metadata — they stay in the
+ * line for re-hydration or payload serialization but are kept out of the
+ * caption. The private-chef page uses this to stash per-day dish picks under
+ * `options._dishes` without leaking a JSON blob into the drawer.
+ *
+ * Values are rendered as-is; keys are never shown, so option values should
+ * read as labels on their own ("90 min", not "90").
  */
 export function describeLine(line, locale = "en") {
-  const parts = Object.values(line?.options ?? {})
-    .filter((v) => v !== null && v !== undefined && v !== "")
-    .map(String);
+  const parts = Object.entries(line?.options ?? {})
+    .filter(([k, v]) => !k.startsWith("_") && v !== null && v !== undefined && v !== "")
+    .map(([, v]) => String(v));
 
   const dateLabel = formatDateLabel(line?.date, locale);
   if (dateLabel) parts.push(dateLabel);

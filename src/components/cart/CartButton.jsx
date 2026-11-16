@@ -25,14 +25,23 @@ import { money } from "@/lib/format";
  * see the note in CLAUDE.md.
  */
 
+/*
+ * The badge now counts unique cart LINES (lineCount), not the summed qty across
+ * them — each experience / vehicle / treatment that the guest added shows up as
+ * exactly one tick regardless of its internal quantity. This matches how the
+ * drawer and checkout page render the order (one row per line).
+ *
+ * Hidden from `lg:+` because the desktop nav in <Navbar/> owns the cart pill
+ * from that breakpoint upward; letting both render would overlap the nav row.
+ */
 export default function CartButton() {
-  const { count, subtotal, openCart, hydrated, isOpen } = useCart();
+  const { lineCount, subtotal, openCart, hydrated, isOpen } = useCart();
   const { t } = useI18n();
 
   return (
     <div
       inert={isOpen}
-      className={`fixed top-5 right-[6.25rem] md:right-[8.25rem] z-[450] pointer-events-auto transition-opacity duration-200 ${
+      className={`fixed top-5 right-[6.25rem] md:right-[8.25rem] z-[450] pointer-events-auto xl:hidden transition-opacity duration-200 ${
         isOpen ? "opacity-0" : "opacity-100"
       }`}
     >
@@ -40,8 +49,8 @@ export default function CartButton() {
         type="button"
         onClick={openCart}
         aria-label={
-          count > 0
-            ? `${t("cart.open")} — ${count} ${count === 1 ? t("cart.itemsOne") : t("cart.itemsMany")}`
+          lineCount > 0
+            ? `${t("cart.open")} — ${lineCount} ${lineCount === 1 ? t("cart.itemsOne") : t("cart.itemsMany")}`
             : t("cart.open")
         }
         className="flex items-center gap-2 rounded-xl bg-[#213B2F] px-3.5 py-2.5 shadow-sm hover:bg-[#213B2F]/85 active:scale-[0.98] transition-all duration-200"
@@ -50,13 +59,13 @@ export default function CartButton() {
           <TbShoppingBag size={18} className="text-[#D8DDB8]" />
           {/* Rendered only after hydration, so the prerendered HTML (which always
             * has an empty cart) can't flash a stale count. */}
-          {hydrated && count > 0 && (
+          {hydrated && lineCount > 0 && (
             <span className="absolute -top-2 -right-2 min-w-[17px] h-[17px] px-1 rounded-full bg-[#D8DDB8] flex items-center justify-center font-sans text-[10px] font-bold text-[#213B2F] tabular-nums">
-              {count}
+              {lineCount}
             </span>
           )}
         </span>
-        {hydrated && count > 0 && (
+        {hydrated && lineCount > 0 && subtotal > 0 && (
           <span className="hidden md:inline font-sans text-sm font-semibold text-[#D8DDB8] tabular-nums">
             {money(subtotal)}
           </span>

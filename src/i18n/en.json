@@ -15,6 +15,7 @@
     "seeLess": "See less",
     "contacts": [
       {
+        "type": "featured",
         "title": "Immediate Emergency (24/7 – First Call)",
         "subtitle": "In remote areas such as Ojochal, response times may vary. If possible, proceed to the nearest clinic while awaiting assistance.",
         "rows": [
@@ -33,6 +34,7 @@
         ]
       },
       {
+        "type": "medical",
         "title": "Dr. Solano (On-call doctor)",
         "subtitle": null,
         "rows": [
@@ -43,6 +45,7 @@
         ]
       },
       {
+        "type": "medical",
         "title": "Erika Quirós – On-call Doctor",
         "subtitle": "Available for medical emergencies",
         "rows": [
@@ -53,6 +56,7 @@
         ]
       },
       {
+        "type": "medical",
         "title": "Local Medical Clinic (Uvita)",
         "subtitle": "Walk-in urgent care (daytime hours)",
         "rows": [
@@ -67,6 +71,7 @@
         ]
       },
       {
+        "type": "medical",
         "title": "Costa Rica Medical Response",
         "subtitle": null,
         "rows": [
@@ -77,6 +82,7 @@
         ]
       },
       {
+        "type": "medical",
         "title": "Lifeguard Air Ambulance",
         "subtitle": null,
         "rows": [
@@ -87,6 +93,8 @@
         ]
       },
       {
+        "type": "hospital-public",
+        "isNearest": true,
         "title": "Hospital Tomás Casas Casajús (Cortés)",
         "subtitle": "Public hospital with 24/7 emergency services — ~20 min",
         "rows": [
@@ -97,6 +105,7 @@
         ]
       },
       {
+        "type": "hospital-public",
         "title": "Hospital Max Terán Valls – Quepos",
         "subtitle": "Public hospital with 24/7 emergency services — ~45 min",
         "rows": [
@@ -107,6 +116,7 @@
         ]
       },
       {
+        "type": "hospital-private",
         "title": "Hospital Las Américas – San Isidro",
         "subtitle": "Private hospital with faster service — ~1–1.5 hours",
         "rows": [
@@ -117,6 +127,7 @@
         ]
       },
       {
+        "type": "hospital-private",
         "title": "Hospital CIMA – San José",
         "subtitle": "International-level private hospital — ~3.5 hours or air transfer",
         "rows": [
@@ -127,6 +138,7 @@
         ]
       },
       {
+        "type": "service",
         "title": "Diego Alonso Pinto Ulate – Trusted Mechanic",
         "subtitle": null,
         "rows": [
@@ -137,6 +149,7 @@
         ]
       },
       {
+        "type": "service",
         "title": "Tourist Police",
         "subtitle": null,
         "rows": [
@@ -147,6 +160,7 @@
         ]
       },
       {
+        "type": "service",
         "title": "OIJ (Judicial Investigation Police)",
         "subtitle": null,
         "rows": [
@@ -157,6 +171,7 @@
         ]
       },
       {
+        "type": "embassy",
         "title": "Canadian Embassy (San José)",
         "subtitle": null,
         "rows": [
@@ -167,6 +182,7 @@
         ]
       },
       {
+        "type": "embassy",
         "title": "U.S. Embassy (San José)",
         "subtitle": "American Citizen Services — emergency line available 24/7",
         "rows": [
@@ -177,6 +193,7 @@
         ]
       },
       {
+        "type": "embassy",
         "title": "Italian Embassy (San José)",
         "subtitle": null,
         "rows": [
@@ -187,6 +204,7 @@
         ]
       },
       {
+        "type": "embassy",
         "title": "French Embassy (San José)",
         "subtitle": null,
         "rows": [
@@ -197,6 +215,7 @@
         ]
       },
       {
+        "type": "embassy",
         "title": "Spanish Embassy (San José)",
         "subtitle": null,
         "rows": [
@@ -206,7 +225,15 @@
           }
         ]
       }
-    ]
+    ],
+    "hospitalsHeading": "Hospitals",
+    "medicalHeading": "Medical Help",
+    "otherHeading": "More Contacts",
+    "hospitalAdvisory": "In a true medical emergency, public hospitals are generally the best option — they're equipped for critical and trauma care, operate 24/7, and are closer than the private alternatives.",
+    "nearestBadge": "Nearest hospital",
+    "publicBadge": "Public",
+    "privateBadge": "Private",
+    "callAction": "Call"
   },
   "mulaRental": {
     "pill": "Adventure add-on",
@@ -215,7 +242,12 @@
     "vehicle": "Yamaha Side-by-Side 700",
     "priceTag": "$200 / day",
     "terms": "Rent by the day or for the full week.",
-    "specs": ["Seats up to 5", "Automatic transmission", "Full tank included", "Available daily or weekly"],
+    "specs": [
+      "Seats up to 5",
+      "Automatic transmission",
+      "Full tank included",
+      "Available daily or weekly"
+    ],
     "daysLabel": "Number of days",
     "totalLabel": "Total",
     "dayLabel": "day",
@@ -226,6 +258,7 @@
     "pill": "Signature Experiences",
     "title": "Signature Experiences",
     "craftTitle": "Craft your own custom experience",
+    "craftEyebrow": "How it works",
     "craftDescription": "Everything below can be combined into a single request. Browse the experiences, customize each one to your group and preferences, and submit it all at once — we'll confirm availability and coordinate the details before your arrival.",
     "craftSteps": [
       "Select the experience",
@@ -337,7 +370,14 @@
       "heading": "Dietary Restrictions & Preferences",
       "description": "Let the chef know about allergies, restrictions, or anything you'd rather avoid.",
       "restrictionsLabel": "Restrictions — select how many guests",
-      "options": ["Vegetarian", "Vegan", "Gluten-Free", "Dairy-Free", "Nut Allergy", "Shellfish Allergy"],
+      "options": [
+        "Vegetarian",
+        "Vegan",
+        "Gluten-Free",
+        "Dairy-Free",
+        "Nut Allergy",
+        "Shellfish Allergy"
+      ],
       "otherLabel": "Other restriction",
       "otherPlaceholder": "e.g. low-FODMAP, low-sodium, kosher...",
       "allergiesLabel": "Allergies — please be specific",
@@ -1007,7 +1047,7 @@
         {
           "title": "Vegetables",
           "items": [
-            "Yuca",
+            "Yuca (cassava)",
             "Chayote",
             "Sweet potato (camote)",
             "Pipián squash",
@@ -1015,7 +1055,9 @@
             "Ripe plantains",
             "Corn on the cob",
             "Tomatoes",
-            "Bell peppers"
+            "Bell peppers",
+            "Garlic",
+            "Onions"
           ]
         },
         {
@@ -1023,12 +1065,16 @@
           "items": [
             "Avocado",
             "Bananas",
-            "Papayas",
+            "Papaya",
             "Passion fruit (maracuyá)",
             "Guava (guayaba)",
-            "Cas",
+            "Cas (endemic from Costa Rica, perfect for juice)",
             "Pineapple",
-            "Rambutan (mamones chinos)"
+            "Rambutan (mamones chinos)",
+            "Watermelon",
+            "Strawberries",
+            "Plums",
+            "Mango"
           ]
         },
         {
@@ -1138,20 +1184,50 @@
         {
           "label": "3 Days",
           "days": 3,
-          "prices": ["$299", "$533", "$728", "$871"],
-          "priceValues": [299, 533, 728, 871]
+          "prices": [
+            "$299",
+            "$533",
+            "$728",
+            "$871"
+          ],
+          "priceValues": [
+            299,
+            533,
+            728,
+            871
+          ]
         },
         {
           "label": "5 Days",
           "days": 5,
-          "prices": ["$494", "$884", "$1,209", "$1,456"],
-          "priceValues": [494, 884, 1209, 1456]
+          "prices": [
+            "$494",
+            "$884",
+            "$1,209",
+            "$1,456"
+          ],
+          "priceValues": [
+            494,
+            884,
+            1209,
+            1456
+          ]
         },
         {
           "label": "8 Days",
           "days": 8,
-          "prices": ["$793", "$1,417", "$1,937", "$2,327"],
-          "priceValues": [793, 1417, 1937, 2327]
+          "prices": [
+            "$793",
+            "$1,417",
+            "$1,937",
+            "$2,327"
+          ],
+          "priceValues": [
+            793,
+            1417,
+            1937,
+            2327
+          ]
         }
       ]
     },
@@ -1193,7 +1269,13 @@
       "dietary": {
         "heading": "Dietary Restrictions & Allergies",
         "question": "Does anyone in your group have dietary restrictions or food allergies?",
-        "options": ["Vegetarian", "Vegan", "Gluten-Free", "Dairy-Free", "Nut Allergy"],
+        "options": [
+          "Vegetarian",
+          "Vegan",
+          "Gluten-Free",
+          "Dairy-Free",
+          "Nut Allergy"
+        ],
         "allergiesLabel": "Specific allergies or intolerances",
         "allergiesPlaceholder": "e.g. tree nuts, shellfish, lactose...",
         "preferencesLabel": "Other dietary preferences",
@@ -1202,7 +1284,13 @@
       "cooking": {
         "heading": "Cooking Plans",
         "question": "How much do you plan to cook during your stay?",
-        "options": ["Breakfast only", "Breakfast & Lunch", "Breakfast & Dinner", "Most meals", "We do not plan to cook"]
+        "options": [
+          "Breakfast only",
+          "Breakfast & Lunch",
+          "Breakfast & Dinner",
+          "Most meals",
+          "We do not plan to cook"
+        ]
       },
       "groceries": {
         "heading": "Anything else?",
@@ -1212,7 +1300,21 @@
       "beverages": {
         "heading": "Beverages",
         "question": "Which beverages would you like us to stock?",
-        "options": ["Bottled Water", "Sparkling Water", "Coconut Water", "Juice", "Milk", "Almond Milk", "Oat Milk", "Soft Drinks", "Coffee", "Tea", "Beer", "Wine", "Spirits"],
+        "options": [
+          "Bottled Water",
+          "Sparkling Water",
+          "Coconut Water",
+          "Juice",
+          "Milk",
+          "Almond Milk",
+          "Oat Milk",
+          "Soft Drinks",
+          "Coffee",
+          "Tea",
+          "Beer",
+          "Wine",
+          "Spirits"
+        ],
         "other": "Other",
         "otherPlaceholder": "Tell us more..."
       },
@@ -1226,24 +1328,55 @@
       "breakfastItems": {
         "heading": "Breakfast Essentials",
         "question": "Would you like breakfast items?",
-        "options": ["Eggs", "Bread", "Butter", "Yogurt", "Granola", "Cereal", "Jam", "Honey"]
+        "options": [
+          "Eggs",
+          "Bread",
+          "Butter",
+          "Yogurt",
+          "Granola",
+          "Cereal",
+          "Jam",
+          "Honey"
+        ]
       },
       "pantryItems": {
         "heading": "Pantry Essentials",
         "question": "Would you like basic cooking ingredients?",
-        "options": ["Rice", "Pasta", "Olive Oil", "Salt", "Pepper", "Sugar", "Flour", "Cooking Oil", "Basic Spices"]
+        "options": [
+          "Rice",
+          "Pasta",
+          "Olive Oil",
+          "Salt",
+          "Pepper",
+          "Sugar",
+          "Flour",
+          "Cooking Oil",
+          "Basic Spices"
+        ]
       },
       "proteins": {
         "heading": "Proteins",
         "question": "Which proteins would you like?",
-        "options": ["Chicken", "Beef", "Pork", "Fish", "Shrimp", "Bacon", "Deli Meats", "Cheese"],
+        "options": [
+          "Chicken",
+          "Beef",
+          "Pork",
+          "Fish",
+          "Shrimp",
+          "Bacon",
+          "Deli Meats",
+          "Cheese"
+        ],
         "other": "Other",
         "otherPlaceholder": "Tell us more..."
       },
       "snacks": {
         "heading": "Snacks",
         "question": "Would you like snacks for:",
-        "forOptions": ["Adults", "Children"],
+        "forOptions": [
+          "Adults",
+          "Children"
+        ],
         "preferredLabel": "Preferred snacks",
         "placeholder": "e.g. chips, cookies, fruit snacks..."
       },
@@ -1778,6 +1911,9 @@
   "nav": {
     "open": "Open menu",
     "close": "Close menu",
+    "experiences": "Experiences",
+    "experiencesHeading": "Signature Experiences",
+    "experiencesSubheading": "Curated in-casa services",
     "links": {
       "houses": "Houses",
       "tours": "Tours & Activities",
@@ -2139,81 +2275,288 @@
   },
   "fishingTours": {
     "pill": "Arborea Experiences",
-    "title": "Fishing Tours & Marine Experiences",
-    "subtitle": "Offshore, inshore, river and combo tours aboard Arborea's own boat",
+    "title": "Fishing Experiences",
+    "subtitle": "Offshore expeditions, coastal and river fishing, and family ocean days — curated to the kind of adventure you're looking for.",
     "whatsapp": "Book via WhatsApp",
     "story": {
       "heading": "Out on the water with Arborea",
-      "body": "From mar afuera runs chasing Tuna and Marlin to quiet river mornings after Snook and Mangrove Snapper, every trip is operated directly by Arborea Experiences — our boat, our captain, our routes.\n\nChoose the tour that fits your day, from a full offshore adventure to a relaxed combo of whale watching, fishing, and beach time. Prices below are estimates; your captain will confirm the final rate based on conditions and group size."
+      "body": "The southern Pacific coast of Costa Rica offers an extraordinary variety of fishing environments, from the open ocean and offshore waters to secluded beaches, mangroves, and winding rivers.\n\nAt Arborea Experiences, we curate fishing days according to the kind of adventure you are looking for — whether that means pursuing big game fish offshore, exploring the waters around Isla del Caño, combining fishing with whale watching, or enjoying a peaceful morning surrounded by mangroves and wildlife.\n\nEvery experience is subject to ocean, weather, seasonal, and local conditions, and specific species cannot be guaranteed."
     },
-    "packages": {
-      "subheading": "Choose your tour",
-      "heading": "Fishing Packages & Experiences",
-      "description": "Select the tour you'd like to book. Each package includes captain and crew — see full conditions below.",
-      "durationNote": "Half-day tours run approximately $650 to $700, compared to $1,200 for a full-day offshore trip. Shorter tours don't include a full lunch — only drinks and fruit are provided. Duration shown is our best estimate per tour and may be adjusted by the crew.",
+    "booking": {
+      "heading": "How to book your experience",
+      "description": "Browse, pick a group size, and submit — we'll confirm everything with you before your stay.",
+      "steps": [
+        {
+          "step": "Choose your experience",
+          "body": "Browse offshore expeditions, coastal and river fishing, or family ocean adventures."
+        },
+        {
+          "step": "Pick a group size",
+          "body": "Each tour's per-person rate changes with the number of guests — pick the tier that fits your group."
+        },
+        {
+          "step": "Add to your request",
+          "body": "Select as many experiences as you'd like — they'll all appear in your order summary."
+        },
+        {
+          "step": "Review & submit",
+          "body": "Scroll to the summary at the bottom, leave any notes, and submit — nothing is charged here."
+        }
+      ]
+    },
+    "anglers": {
+      "subheading": "Anglers' Expeditions",
+      "heading": "For Fishing Enthusiasts",
+      "description": "Specialized trips designed for anglers of every level — from offshore sport fishing to peaceful river mornings.",
+      "guestsLabel": "guests",
+      "perPersonLabel": "per person",
+      "totalLabel": "Total",
+      "speciesLabel": "Target species",
+      "includedLabel": "Included",
+      "durationLabel": "Duration",
+      "departureLabel": "Departure",
+      "capacityLabel": "Capacity",
+      "pickGroupLabel": "Group size",
+      "selectTourLabel": "Select tour",
+      "selectedLabel": "Selected",
+      "fromLabel": "from",
       "items": [
         {
-          "name": "Offshore Fishing",
-          "species": "Tuna, Marlin, Sailfish, Dorado",
-          "priceLabel": "$1,200 – $1,300",
-          "priceValue": 1200,
-          "duration": "Full day",
-          "description": "Runs in open water. The most common rate currently charged is $1,200."
+          "name": "Elite Full-day Offshore Sport Fishing Expedition",
+          "tagline": "Premier offshore expedition, strictly capped at 4–5 anglers",
+          "description": "Head into the open Pacific for a premier, full-day sport fishing adventure in one of Costa Rica's most productive offshore waters. Designed explicitly for high-end anglers and sport fishing experts, this uncompromising expedition delivers the ultimate thrill of pursuing pelagic giants while surrounded by the vast deep blue.\n\nYou will command the waters aboard our luxury Arborea vessel. While this boat is designed to comfortably accommodate up to eight passengers for standard cruising, this specific expedition is strictly capped at a maximum of 4 anglers — we deliberately limit capacity to guarantee unrestricted deck space, unhindered maneuverability during intense, multi-reel hookups, and a highly personalized, VIP experience from our expert crew.",
+          "species": "Yellowfin Tuna · Marlin · Pacific Sailfish · Mahi Mahi (Dorado)",
+          "included": "Hydration and beverages, tailored meal, fruit, and bait.",
+          "duration": "Full Day · 7:00 am – 4:30 pm",
+          "departure": "Sierpe Town",
+          "tiers": [
+            {
+              "guests": 4,
+              "perPerson": 325,
+              "total": 1300
+            },
+            {
+              "guests": 5,
+              "perPerson": 260,
+              "total": 1300
+            }
+          ]
         },
         {
-          "name": "Isla del Caño Fishing",
-          "species": "Snapper, Tuna, Guaho, Mackerel, Roosterfish",
-          "priceLabel": "$900 – $1,000",
-          "priceValue": 900,
-          "duration": "Full day",
-          "description": "Fished 3 km from the island's shore (outside national park limits). Typical rate is $950."
+          "name": "Caño Island Offshore Fishing",
+          "tagline": "Full-day fishing around the waters of Isla del Caño",
+          "description": "Explore the waters surrounding Isla del Caño on a full-day fishing adventure that combines spectacular ocean scenery with the excitement of coastal and offshore fishing.\n\nLocated approximately 3 km from the island and outside the national park boundaries, these waters offer opportunities to pursue a variety of Pacific species while enjoying one of Costa Rica's most remarkable marine landscapes.",
+          "species": "Snapper · Tuna · Wahoo · Mackerel · Roosterfish",
+          "included": "Hydration and beverages, tailored meal, fruit, and bait.",
+          "duration": "Full Day · 7:00 am – 3:00 pm",
+          "departure": "Sierpe Town",
+          "tiers": [
+            {
+              "guests": 4,
+              "perPerson": 250,
+              "total": 1000
+            },
+            {
+              "guests": 5,
+              "perPerson": 200,
+              "total": 1000
+            }
+          ]
         },
         {
-          "name": "Whales, Fishing & Beach Combo",
-          "species": "Varied",
-          "priceLabel": "$700 – $800",
-          "priceValue": 700,
-          "duration": "Half day",
-          "description": "Includes whale watching, a short fishing session, and lunch with free time at San Josecito beach."
+          "name": "Half-day Inshore Fishing — Coastal Adventure",
+          "tagline": "Action-packed morning bite at the river mouth",
+          "description": "Experience the thrill of the early morning bite on this action-packed half-day adventure. Running from 7:00 AM to 12:00 PM, this tour keeps you close to the stunning coastline to explore the teeming, nutrient-rich waters right at the river mouth.\n\nIt's a dynamic alternative to deep-sea fishing, targeting the exact sweet spot where the ocean currents meet the estuary. This unique transition zone naturally concentrates baitfish and attracts a massive variety of hard-fighting species, giving you a morning full of constant action, beautiful shoreline views, and a return to the dock just in time for lunch.",
+          "species": "Roosterfish · Mackerel · Barracuda · Snapper · Jurel · Corvina · Snook",
+          "included": "Hydration and beverages, fruit, and bait.",
+          "duration": "Half Day · 7:00 am – 12:00 pm",
+          "departure": "Sierpe Town",
+          "tiers": [
+            {
+              "guests": 4,
+              "perPerson": 175,
+              "total": 700
+            },
+            {
+              "guests": 5,
+              "perPerson": 140,
+              "total": 700
+            }
+          ]
         },
         {
-          "name": "Inshore Fishing",
-          "species": "Roosterfish, Mackerel, Barracuda, Snapper, Jack, Corvina, Snook",
-          "priceLabel": "$600 – $700",
-          "priceValue": 600,
-          "duration": "Half day",
-          "description": "Fished close to shore, just past the river mouth."
+          "name": "Half-day Sierpe River Fishing",
+          "tagline": "A peaceful morning deep inside the Térraba-Sierpe wetlands",
+          "description": "Navigate the winding waterways of the Sierpe River, home to one of Central America's most untouched mangrove ecosystems.\n\nBeyond the thrill of the catch, the tranquil journey offers an unparalleled wildlife safari — keep your eyes peeled for howler monkeys swinging through the jungle canopy, vibrant scarlet macaws flying overhead, and crocodiles resting along the muddy banks. Whether you're an experienced angler looking for your next big fight or a beginner seeking a tranquil day on the water, our expert local guides will navigate the complex labyrinth of the Térraba-Sierpe wetlands to put you exactly where the fish are biting.",
+          "species": "Mangrove Snapper · Corvina · Snook",
+          "included": "Hydration and beverages, fruit, and bait.",
+          "duration": "Half Day · 7:00 am – 12:00 pm",
+          "departure": "Sierpe Town",
+          "tiers": [
+            {
+              "guests": 4,
+              "perPerson": 150,
+              "total": 600
+            },
+            {
+              "guests": 5,
+              "perPerson": 120,
+              "total": 600
+            }
+          ]
+        }
+      ]
+    },
+    "family": {
+      "subheading": "For the Whole Family",
+      "heading": "Ocean Experiences for Everyone",
+      "description": "Relaxed, family-friendly ocean days — whale watching, wild dolphins, mangroves, and gentle fishing for every age.",
+      "items": [
+        {
+          "name": "Private Whale Watching, Casual Fishing & San Josecito Beach",
+          "tagline": "Private whale-watching, casual fishing, and a hidden beach lunch",
+          "description": "Escape the commercial crowds on a private, full-day ocean journey for up to eight guests, exploring the pristine, lesser-traveled waters of the South Pacific. Your adventure begins with an exclusive whale-watching experience far south of the usual tour routes, offering a privileged, front-row seat to Costa Rica's incredible marine life.\n\nBetween sightings, you'll enjoy a laid-back, casual fishing session — perfect for beginners and aficionados who just want to have a little fun dropping a line in the water. The day culminates at the stunning shores of Playa San Josecito, an untouched hidden cove accessible only by boat from Sierpe.\n\nNaturally protected from heavy surf, its exceptionally calm, warm waters create a safe, welcoming sanctuary ideal for kids, elders, and families. Here, you'll be served a delicious beachside lunch with a full afternoon left to float, swim, and soak in the pure tropical tranquility of the coastline.",
+          "species": "Mackerel · Roosterfish",
+          "included": "Hydration and beverages, tailored meal, fruit, and bait.",
+          "duration": "Full Day · 7:00 am – 3:30 pm",
+          "departure": "Sierpe Town",
+          "capacityNote": "Maximum capacity: 8 guests.",
+          "tiers": [
+            {
+              "guests": 4,
+              "perPerson": 225,
+              "total": 900
+            },
+            {
+              "guests": 5,
+              "perPerson": 180,
+              "total": 900
+            },
+            {
+              "guests": 6,
+              "perPerson": 150,
+              "total": 900
+            },
+            {
+              "guests": 7,
+              "perPerson": 128.5,
+              "total": 900
+            },
+            {
+              "guests": 8,
+              "perPerson": 112.5,
+              "total": 900
+            }
+          ]
         },
         {
-          "name": "River Fishing",
-          "species": "Mangrove Snapper, Corvina, Snook",
-          "priceLabel": "$500",
-          "priceValue": 500,
-          "duration": "Half day",
-          "description": "All-inclusive. Fished along the nearby river and its channels."
+          "name": "Wild Dolphin Expedition",
+          "tagline": "An extraordinary journey into the world of wild dolphins",
+          "description": "Embark on an unforgettable ocean expedition in search of thousands of wild dolphins in their natural habitat. This exceptional marine wildlife experience offers the opportunity to encounter massive pods — estimated at 4,000–5,000 dolphins — and witness their fascinating behavior in the open ocean.\n\nUsing a specialized drop-and-retrieve technique, your experienced captain carefully positions the boat ahead of the moving pod, creating opportunities for guests to enter the water equipped with masks and fins. As the dolphins pass through, the boat retrieves the group and repositions them for additional encounters.\n\nNaturally curious and remarkably social, dolphins may turn back toward swimmers, approach the group, and sometimes come surprisingly close. The adventure may also reveal an extraordinary display of marine life, including tuna, sailfish, and marlin feeding on schools of sardines.\n\nMore than a snorkeling excursion, this is an immersive wildlife expedition designed for ocean enthusiasts seeking a rare and meaningful connection with the natural world.",
+          "species": "Dolphins · Tuna · Sailfish · Marlin · Sardine schools",
+          "included": "Hydration and beverages, snorkeling gear, experienced guide, tailored meal, and fruit.",
+          "duration": "Full Day",
+          "departure": "Sierpe Town",
+          "wildlifeNote": "This is a wild marine wildlife expedition and all encounters take place in the animals' natural environment. Dolphin sightings, close interactions, and opportunities to swim alongside them cannot be guaranteed — wildlife behavior and ocean conditions are naturally unpredictable.",
+          "tiers": [
+            {
+              "guests": 4,
+              "perPerson": 300,
+              "total": 1200
+            },
+            {
+              "guests": 5,
+              "perPerson": 240,
+              "total": 1200
+            },
+            {
+              "guests": 6,
+              "perPerson": 200,
+              "total": 1200
+            },
+            {
+              "guests": 7,
+              "perPerson": 171.43,
+              "total": 1200
+            }
+          ]
         },
         {
-          "name": "Mangrove, Wildlife & Beach",
-          "species": "Birds & mangrove wildlife",
-          "priceLabel": "Variable",
-          "priceValue": 0,
-          "duration": "Full day",
-          "description": "Early morning departure for birdwatching, returning in the afternoon after time at the beach."
+          "name": "Sierpe River Mangrove & Wildlife Experience",
+          "tagline": "A tranquil 3-hour wildlife journey through the Térraba-Sierpe wetlands",
+          "description": "Discover the wild heart of Costa Rica's Southern Pacific. Explore the extraordinary biodiversity of the Sierpe River, home to one of the largest and most important mangrove ecosystems in Central America. Winding through the Térraba-Sierpe wetlands, these tranquil waterways create a remarkable natural sanctuary where rainforest, river, and ocean ecosystems come together.\n\nDuring this three-hour guided boat expedition, you'll navigate slowly through winding mangrove canals, surrounded by towering roots and lush tropical vegetation. With the help of an experienced local guide, you'll explore known wildlife habitats and keep an eye out for fascinating creatures along the way — American crocodiles and caimans along the riverbanks, howler monkeys, white-faced capuchins, and spider monkeys in the treetops, scarlet macaws, herons, egrets and kingfishers, sloths resting among the mangrove branches, and iguanas camouflaged along the waterways.\n\nThroughout the journey, your guide will share interesting insights into the mangrove ecosystem, its incredible biodiversity, and its vital role in protecting the coastline and supporting marine life. Perfect for nature enthusiasts, wildlife photographers, families, and curious explorers.",
+          "species": "Crocodiles · Howler, capuchin & spider monkeys · Scarlet macaws · Herons · Sloths · Iguanas",
+          "included": "Hydration and beverages, experienced local guide, and river navigation.",
+          "duration": "Approx. 3 hours · 7:00 am, 11:00 am or 3:00 pm",
+          "departure": "Sierpe Town",
+          "wildlifeNote": "Wildlife sightings are not guaranteed — animals roam freely in their natural habitat. Early morning or late afternoon departures offer the best wildlife activity.",
+          "tiers": [
+            {
+              "guests": 2,
+              "perPerson": 150,
+              "total": 300
+            },
+            {
+              "guests": 3,
+              "perPerson": 150,
+              "total": 450
+            },
+            {
+              "guests": 4,
+              "perPerson": 150,
+              "total": 600
+            },
+            {
+              "guests": 5,
+              "perPerson": 150,
+              "total": 750
+            },
+            {
+              "guests": 6,
+              "perPerson": 125,
+              "total": 750
+            },
+            {
+              "guests": 7,
+              "perPerson": 125,
+              "total": 875
+            },
+            {
+              "guests": 8,
+              "perPerson": 125,
+              "total": 1000
+            }
+          ]
         }
       ]
     },
     "conditions": {
       "heading": "Good to Know",
       "items": [
-        "Half-day tours: approx. $650–$700, versus $1,200 for a full-day offshore trip.",
-        "Half-day meals: drinks and fruit only — no full lunch on shorter tours.",
-        "Fruit on board: only pineapple and watermelon are offered. Banana and papaya are avoided — they spoil quickly and leave an odor on board.",
-        "Snorkel gear: not offered on the Isla del Caño tour — it requires special park permits, national park fees, and certified equipment the boat doesn't currently carry."
+        "Every experience is subject to ocean, weather, seasonal, and local conditions — specific species and wildlife cannot be guaranteed.",
+        "All departures are from Sierpe Town unless otherwise coordinated.",
+        "Half-day tours include hydration, fruit, and bait; full-day tours include a tailored meal.",
+        "Fruit on board: pineapple and watermelon only. Banana and papaya spoil quickly and leave an odor on board.",
+        "Snorkel gear is not offered on Isla del Caño fishing tours — the island requires special park permits and certified equipment the boat doesn't currently carry."
       ]
     },
+    "summary": {
+      "eyebrow": "Order Summary",
+      "heading": "Review your selection",
+      "description": "Review the experiences you've chosen and add any notes for the captain, then add it all to your order. You'll fill in your details at checkout.",
+      "yourSelection": "Your Selection",
+      "emptyState": "No experiences selected yet — browse the sections above.",
+      "totalLabel": "Total",
+      "notesLabel": "Notes for the captain",
+      "notesPlaceholder": "Group experience level, mobility, preferred species, departure requests — anything the crew should know ahead of time…"
+    },
     "ctaHeading": "Ready to head out on the water?",
-    "ctaSubheading": "Reach out on WhatsApp and we'll help you pick the right tour.",
-    "note": "Prices are estimates per boat/group and may vary with conditions, group size, and season. Your captain will confirm final pricing before departure."
+    "ctaSubheading": "Reach out on WhatsApp and we'll help you pick the right experience.",
+    "note": "Prices listed are per group and based on the selected guest count. Your captain will confirm final pricing based on conditions, group size, and season before departure.",
+    "closingQuote": {
+      "body": "The sea, once it casts its spell, holds one in its net of wonder forever.",
+      "attribution": "— Jacques-Yves Cousteau"
+    }
   },
   "services": {
     "privateChef": {
@@ -2260,6 +2603,7 @@
       "preferencesHeading": "Your preferences"
     },
     "addToCart": "Add to cart",
+    "addToOrder": "Add to current order",
     "update": "Update order",
     "inOrder": "In your order",
     "days": "Days",
@@ -2285,6 +2629,10 @@
     "checkout": "Continue to checkout",
     "clear": "Empty order",
     "clearConfirm": "Remove everything from your order?",
+    "clearConfirmTitle": "Empty your order?",
+    "clearConfirmBody": "This will remove every experience, service and vehicle you've added. This can't be undone.",
+    "clearConfirmAction": "Yes, empty order",
+    "clearCancel": "Keep it",
     "viewOrder": "View order"
   },
   "checkout": {

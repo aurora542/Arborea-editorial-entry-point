@@ -335,9 +335,13 @@ const SERVICE = "wellness-spa";
 export default function WellnessSpaPage() {
   const { t } = useI18n();
   const draft = useDraft();
-  const { setLine, clearService, setServiceForm, openCart, linesByService, lines, serviceForms, hydrated } = useCart();
+  const { setLine, clearService, setServiceForm, openCart, linesByService, lines, serviceForms, hydrated, editSignal } = useCart();
   const [allergies, setAllergies] = useState("");
   const [notes, setNotes] = useState("");
+
+  /* `trigger` changes when the drawer's "Edit" link targets this service — the
+   * seed hook re-fires and rehydrates draft + form state from cart lines. */
+  const seedTrigger = editSignal.service === SERVICE ? editSignal.token : "__initial__";
 
   /* Enhancements only make sense alongside a real treatment. Scoped to this page's
    * draft — checking the global cart instead would let a rental car unlock them. */
@@ -379,10 +383,11 @@ export default function WellnessSpaPage() {
     service: SERVICE,
     skuToId: (line) => skuToDraftId[line.sku],
     setItems: draft.setItems,
+    trigger: seedTrigger,
     onSeed: () => {
       const form = serviceForms[SERVICE];
-      if (form?.allergies) setAllergies(form.allergies);
-      if (form?.notes) setNotes(form.notes);
+      setAllergies(form?.allergies ?? "");
+      setNotes(form?.notes ?? "");
     },
   });
 
@@ -461,6 +466,13 @@ export default function WellnessSpaPage() {
     if (Object.keys(form).length) setServiceForm(SERVICE, form);
 
     openCart();
+
+    /* Clear the page so the guest can start a new order with different specs.
+     * The cart keeps the committed line; re-opening via the drawer's Edit link
+     * will re-seed the draft from it (see `seedTrigger` above). */
+    draft.clear();
+    setAllergies("");
+    setNotes("");
   };
 
   return (

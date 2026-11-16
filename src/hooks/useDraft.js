@@ -52,29 +52,31 @@ export function useDraft(initial = {}) {
 }
 
 /**
- * Restores a page's draft from lines already committed to the cart, once, after
- * hydration.
+ * Restores a page's draft from lines already committed to the cart.
  *
- * Without this, the "Edit" link in the cart drawer lands the guest on an empty page.
- * Because every commit does `clearService()` first, re-committing from that empty
- * page would silently drop the lines and preferences they had already added — they
- * would think they were adding a third massage and end up with only the new one.
+ * Fires on the first hydration tick (initial mount) AND every time `trigger`
+ * changes — the latter is how the cart drawer's "Edit" link re-populates the
+ * page even when the guest is already on that same URL (same-URL soft nav keeps
+ * the component mounted, so a mount-only seed would be invisible). Pass
+ * `trigger = cart.editSignal.token` from the service page, gated so it only
+ * changes when that service is the one being edited.
+ *
+ * On re-fire the whole draft is replaced, not merged — otherwise half-filled
+ * selections from before the Edit would hang around alongside the restored
+ * lines. On the very first fire (no prior draft) that's a no-op.
  *
  * `skuToId` maps a committed line back to the draft key the page uses for it;
  * return a falsy value to ignore a line.
- *
- * Runs on the hydration tick only (guarded by a ref), so it can never overwrite
- * edits the guest is in the middle of making.
  */
-export function useSeedDraftFromCart({ hydrated, lines, service, skuToId, setItems, onSeed }) {
-  const seeded = useRef(false);
+export function useSeedDraftFromCart({ hydrated, lines, service, skuToId, setItems, onSeed, trigger }) {
+  const lastTrigger = useRef(null);
 
   useEffect(() => {
-    if (seeded.current || !hydrated) return;
-    seeded.current = true;
+    if (!hydrated) return;
+    if (lastTrigger.current === trigger) return;
+    lastTrigger.current = trigger;
 
     const mine = lines.filter((l) => l.service === service);
-    if (!mine.length) return;
 
     const next = {};
     for (const line of mine) {
@@ -88,10 +90,10 @@ export function useSeedDraftFromCart({ hydrated, lines, service, skuToId, setIte
       };
     }
 
-    if (Object.keys(next).length) setItems((prev) => ({ ...prev, ...next }));
+    setItems(next);
     onSeed?.(mine);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated]);
+  }, [hydrated, trigger]);
 }
 
 export default useDraft;

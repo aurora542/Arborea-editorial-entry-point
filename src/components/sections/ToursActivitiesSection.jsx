@@ -8,7 +8,7 @@ export default function ToursActivitiesSection() {
   const { t } = useI18n();
 
   return (
-    <section id="tours" className="flex flex-col px-8 md:px-16 pb-24 gap-8">
+    <section id="tours" className="flex flex-col px-8 md:px-16 pb-24 gap-8 scroll-mt-24">
 
       {/* Header */}
       <div className="flex flex-col gap-4" data-aos="fade-up">

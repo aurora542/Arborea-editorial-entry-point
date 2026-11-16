@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { TbUsers, TbRoute, TbCirclePlus, TbCircleCheck, TbPhoto, TbTrash } from "react-icons/tb";
+import {
+  TbUsers, TbCirclePlus, TbCircleCheck, TbPhoto, TbTrash,
+  TbMessageCircle, TbTag, TbBriefcase, TbEngine,
+} from "react-icons/tb";
 import { useCart } from "@/app/context/CartContext";
 import { useI18n } from "@/app/context/I18nContext";
 import { lineIdOf } from "@/lib/sku";
@@ -9,92 +12,128 @@ import { money } from "@/lib/format";
 import QtyStepper from "@/components/ui/QtyStepper";
 import DateField from "@/components/ui/DateField";
 
+/*
+ * Pricing model (as of nov 2026):
+ * - `sidebyside` carries a real `dailyRate` — the only vehicle with a visible,
+ *   deterministic price (it is Arborea-owned, not fleet-rented).
+ * - Every other vehicle is by-quote. We book through a preferred-partner
+ *   agreement with Alamo / Enterprise / National so the final rate depends on
+ *   season, availability, and inventory — it can't be fixed in the UI.
+ *
+ * Specs (seats / luggage / engine) match the partner fleet sheet. See the
+ * nov 2026 SUV 4X4 + Luxury 4X4 + Pickup 4X4 category sheets.
+ */
 const VEHICLES = [
   {
     id: "sidebyside",
     name: "Yamaha Side-by-Side 700",
     type: "Off-road · Automatic",
     seats: 5,
-    drive: "4WD",
+    engine: "700cc",
+    /* No luggage field — a UTV doesn't really carry suitcases. */
     idealFor: "Couples or small groups who want to explore Arborea's trails, viewpoints, and jungle paths — without leaving the property.",
-    dailyRate: 200,
     badge: "Arborea exclusive",
     image: "/assets/transporte/sidebyside.avif",
+    dailyRate: 200,
   },
   {
     id: "rav4",
     name: "Toyota RAV4",
-    type: "SUV · Automatic",
+    type: "Standard 4x4 SUV · Automatic",
     seats: 5,
-    drive: "4x4",
+    luggage: 2,
+    engine: "2400cc",
     idealFor: "Families of 4–5 planning day trips to waterfalls, beaches, or nearby towns — comfortable, reliable, and easy to drive.",
-    dailyRate: 85,
     image: "/assets/transporte/rav4.avif",
   },
   {
     id: "jimny",
     name: "Suzuki Jimny",
-    type: "Compact 4x4 · Manual",
+    type: "Compact 4x4 All-Terrain · Manual",
     seats: 4,
-    drive: "Full-time 4WD",
+    luggage: 2,
+    engine: "1500cc",
     idealFor: "Couples or duos who enjoy a mix of on-property time and adventurous back-road driving. Agile in tight jungle tracks.",
-    dailyRate: 70,
     image: "/assets/transporte/jimny.avif",
   },
   {
-    id: "landcruiser",
-    name: "Toyota Land Cruiser",
-    type: "Full-size SUV · Automatic",
-    seats: 8,
-    drive: "4WD Low Range",
-    idealFor: "Large groups of up to 8 who need one vehicle for everything — national parks, multi-day road trips, or heavy off-road terrain.",
-    dailyRate: 150,
-    image: "/assets/transporte/lc.avif",
-  },
-  {
-    id: "prado",
-    name: "Toyota Prado",
-    type: "Mid-size SUV · Automatic",
+    id: "fortuner",
+    name: "Toyota Fortuner",
+    type: "Full-size 4x4 SUV · Automatic",
     seats: 7,
-    drive: "4x4",
-    idealFor: "Families with kids who want comfort and confidence on longer regional trips — spacious, capable, and stress-free.",
-    dailyRate: 120,
-    image: "/assets/transporte/prado.avif",
+    luggage: 3,
+    engine: "2800cc",
+    idealFor: "Larger groups mixing comfortable highway driving with national-park access and gravel back roads — true 7-seat capacity with cargo room.",
+    image: "/assets/transporte/fortuner.avif",
   },
   {
-    id: "tucson",
-    name: "Hyundai Tucson",
-    type: "Crossover · Automatic",
+    id: "hilux",
+    name: "Toyota Hilux",
+    type: "Fullsize Pickup 4x4 · Automatic",
     seats: 5,
-    drive: "AWD",
-    idealFor: "Couples or small groups doing town runs, restaurant visits, and casual coastal drives — practical and fuel-efficient.",
-    dailyRate: 75,
-    image: "/assets/transporte/tucson.avif",
+    luggage: 4,
+    engine: "2400cc",
+    idealFor: "Fishing, surf trips, or any plan involving gear, boards, or bulky luggage. Rugged and proven on the most demanding Osa routes.",
+    image: "/assets/transporte/hilux.avif",
+  },
+  {
+    id: "everest",
+    name: "Ford Everest",
+    type: "Premium 4x4 SUV · Automatic",
+    seats: 7,
+    luggage: 3,
+    engine: "2800cc",
+    idealFor: "Families needing three full rows plus confident off-road capability for Corcovado, Drake Bay, and beach approaches.",
+    image: "/assets/transporte/everest.avif",
+  },
+  {
+    id: "bronco",
+    name: "Ford Bronco",
+    type: "Sport All-Terrain 4x4 · Automatic",
+    seats: 5,
+    luggage: 2,
+    engine: "1500cc",
+    idealFor: "Adventure-forward couples or groups of four who want serious off-road capability with a distinctive look for the trip.",
+    image: "/assets/transporte/bronco.avif",
   },
 ];
 
 const initConfigs = Object.fromEntries(VEHICLES.map((v) => [v.id, { days: 1, date: "" }]));
 
-function VehicleCard({ vehicle, days, date, cartLine, onDaysChange, onDateChange, onCommit, onRemove }) {
+function VehicleCard({ vehicle, days, date, cartLine, onDaysChange, onDateChange, onCommit, onRemove, featured = false }) {
   const { t } = useI18n();
-  const total = days * vehicle.dailyRate;
+  const isPriced = typeof vehicle.dailyRate === "number" && vehicle.dailyRate > 0;
+  const total = isPriced ? days * vehicle.dailyRate : 0;
 
-  /* A committed line is "dirty" once the draft no longer matches it, which turns
-   * the CTA from a confirmation into an update. */
+  /* Days live in the cart line as the "N days" option string (not derived from
+   * price) — works for both priced and by-quote vehicles. Priced vehicles also
+   * re-check unitPrice so a day change on a priced vehicle still trips `dirty`. */
+  const committedDays = cartLine
+    ? Number(String(cartLine.options?.days ?? "").match(/^(\d+)/)?.[1]) || 1
+    : null;
+
   const dirty = cartLine
-    ? cartLine.unitPrice !== total || cartLine.date !== date
+    ? committedDays !== days
+        || cartLine.date !== date
+        || (isPriced && cartLine.unitPrice !== total)
     : true;
 
   return (
     <div
-      className={`flex flex-col rounded-2xl overflow-hidden transition-all duration-300 h-full bg-[#213B2F] ${
+      className={`rounded-2xl overflow-hidden transition-all duration-300 h-full bg-[#213B2F] ${
+        featured ? "flex flex-col lg:flex-row" : "flex flex-col"
+      } ${
         cartLine
           ? "ring-2 ring-[#D8DDB8]/50 shadow-lg"
           : "ring-1 ring-white/10 hover:ring-white/20 hover:shadow-md"
       }`}
     >
       {/* Photo */}
-      <div className="h-52 shrink-0 overflow-hidden bg-[#1a2e24] flex items-center justify-center relative">
+      <div
+        className={`shrink-0 overflow-hidden bg-[#1a2e24] flex items-center justify-center relative ${
+          featured ? "h-64 lg:h-auto lg:w-2/5" : "h-52"
+        }`}
+      >
         {vehicle.image ? (
           <img
             src={vehicle.image}
@@ -107,42 +146,64 @@ function VehicleCard({ vehicle, days, date, cartLine, onDaysChange, onDateChange
           <TbPhoto size={28} className="text-[#D8DDB8]/30" />
         )}
         {vehicle.badge && (
-          <span className="absolute top-3 left-3 bg-[#D8DDB8] text-[#213B2F] font-sans text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-widest shadow-sm">
+          <span className="absolute top-3 left-3 bg-[#C9974F] text-[#222E2C] font-sans text-[10px] font-bold px-2.5 py-1 rounded-full uppercase tracking-widest shadow-md">
             {vehicle.badge}
           </span>
         )}
       </div>
 
+      {/* Right side (when featured) wraps info + booking so the two halves are
+       * side-by-side on wide viewports. Otherwise behaves exactly like a regular
+       * stacked card. */}
+      <div className={featured ? "flex flex-col flex-1 lg:border-l lg:border-white/10" : "flex flex-col flex-1"}>
+
       {/* Info */}
-      <div className="px-5 pt-5 pb-4 flex flex-col gap-4 flex-1">
+      <div className={`flex flex-col gap-4 flex-1 ${featured ? "px-6 pt-6 pb-5" : "px-5 pt-5 pb-4"}`}>
 
         {/* Name + type */}
         <div className="flex flex-col gap-0.5">
-          <h3 className="font-sans font-semibold text-base text-white leading-snug">{vehicle.name}</h3>
-          <p className="font-sans text-xs text-[#D8DDB8]/60">{vehicle.type}</p>
+          <h3 className={`font-sans font-semibold text-white leading-snug ${featured ? "text-xl md:text-2xl" : "text-base"}`}>{vehicle.name}</h3>
+          <p className={`font-sans text-[#D8DDB8]/60 ${featured ? "text-sm" : "text-xs"}`}>{vehicle.type}</p>
         </div>
 
-        {/* Specs chips */}
+        {/* Specs chips — each metric has its own accent from the palette so the
+         * eye recognises the type at a glance: sage = who fits, sand = what
+         * fits, gold = how it performs. */}
         <div className="flex flex-wrap gap-1.5">
-          <span className="inline-flex items-center gap-1.5 bg-white/10 border border-white/10 rounded-full px-2.5 py-1">
-            <TbUsers size={12} className="text-[#D8DDB8]/70 shrink-0" />
-            <span className="font-sans text-xs font-medium text-[#D8DDB8]/85">{vehicle.seats} seats</span>
+          <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 bg-[#D8DDB8]/15 border border-[#D8DDB8]/30">
+            <TbUsers size={12} className="text-[#D8DDB8] shrink-0" />
+            <span className="font-sans text-xs font-semibold text-[#D8DDB8]">
+              {vehicle.seats} {vehicle.seats === 1 ? "seat" : "seats"}
+            </span>
           </span>
-          <span className="inline-flex items-center gap-1.5 bg-white/10 border border-white/10 rounded-full px-2.5 py-1">
-            <TbRoute size={12} className="text-[#D8DDB8]/70 shrink-0" />
-            <span className="font-sans text-xs font-medium text-[#D8DDB8]/85">{vehicle.drive}</span>
-          </span>
+          {typeof vehicle.luggage === "number" && (
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 bg-[#E0D4C4]/15 border border-[#E0D4C4]/30">
+              <TbBriefcase size={12} className="text-[#E0D4C4] shrink-0" />
+              <span className="font-sans text-xs font-semibold text-[#E0D4C4]">
+                {vehicle.luggage} {vehicle.luggage === 1 ? "bag" : "bags"}
+              </span>
+            </span>
+          )}
+          {vehicle.engine && (
+            <span className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 bg-[#C9974F]/15 border border-[#C9974F]/40">
+              <TbEngine size={12} className="text-[#C9974F] shrink-0" />
+              <span className="font-sans text-xs font-semibold text-[#C9974F]">
+                {vehicle.engine}
+              </span>
+            </span>
+          )}
         </div>
 
-        {/* Ideal for */}
-        <div className="bg-white/8 rounded-xl px-3.5 py-3 flex flex-col gap-1">
-          <p className="font-sans text-[10px] font-bold text-[#D8DDB8]/45 uppercase tracking-widest">Ideal for</p>
-          <p className="font-sans text-xs text-[#D8DDB8]/85 leading-relaxed">{vehicle.idealFor}</p>
+        {/* Ideal for — gold accent eyebrow + sand-tinted container to stand out
+         * as the editorial note within the forest-green card. */}
+        <div className="bg-[#C9974F]/10 border border-[#C9974F]/20 rounded-xl px-3.5 py-3 flex flex-col gap-1">
+          <p className="font-sans text-[10px] font-bold text-[#C9974F] uppercase tracking-widest">Ideal for</p>
+          <p className={`font-sans text-[#EDE5D8]/85 leading-relaxed ${featured ? "text-sm" : "text-xs"}`}>{vehicle.idealFor}</p>
         </div>
       </div>
 
       {/* Booking controls */}
-      <div className="px-5 pt-4 pb-5 flex flex-col gap-4 border-t border-white/10 bg-black/15">
+      <div className={`flex flex-col gap-4 border-t border-white/10 bg-black/15 ${featured ? "px-6 pt-5 pb-6" : "px-5 pt-4 pb-5"}`}>
 
         {/* Days + Date side by side */}
         <div className="flex gap-3">
@@ -157,14 +218,31 @@ function VehicleCard({ vehicle, days, date, cartLine, onDaysChange, onDateChange
           </div>
         </div>
 
-        {/* Price + CTA */}
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex flex-col gap-0">
-            <p className="font-sans text-[10px] text-[#D8DDB8]/50">{money(vehicle.dailyRate)}/day</p>
-            <p className="font-sans font-bold text-2xl leading-tight text-[#D8DDB8] tabular-nums">
-              {money(total)}
-            </p>
-          </div>
+        {/* Price / Quote + CTA.
+         *
+         * Priced vehicles: the total gets the gold accent since it's the single
+         * most scannable fact on the card. Daily rate sits above in muted bone.
+         *
+         * By-quote vehicles: sand-tinted pill (not sage) so they visually
+         * differentiate from the priced sidebyside at a glance. */}
+        <div className="flex items-end justify-between gap-3">
+          {isPriced ? (
+            <div className="flex flex-col gap-0 leading-tight">
+              <p className="font-sans text-[10px] text-[#D8DDB8]/55 uppercase tracking-widest">
+                {money(vehicle.dailyRate)} / day
+              </p>
+              <p className="font-sans font-bold text-2xl tabular-nums text-[#C9974F]">
+                {money(total)}
+              </p>
+            </div>
+          ) : (
+            <span className="inline-flex items-center gap-1.5 bg-[#E0D4C4]/15 border border-[#E0D4C4]/30 rounded-full px-3 py-1.5">
+              <TbMessageCircle size={13} className="text-[#E0D4C4] shrink-0" />
+              <span className="font-sans text-xs font-bold text-[#E0D4C4] uppercase tracking-wide">
+                By quote
+              </span>
+            </span>
+          )}
 
           <div className="flex items-center gap-1.5">
             {cartLine && (
@@ -182,23 +260,76 @@ function VehicleCard({ vehicle, days, date, cartLine, onDaysChange, onDateChange
               <button
                 type="button"
                 onClick={onCommit}
-                className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 font-sans text-sm font-semibold transition-all duration-200 whitespace-nowrap bg-[#D8DDB8] text-[#213B2F] hover:bg-[#c8cda8]"
+                className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 font-sans text-sm font-semibold transition-all duration-200 whitespace-nowrap bg-[#D8DDB8] text-[#213B2F] hover:bg-[#C9974F] hover:text-[#222E2C] shadow-sm"
               >
                 <TbCirclePlus size={15} />
-                {cartLine ? t("cart.update") : t("cart.addToCart")}
+                {cartLine
+                  ? t("cart.update")
+                  : isPriced ? t("cart.addToCart") : "Request quote"}
               </button>
             ) : (
-              <span className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 font-sans text-sm font-semibold whitespace-nowrap bg-white/12 text-[#D8DDB8]">
-                <TbCircleCheck size={15} />
+              <span className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 font-sans text-sm font-semibold whitespace-nowrap bg-[#D8DDB8]/15 ring-1 ring-[#D8DDB8]/35 text-[#D8DDB8]">
+                <TbCircleCheck size={15} className="text-[#C9974F]" />
                 {t("cart.inOrder")}
               </span>
             )}
           </div>
         </div>
       </div>
+
+      </div>
     </div>
   );
 }
+
+/* ── partnership banner ──────────────────────────────────────────── */
+
+const PARTNER_BRANDS = ["Alamo", "Enterprise", "National Rent a Car"];
+
+function PartnershipBanner() {
+  return (
+    <div
+      className="rounded-2xl overflow-hidden px-6 md:px-10 py-8 flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-10"
+      style={{ backgroundColor: "#8B5A3C" }}
+      data-aos="fade-up"
+    >
+      <div className="flex items-start gap-4 flex-1">
+        <span className="size-11 shrink-0 rounded-xl bg-[#C9974F]/25 border border-[#C9974F]/40 flex items-center justify-center">
+          <TbTag size={20} className="text-[#C9974F]" />
+        </span>
+        <div className="flex flex-col gap-2">
+          <p className="font-sans text-[10px] font-bold uppercase tracking-widest text-[#C9974F]">
+            Preferred partner rates
+          </p>
+          <h3
+            className="text-xl md:text-2xl text-[#EDE5D8] tracking-tight leading-snug"
+            style={{ fontFamily: "var(--font-alpina)" }}
+          >
+            Better rates than booking the rental brands directly
+          </h3>
+          <p className="font-sans text-sm text-[#D8DDB8]/75 leading-relaxed max-w-2xl">
+            We work with three of Costa Rica's largest rental brands — all under
+            the same parent company. Thanks to our commercial agreement with them,
+            we're able to offer our guests preferential rates that aren't
+            available when booking directly.
+          </p>
+        </div>
+      </div>
+      <div className="flex flex-wrap gap-2 shrink-0 lg:justify-end">
+        {PARTNER_BRANDS.map((brand) => (
+          <span
+            key={brand}
+            className="inline-flex items-center px-3.5 py-1.5 rounded-full bg-[#EDE5D8]/10 border border-[#C9974F]/35 font-sans text-xs font-semibold text-[#EDE5D8] whitespace-nowrap"
+          >
+            {brand}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ── section ────────────────────────────────────────────────────── */
 
 export default function MulaRentalSection() {
   const { getLine, setLine, removeLine, openCart, hydrated } = useCart();
@@ -207,11 +338,9 @@ export default function MulaRentalSection() {
   /*
    * Restore each card's day count and pickup date from the cart once hydration
    * finishes, so coming back to the home page doesn't show "1 day" for a vehicle
-   * already booked for five. Days are recovered as unitPrice / dailyRate, which is
-   * exact because that is how the line was priced.
-   *
-   * Depends only on `hydrated`: adding `getLine` would re-run this on every cart
-   * change and fight the guest's in-progress edits.
+   * already booked for five. Day count is parsed from `options.days` — works
+   * identically for priced and by-quote lines (we no longer back-derive from
+   * unitPrice / dailyRate, which would break for quote-only vehicles).
    */
   useEffect(() => {
     if (!hydrated) return;
@@ -221,7 +350,8 @@ export default function MulaRentalSection() {
       for (const vehicle of VEHICLES) {
         const line = getLine(lineIdOf("transport", vehicle.id));
         if (!line) continue;
-        const days = Math.max(1, Math.round(line.unitPrice / vehicle.dailyRate));
+        const match = String(line.options?.days ?? "").match(/^(\d+)/);
+        const days = Math.max(1, Number(match?.[1]) || 1);
         if (next[vehicle.id].days !== days || next[vehicle.id].date !== line.date) {
           next[vehicle.id] = { days, date: line.date };
           changed = true;
@@ -240,19 +370,24 @@ export default function MulaRentalSection() {
   /*
    * qty is the number of VEHICLES, not days — so the drawer's stepper reads as
    * "two of this vehicle" rather than silently changing the rental length. The
-   * day count is folded into unitPrice (days x dailyRate) and surfaced as an
-   * option label, which is why `options.days` is a string: describeLine() joins
-   * option values and hides the keys, so a bare number would render as "3".
+   * day count rides in `options.days` as a string ("3 days") because
+   * describeLine() joins option values and hides the keys; a bare number would
+   * render as "3" on its own in the cart caption.
+   *
+   * Priced vehicles (currently just the Side-by-Side) commit a real unitPrice.
+   * Everything else is by-quote (unitPrice 0) and the drawer surfaces "By quote"
+   * in place of a price.
    */
   const commit = (vehicle) => {
     const { days, date } = configs[vehicle.id];
+    const isPriced = typeof vehicle.dailyRate === "number" && vehicle.dailyRate > 0;
     setLine({
       lineId: lineIdOf("transport", vehicle.id),
       service: "transport",
       sku: vehicle.id,
       title: vehicle.name,
       qty: 1,
-      unitPrice: days * vehicle.dailyRate,
+      unitPrice: isPriced ? days * vehicle.dailyRate : 0,
       date,
       options: { days: `${days} ${days === 1 ? "day" : "days"}` },
     });
@@ -260,7 +395,7 @@ export default function MulaRentalSection() {
   };
 
   return (
-    <section id="transport" className="flex flex-col px-8 md:px-16 pb-24 gap-12">
+    <section id="transport" className="flex flex-col px-8 md:px-16 pb-24 gap-10 scroll-mt-24">
 
       {/* Header */}
       <div className="flex flex-col gap-3" data-aos="fade-up">
@@ -270,28 +405,43 @@ export default function MulaRentalSection() {
         >
           Transportation
         </h2>
-        <p className="font-sans text-base text-[#222E2C]/60 max-w-2xl leading-relaxed">
-          Explore the region on your own terms. Pick a vehicle, set how many days you need it, and we'll have it ready at the property on your preferred date.
-        </p>
       </div>
 
+      {/* Partnership banner */}
+      <PartnershipBanner />
+
       {/* Vehicle grid. No section summary or submit here by design — vehicles go
-          straight into the cart, and the drawer is the only place they're reviewed. */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {VEHICLES.map((vehicle) => (
-          <VehicleCard
-            key={vehicle.id}
-            vehicle={vehicle}
-            days={configs[vehicle.id].days}
-            date={configs[vehicle.id].date}
-            cartLine={getLine(lineIdOf("transport", vehicle.id))}
-            onDaysChange={(val) => updateDays(vehicle.id, val)}
-            onDateChange={(val) => updateDate(vehicle.id, val)}
-            onCommit={() => commit(vehicle)}
-            onRemove={() => removeLine(lineIdOf("transport", vehicle.id))}
-          />
-        ))}
-      </div>
+          straight into the cart, and the drawer is the only place they're reviewed.
+          Featured (Side-by-Side) gets its own full-width row with a horizontal
+          layout; the six fleet vehicles then tile 3 across below it. */}
+      {(() => {
+        const featuredVehicle = VEHICLES.find((v) => v.id === "sidebyside");
+        const restVehicles = VEHICLES.filter((v) => v.id !== "sidebyside");
+
+        const cardProps = (vehicle) => ({
+          vehicle,
+          days: configs[vehicle.id].days,
+          date: configs[vehicle.id].date,
+          cartLine: getLine(lineIdOf("transport", vehicle.id)),
+          onDaysChange: (val) => updateDays(vehicle.id, val),
+          onDateChange: (val) => updateDate(vehicle.id, val),
+          onCommit: () => commit(vehicle),
+          onRemove: () => removeLine(lineIdOf("transport", vehicle.id)),
+        });
+
+        return (
+          <div className="flex flex-col gap-4">
+            {featuredVehicle && (
+              <VehicleCard {...cardProps(featuredVehicle)} featured />
+            )}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {restVehicles.map((vehicle) => (
+                <VehicleCard key={vehicle.id} {...cardProps(vehicle)} />
+              ))}
+            </div>
+          </div>
+        );
+      })()}
 
     </section>
   );

@@ -56,36 +56,73 @@ export default function InHouseServicesSection() {
   const steps = t("inhouse.craftSteps");
 
   return (
-    <section id="experiences" className="flex flex-col px-8 md:px-16 pb-24 gap-16">
+    <section id="experiences" className="flex flex-col px-8 md:px-16 pb-24 gap-16 scroll-mt-24">
 
-      {/* Craft intro + steps */}
-      <div className="flex flex-col gap-10" data-aos="fade-up">
-        <div className="flex flex-col gap-4 max-w-2xl">
+      {/* Craft intro + steps.
+       *
+       * Hierarchy here is built with typographic scale — not with new container
+       * primitives. The entire site already uses flat cards, forest-green
+       * accents and tight eyebrows; the "how to book" pattern on the service
+       * pages (WellnessSpaPage, FishingToursPage, etc.) is the established
+       * vocabulary for a 4–5-step guide. We reuse it literally here so the
+       * home's onboarding reads as the SAME idea the guest will see again on
+       * every service page they visit.
+       *
+       * Levels of emphasis, loudest → softest:
+       *   1. Alpina h2 title
+       *   2. Larger body paragraph (text-lg on md)
+       *   3. Small uppercase eyebrow sitting above the title
+       *   4. Card titles (base, medium weight)
+       *   5. Step eyebrow inside each card (10px uppercase, with icon)
+       */}
+      {/* Centered hero-style onboarding block.
+       *
+       * The eyebrow "How it works" sits inside the same horizontal-rule
+       * framing that the fishing-tours closing quote already uses (see
+       * FishingToursPage: `<div className="w-10 h-px bg-[#213B2F]/25" />`)
+       * — that bar-TITLE-bar pattern is established brand vocabulary for
+       * chapter-marker labels, so we reuse it instead of inventing a pill.
+       *
+       * Each step card centers its own content so the whole block reads as a
+       * single symmetrical unit on desktop, and collapses naturally on mobile. */}
+      <div className="flex flex-col gap-12" data-aos="fade-up">
+        <div className="flex flex-col items-center text-center gap-5 max-w-3xl mx-auto">
+          <div className="flex items-center gap-4">
+            <span aria-hidden className="h-px w-10 bg-[#213B2F]/35" />
+            <p className="font-sans text-sm font-bold text-[#213B2F] uppercase tracking-widest">
+              {t("inhouse.craftEyebrow")}
+            </p>
+            <span aria-hidden className="h-px w-10 bg-[#213B2F]/35" />
+          </div>
           <h2
-            className="text-4xl md:text-5xl text-[#222E2C] tracking-tight leading-tight"
+            className="text-5xl md:text-6xl text-[#222E2C] tracking-tight leading-[1.05]"
             style={{ fontFamily: "var(--font-alpina)" }}
           >
             {t("inhouse.craftTitle")}
           </h2>
-          <p className="font-sans text-base text-[#222E2C]/55 leading-relaxed">
+          <p className="font-sans text-lg md:text-xl text-[#222E2C]/65 leading-relaxed">
             {t("inhouse.craftDescription")}
           </p>
         </div>
 
-        {/* Steps */}
         {Array.isArray(steps) && (
           <div className="flex flex-col sm:flex-row gap-3">
             {steps.map((step, i) => {
               const Icon = STEP_ICONS[i];
               return (
-                <div key={i} className="flex-1 flex flex-col gap-3 bg-[#222E2C]/4 rounded-2xl px-5 py-5">
-                  <div className="flex items-center gap-3">
-                    <div className="size-8 rounded-full bg-[#213B2F] flex items-center justify-center shrink-0">
-                      <Icon size={15} className="text-[#D8DDB8]" />
-                    </div>
-                    <span className="font-sans text-xs font-semibold text-[#222E2C]/40 uppercase tracking-widest">Step {i + 1}</span>
+                <div
+                  key={i}
+                  className="flex-1 flex flex-col items-center text-center gap-3 bg-white rounded-2xl px-5 py-7 border border-[#213B2F]/8"
+                >
+                  <div className="size-10 rounded-full bg-[#213B2F] flex items-center justify-center shrink-0">
+                    <Icon size={17} className="text-[#D8DDB8]" />
                   </div>
-                  <p className="font-sans text-base font-medium text-[#222E2C] leading-snug">{step}</p>
+                  <span className="font-sans text-xs font-semibold text-[#222E2C]/40 uppercase tracking-widest">
+                    Step {i + 1}
+                  </span>
+                  <p className="font-sans text-base font-medium text-[#222E2C] leading-snug">
+                    {step}
+                  </p>
                 </div>
               );
             })}

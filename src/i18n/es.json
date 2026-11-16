@@ -87,6 +87,7 @@
     "seeLess": "Ver menos",
     "contacts": [
       {
+        "type": "featured",
         "title": "Emergencia Inmediata (24/7 – Primera Llamada)",
         "subtitle": "En zonas remotas como Ojochal, los tiempos de respuesta pueden variar. De ser posible, diríjase a la clínica más cercana mientras espera asistencia.",
         "rows": [
@@ -105,6 +106,7 @@
         ]
       },
       {
+        "type": "medical",
         "title": "Dr. Solano (Médico de guardia)",
         "subtitle": null,
         "rows": [
@@ -115,6 +117,7 @@
         ]
       },
       {
+        "type": "medical",
         "title": "Erika Quirós – Médico Disponible",
         "subtitle": "Disponible para emergencias médicas",
         "rows": [
@@ -125,6 +128,7 @@
         ]
       },
       {
+        "type": "medical",
         "title": "Clínica Médica Local (Uvita)",
         "subtitle": "Atención urgente sin cita (horario diurno)",
         "rows": [
@@ -139,6 +143,7 @@
         ]
       },
       {
+        "type": "medical",
         "title": "Costa Rica Medical Response",
         "subtitle": null,
         "rows": [
@@ -149,6 +154,7 @@
         ]
       },
       {
+        "type": "medical",
         "title": "Lifeguard Air Ambulance",
         "subtitle": null,
         "rows": [
@@ -159,6 +165,8 @@
         ]
       },
       {
+        "type": "hospital-public",
+        "isNearest": true,
         "title": "Hospital Tomás Casas Casajús (Cortés)",
         "subtitle": "Hospital público con servicios de emergencia 24/7 — ~20 min",
         "rows": [
@@ -169,6 +177,7 @@
         ]
       },
       {
+        "type": "hospital-public",
         "title": "Hospital Max Terán Valls – Quepos",
         "subtitle": "Hospital público con servicios de emergencia 24/7 — ~45 min",
         "rows": [
@@ -179,6 +188,7 @@
         ]
       },
       {
+        "type": "hospital-private",
         "title": "Hospital Las Américas – San Isidro",
         "subtitle": "Hospital privado con atención más rápida — ~1–1.5 horas",
         "rows": [
@@ -189,6 +199,7 @@
         ]
       },
       {
+        "type": "hospital-private",
         "title": "Hospital CIMA – San José",
         "subtitle": "Hospital privado de nivel internacional — ~3.5 horas o traslado aéreo",
         "rows": [
@@ -199,6 +210,7 @@
         ]
       },
       {
+        "type": "service",
         "title": "Diego Alonso Pinto Ulate – Mecánico de Confianza",
         "subtitle": null,
         "rows": [
@@ -209,6 +221,7 @@
         ]
       },
       {
+        "type": "service",
         "title": "Policía Turística",
         "subtitle": null,
         "rows": [
@@ -219,6 +232,7 @@
         ]
       },
       {
+        "type": "service",
         "title": "OIJ (Policía Judicial)",
         "subtitle": null,
         "rows": [
@@ -229,6 +243,7 @@
         ]
       },
       {
+        "type": "embassy",
         "title": "Embajada de Canadá (San José)",
         "subtitle": null,
         "rows": [
@@ -239,6 +254,7 @@
         ]
       },
       {
+        "type": "embassy",
         "title": "Embajada de EE.UU. (San José)",
         "subtitle": "Servicios para ciudadanos americanos — línea de emergencia 24/7",
         "rows": [
@@ -249,6 +265,7 @@
         ]
       },
       {
+        "type": "embassy",
         "title": "Embajada de Italia (San José)",
         "subtitle": null,
         "rows": [
@@ -259,6 +276,7 @@
         ]
       },
       {
+        "type": "embassy",
         "title": "Embajada de Francia (San José)",
         "subtitle": null,
         "rows": [
@@ -269,6 +287,7 @@
         ]
       },
       {
+        "type": "embassy",
         "title": "Embajada de España (San José)",
         "subtitle": null,
         "rows": [
@@ -278,7 +297,15 @@
           }
         ]
       }
-    ]
+    ],
+    "hospitalsHeading": "Hospitales",
+    "medicalHeading": "Ayuda Médica",
+    "otherHeading": "Más Contactos",
+    "hospitalAdvisory": "En una emergencia médica real, los hospitales públicos son generalmente la mejor opción — están equipados para atención crítica y traumatológica, operan 24/7, y suelen estar más cerca que las opciones privadas.",
+    "nearestBadge": "Hospital más cercano",
+    "publicBadge": "Público",
+    "privateBadge": "Privado",
+    "callAction": "Llamar"
   },
   "mulaRental": {
     "pill": "Aventura adicional",
@@ -287,7 +314,12 @@
     "vehicle": "Yamaha Side-by-Side 700",
     "priceTag": "$200 / día",
     "terms": "Se renta por día o por semana completa.",
-    "specs": ["Capacidad para 5 personas", "Transmisión automática", "Tanque lleno incluido", "Disponible por día o por semana"],
+    "specs": [
+      "Capacidad para 5 personas",
+      "Transmisión automática",
+      "Tanque lleno incluido",
+      "Disponible por día o por semana"
+    ],
     "daysLabel": "Número de días",
     "totalLabel": "Total",
     "dayLabel": "día",
@@ -298,6 +330,7 @@
     "pill": "Experiencias Signature",
     "title": "Experiencias Signature",
     "craftTitle": "Crea tu experiencia personalizada",
+    "craftEyebrow": "Cómo funciona",
     "craftDescription": "Todo lo que ves a continuación puede combinarse en una sola solicitud. Explora las experiencias, personaliza cada una según tu grupo y preferencias, y envíalo todo de una vez — confirmamos disponibilidad y coordinamos los detalles antes de tu llegada.",
     "craftSteps": [
       "Selecciona la experiencia",
@@ -409,7 +442,14 @@
       "heading": "Restricciones Alimentarias y Preferencias",
       "description": "Cuéntale al chef sobre alergias, restricciones o cualquier cosa que prefieras evitar.",
       "restrictionsLabel": "Restricciones — indica cuántos huéspedes",
-      "options": ["Vegetariano", "Vegano", "Sin Gluten", "Sin Lácteos", "Alergia a Nueces", "Alergia a Mariscos"],
+      "options": [
+        "Vegetariano",
+        "Vegano",
+        "Sin Gluten",
+        "Sin Lácteos",
+        "Alergia a Nueces",
+        "Alergia a Mariscos"
+      ],
       "otherLabel": "Otra restricción",
       "otherPlaceholder": "ej. bajo en FODMAP, bajo en sodio, kosher...",
       "allergiesLabel": "Alergias — sé específico por favor",
@@ -1079,7 +1119,7 @@
         {
           "title": "Vegetales",
           "items": [
-            "Yuca",
+            "Yuca (cassava)",
             "Chayote",
             "Camote",
             "Ayote pipián",
@@ -1087,7 +1127,9 @@
             "Plátanos maduros",
             "Elote",
             "Tomates",
-            "Chiltomas"
+            "Chiltomas",
+            "Ajo",
+            "Cebollas"
           ]
         },
         {
@@ -1095,12 +1137,16 @@
           "items": [
             "Aguacate",
             "Bananos",
-            "Papayas",
+            "Papaya",
             "Maracuyá",
             "Guayabas",
-            "Cas",
+            "Cas (endémico de Costa Rica, perfecto para jugo)",
             "Piña",
-            "Mamones chinos"
+            "Mamones chinos",
+            "Sandía",
+            "Fresas",
+            "Ciruelas",
+            "Mango"
           ]
         },
         {
@@ -1210,20 +1256,50 @@
         {
           "label": "3 Días",
           "days": 3,
-          "prices": ["$299", "$533", "$728", "$871"],
-          "priceValues": [299, 533, 728, 871]
+          "prices": [
+            "$299",
+            "$533",
+            "$728",
+            "$871"
+          ],
+          "priceValues": [
+            299,
+            533,
+            728,
+            871
+          ]
         },
         {
           "label": "5 Días",
           "days": 5,
-          "prices": ["$494", "$884", "$1,209", "$1,456"],
-          "priceValues": [494, 884, 1209, 1456]
+          "prices": [
+            "$494",
+            "$884",
+            "$1,209",
+            "$1,456"
+          ],
+          "priceValues": [
+            494,
+            884,
+            1209,
+            1456
+          ]
         },
         {
           "label": "8 Días",
           "days": 8,
-          "prices": ["$793", "$1,417", "$1,937", "$2,327"],
-          "priceValues": [793, 1417, 1937, 2327]
+          "prices": [
+            "$793",
+            "$1,417",
+            "$1,937",
+            "$2,327"
+          ],
+          "priceValues": [
+            793,
+            1417,
+            1937,
+            2327
+          ]
         }
       ]
     },
@@ -1265,7 +1341,13 @@
       "dietary": {
         "heading": "Restricciones Dietéticas y Alergias",
         "question": "¿Alguien en tu grupo tiene restricciones alimenticias o alergias?",
-        "options": ["Vegetariano", "Vegano", "Sin Gluten", "Sin Lácteos", "Alergia a Nueces"],
+        "options": [
+          "Vegetariano",
+          "Vegano",
+          "Sin Gluten",
+          "Sin Lácteos",
+          "Alergia a Nueces"
+        ],
         "allergiesLabel": "Alergias o intolerancias específicas",
         "allergiesPlaceholder": "p. ej. nueces, mariscos, lactosa...",
         "preferencesLabel": "Otras preferencias alimenticias",
@@ -1274,7 +1356,13 @@
       "cooking": {
         "heading": "Planes de Cocina",
         "question": "¿Cuánto planeas cocinar durante tu estadía?",
-        "options": ["Solo desayuno", "Desayuno y Almuerzo", "Desayuno y Cena", "La mayoría de las comidas", "No planeamos cocinar"]
+        "options": [
+          "Solo desayuno",
+          "Desayuno y Almuerzo",
+          "Desayuno y Cena",
+          "La mayoría de las comidas",
+          "No planeamos cocinar"
+        ]
       },
       "groceries": {
         "heading": "¿Algo más?",
@@ -1284,7 +1372,21 @@
       "beverages": {
         "heading": "Bebidas",
         "question": "¿Qué bebidas te gustaría que surtamos?",
-        "options": ["Agua Embotellada", "Agua con Gas", "Agua de Coco", "Jugo", "Leche", "Leche de Almendras", "Leche de Avena", "Refrescos", "Café", "Té", "Cerveza", "Vino", "Licores"],
+        "options": [
+          "Agua Embotellada",
+          "Agua con Gas",
+          "Agua de Coco",
+          "Jugo",
+          "Leche",
+          "Leche de Almendras",
+          "Leche de Avena",
+          "Refrescos",
+          "Café",
+          "Té",
+          "Cerveza",
+          "Vino",
+          "Licores"
+        ],
         "other": "Otro",
         "otherPlaceholder": "Cuéntanos más..."
       },
@@ -1298,24 +1400,55 @@
       "breakfastItems": {
         "heading": "Esenciales de Desayuno",
         "question": "¿Te gustaría incluir productos de desayuno?",
-        "options": ["Huevos", "Pan", "Mantequilla", "Yogur", "Granola", "Cereal", "Mermelada", "Miel"]
+        "options": [
+          "Huevos",
+          "Pan",
+          "Mantequilla",
+          "Yogur",
+          "Granola",
+          "Cereal",
+          "Mermelada",
+          "Miel"
+        ]
       },
       "pantryItems": {
         "heading": "Esenciales de Despensa",
         "question": "¿Te gustaría incluir ingredientes básicos de cocina?",
-        "options": ["Arroz", "Pasta", "Aceite de Oliva", "Sal", "Pimienta", "Azúcar", "Harina", "Aceite de Cocina", "Especias Básicas"]
+        "options": [
+          "Arroz",
+          "Pasta",
+          "Aceite de Oliva",
+          "Sal",
+          "Pimienta",
+          "Azúcar",
+          "Harina",
+          "Aceite de Cocina",
+          "Especias Básicas"
+        ]
       },
       "proteins": {
         "heading": "Proteínas",
         "question": "¿Qué proteínas te gustaría incluir?",
-        "options": ["Pollo", "Res", "Cerdo", "Pescado", "Camarones", "Tocino", "Embutidos", "Queso"],
+        "options": [
+          "Pollo",
+          "Res",
+          "Cerdo",
+          "Pescado",
+          "Camarones",
+          "Tocino",
+          "Embutidos",
+          "Queso"
+        ],
         "other": "Otro",
         "otherPlaceholder": "Cuéntanos más..."
       },
       "snacks": {
         "heading": "Snacks",
         "question": "¿Te gustaría incluir snacks para:",
-        "forOptions": ["Adultos", "Niños"],
+        "forOptions": [
+          "Adultos",
+          "Niños"
+        ],
         "preferredLabel": "Snacks preferidos",
         "placeholder": "ej. papas, galletas, snacks de fruta..."
       },
@@ -1778,6 +1911,9 @@
   "nav": {
     "open": "Abrir menú",
     "close": "Cerrar menú",
+    "experiences": "Experiencias",
+    "experiencesHeading": "Experiencias Signature",
+    "experiencesSubheading": "Servicios curados en la casa",
     "links": {
       "houses": "Casas",
       "tours": "Tours y Actividades",
@@ -2139,81 +2275,288 @@
   },
   "fishingTours": {
     "pill": "Arborea Experiences",
-    "title": "Tours de Pesca y Experiencias Marinas",
-    "subtitle": "Tours mar afuera, costeros, de río y combinados a bordo del bote propio de Arborea",
+    "title": "Experiencias de Pesca",
+    "subtitle": "Expediciones offshore, pesca costera y de río, y días en el mar para toda la familia — diseñadas según el tipo de aventura que buscas.",
     "whatsapp": "Reservar por WhatsApp",
     "story": {
       "heading": "Al mar con Arborea",
-      "body": "Desde salidas mar afuera en busca de Atún y Marlin hasta tranquilas mañanas de río tras Róbalo y Pargo de Manglar, cada tour lo opera directamente Arborea Experiences — nuestro bote, nuestro capitán, nuestras rutas.\n\nElige el tour que se ajuste a tu día, desde una aventura completa mar afuera hasta un combo relajado de avistamiento de ballenas, pesca y playa. Los precios a continuación son estimados; tu capitán confirmará la tarifa final según las condiciones y el tamaño del grupo."
+      "body": "La costa del Pacífico sur de Costa Rica ofrece una variedad extraordinaria de ambientes de pesca, desde el mar abierto y aguas offshore hasta playas escondidas, manglares y ríos sinuosos.\n\nEn Arborea Experiences, curamos cada día de pesca según el tipo de aventura que buscas — ya sea perseguir peces de gran porte mar afuera, explorar las aguas alrededor de Isla del Caño, combinar pesca con avistamiento de ballenas, o disfrutar de una mañana tranquila rodeado de manglares y vida silvestre.\n\nCada experiencia está sujeta a las condiciones del mar, el clima, la temporada y factores locales, y las especies específicas no pueden garantizarse."
     },
-    "packages": {
-      "subheading": "Elige tu tour",
-      "heading": "Paquetes y Experiencias de Pesca",
-      "description": "Selecciona el tour que deseas reservar. Cada paquete incluye capitán y tripulación — revisa las condiciones completas más abajo.",
-      "durationNote": "Los tours de medio día tienen un costo aproximado de $650 a $700, en comparación con $1,200 del día completo offshore. Los tours más cortos no incluyen almuerzo completo; únicamente se brindan bebidas y frutas. La duración mostrada es nuestro estimado por tour y puede ser ajustada por la tripulación.",
+    "booking": {
+      "heading": "Cómo reservar tu experiencia",
+      "description": "Explora, elige el tamaño del grupo y envía — confirmaremos todo contigo antes de tu estadía.",
+      "steps": [
+        {
+          "step": "Elige tu experiencia",
+          "body": "Explora las expediciones offshore, la pesca costera y de río, o las aventuras oceánicas en familia."
+        },
+        {
+          "step": "Elige el tamaño del grupo",
+          "body": "La tarifa por persona cambia según el número de invitados — elige el nivel que mejor se ajuste."
+        },
+        {
+          "step": "Agrega a tu solicitud",
+          "body": "Selecciona tantas experiencias como desees — todas aparecerán en el resumen de tu pedido."
+        },
+        {
+          "step": "Revisa y envía",
+          "body": "Baja al resumen, deja cualquier nota y envía — no se cobra nada aquí."
+        }
+      ]
+    },
+    "anglers": {
+      "subheading": "Expediciones para pescadores",
+      "heading": "Para los apasionados de la pesca",
+      "description": "Salidas diseñadas para pescadores de todo nivel — desde pesca deportiva offshore hasta mañanas tranquilas de río.",
+      "guestsLabel": "personas",
+      "perPersonLabel": "por persona",
+      "totalLabel": "Total",
+      "speciesLabel": "Especies objetivo",
+      "includedLabel": "Incluye",
+      "durationLabel": "Duración",
+      "departureLabel": "Salida",
+      "capacityLabel": "Capacidad",
+      "pickGroupLabel": "Tamaño del grupo",
+      "selectTourLabel": "Seleccionar tour",
+      "selectedLabel": "Seleccionado",
+      "fromLabel": "desde",
       "items": [
         {
-          "name": "Pesca Mar Afuera (Offshore)",
-          "species": "Atún, Marlin, Pez Vela, Dorado",
-          "priceLabel": "$1,200 – $1,300",
-          "priceValue": 1200,
-          "duration": "Día completo",
-          "description": "Se realiza en mar abierto. La tarifa más habitual que están cobrando es de $1,200."
+          "name": "Expedición Élite de Pesca Deportiva Offshore (Día Completo)",
+          "tagline": "Expedición offshore premier, estrictamente limitada a 4–5 pescadores",
+          "description": "Adéntrate en el Pacífico abierto para una aventura premier de pesca deportiva de día completo en una de las aguas offshore más productivas de Costa Rica. Diseñada específicamente para pescadores exigentes y expertos en pesca deportiva, esta expedición ofrece la emoción máxima de perseguir gigantes pelágicos rodeado del vasto azul profundo.\n\nNavegarás a bordo de nuestra embarcación de lujo Arborea. Si bien el bote está diseñado para acomodar cómodamente hasta ocho pasajeros en crucero estándar, esta expedición en particular está estrictamente limitada a un máximo de 4 pescadores — limitamos deliberadamente la capacidad para garantizar espacio total en cubierta, maniobrabilidad plena durante los piques intensos y una experiencia VIP altamente personalizada por parte de nuestra tripulación experta.",
+          "species": "Atún Aleta Amarilla · Marlin · Pez Vela del Pacífico · Mahi Mahi (Dorado)",
+          "included": "Hidratación y bebidas, comida a medida, fruta y carnada.",
+          "duration": "Día Completo · 7:00 am – 4:30 pm",
+          "departure": "Pueblo de Sierpe",
+          "tiers": [
+            {
+              "guests": 4,
+              "perPerson": 325,
+              "total": 1300
+            },
+            {
+              "guests": 5,
+              "perPerson": 260,
+              "total": 1300
+            }
+          ]
         },
         {
-          "name": "Pesca Isla del Caño",
-          "species": "Pargo, Atún, Guajo, Macarela, Pez Gallo",
-          "priceLabel": "$900 – $1,000",
-          "priceValue": 900,
-          "duration": "Día completo",
-          "description": "Se pesca a 3 km de la orilla de la isla (fuera de los límites del parque nacional). Tarifa habitual de $950."
+          "name": "Pesca Offshore Isla del Caño",
+          "tagline": "Día completo de pesca en las aguas de Isla del Caño",
+          "description": "Explora las aguas que rodean la Isla del Caño en una aventura de pesca de día completo que combina paisajes oceánicos espectaculares con la emoción de la pesca costera y offshore.\n\nUbicadas a aproximadamente 3 km de la isla y fuera de los límites del parque nacional, estas aguas ofrecen oportunidades para perseguir una variedad de especies del Pacífico mientras disfrutas de uno de los paisajes marinos más notables de Costa Rica.",
+          "species": "Pargo · Atún · Wahoo · Macarela · Pez Gallo",
+          "included": "Hidratación y bebidas, comida a medida, fruta y carnada.",
+          "duration": "Día Completo · 7:00 am – 3:00 pm",
+          "departure": "Pueblo de Sierpe",
+          "tiers": [
+            {
+              "guests": 4,
+              "perPerson": 250,
+              "total": 1000
+            },
+            {
+              "guests": 5,
+              "perPerson": 200,
+              "total": 1000
+            }
+          ]
         },
         {
-          "name": "Combinado: Ballenas, Pesca y Playa",
-          "species": "Variado",
-          "priceLabel": "$700 – $800",
-          "priceValue": 700,
-          "duration": "Medio día",
-          "description": "Incluye avistamiento de ballenas, pesca breve y almuerzo con tarde libre en la playa San Josecito."
+          "name": "Pesca Costera de Medio Día — Aventura en la Costa",
+          "tagline": "Mañana llena de acción en la desembocadura del río",
+          "description": "Vive la emoción del pique matutino en esta aventura de medio día llena de acción. De 7:00 AM a 12:00 PM, este tour se mantiene cerca de la deslumbrante costa para explorar las aguas ricas en nutrientes justo en la desembocadura del río.\n\nEs una alternativa dinámica a la pesca de altura, apuntando al punto exacto donde las corrientes del océano se encuentran con el estuario. Esta zona de transición concentra naturalmente peces carnada y atrae una enorme variedad de especies de fuerte pelea, con una mañana de acción constante, hermosas vistas costeras y un regreso al muelle justo a tiempo para el almuerzo.",
+          "species": "Pez Gallo · Macarela · Barracuda · Pargo · Jurel · Corvina · Róbalo",
+          "included": "Hidratación y bebidas, fruta y carnada.",
+          "duration": "Medio Día · 7:00 am – 12:00 pm",
+          "departure": "Pueblo de Sierpe",
+          "tiers": [
+            {
+              "guests": 4,
+              "perPerson": 175,
+              "total": 700
+            },
+            {
+              "guests": 5,
+              "perPerson": 140,
+              "total": 700
+            }
+          ]
         },
         {
-          "name": "Pesca Costera (Inshore)",
-          "species": "Pez Gallo, Macarela, Barracuda, Pargo, Jurel, Corvina, Róbalo",
-          "priceLabel": "$600 – $700",
-          "priceValue": 600,
-          "duration": "Medio día",
-          "description": "Se realiza cerca de la costa, justo después de salir de la desembocadura."
+          "name": "Pesca de Medio Día en el Río Sierpe",
+          "tagline": "Una mañana tranquila en el corazón de los humedales Térraba-Sierpe",
+          "description": "Navega los serpenteantes cursos del Río Sierpe, hogar de uno de los ecosistemas de manglar más intactos de Centroamérica.\n\nMás allá de la emoción de la pesca, el tranquilo recorrido ofrece un safari de vida silvestre incomparable — mantén los ojos atentos a los monos aulladores entre el dosel, los vibrantes lapas rojas sobrevolando y los cocodrilos descansando en las orillas fangosas. Ya seas un pescador experimentado buscando su próxima gran pelea o un principiante en busca de un día tranquilo en el agua, nuestros guías locales expertos navegarán el complejo laberinto de los humedales Térraba-Sierpe para ponerte exactamente donde los peces están picando.",
+          "species": "Pargo de Manglar · Corvina · Róbalo",
+          "included": "Hidratación y bebidas, fruta y carnada.",
+          "duration": "Medio Día · 7:00 am – 12:00 pm",
+          "departure": "Pueblo de Sierpe",
+          "tiers": [
+            {
+              "guests": 4,
+              "perPerson": 150,
+              "total": 600
+            },
+            {
+              "guests": 5,
+              "perPerson": 120,
+              "total": 600
+            }
+          ]
+        }
+      ]
+    },
+    "family": {
+      "subheading": "Para toda la familia",
+      "heading": "Experiencias oceánicas para todos",
+      "description": "Días relajados en el mar para toda la familia — avistamiento de ballenas, delfines salvajes, manglares y pesca suave para todas las edades.",
+      "items": [
+        {
+          "name": "Avistamiento Privado de Ballenas, Pesca Casual y Playa San Josecito",
+          "tagline": "Avistamiento privado de ballenas, pesca casual y almuerzo en una playa escondida",
+          "description": "Escapa de la multitud en un viaje oceánico privado de día completo para hasta ocho invitados, explorando las aguas prístinas y poco transitadas del Pacífico sur. Tu aventura comienza con una experiencia exclusiva de avistamiento de ballenas muy al sur de las rutas turísticas habituales, ofreciéndote un asiento privilegiado frente a la increíble vida marina de Costa Rica.\n\nEntre avistamientos, disfrutarás de una sesión de pesca casual y relajada — perfecta para principiantes y aficionados que solo quieren divertirse echando la línea al agua. El día culmina en las impresionantes orillas de Playa San Josecito, una cala escondida intacta accesible únicamente por bote desde Sierpe.\n\nProtegida naturalmente del oleaje fuerte, sus aguas excepcionalmente calmadas y cálidas crean un santuario seguro ideal para niños, adultos mayores y familias. Aquí se te servirá un delicioso almuerzo a orillas del mar con toda la tarde libre para flotar, nadar y disfrutar de la pura tranquilidad tropical de la costa.",
+          "species": "Macarela · Pez Gallo",
+          "included": "Hidratación y bebidas, comida a medida, fruta y carnada.",
+          "duration": "Día Completo · 7:00 am – 3:30 pm",
+          "departure": "Pueblo de Sierpe",
+          "capacityNote": "Capacidad máxima: 8 personas.",
+          "tiers": [
+            {
+              "guests": 4,
+              "perPerson": 225,
+              "total": 900
+            },
+            {
+              "guests": 5,
+              "perPerson": 180,
+              "total": 900
+            },
+            {
+              "guests": 6,
+              "perPerson": 150,
+              "total": 900
+            },
+            {
+              "guests": 7,
+              "perPerson": 128.5,
+              "total": 900
+            },
+            {
+              "guests": 8,
+              "perPerson": 112.5,
+              "total": 900
+            }
+          ]
         },
         {
-          "name": "Pesca en el Río",
-          "species": "Pargo de Manglar, Corvina, Róbalo",
-          "priceLabel": "$500",
-          "priceValue": 500,
-          "duration": "Medio día",
-          "description": "Modalidad todo incluido. Se realiza en las cercanías y canales del río."
+          "name": "Expedición de Delfines Salvajes",
+          "tagline": "Un viaje extraordinario al mundo de los delfines salvajes",
+          "description": "Embárcate en una inolvidable expedición oceánica en busca de miles de delfines salvajes en su hábitat natural. Esta experiencia excepcional de vida marina ofrece la oportunidad de encontrar manadas enormes — estimadas entre 4,000 y 5,000 delfines — y presenciar su fascinante comportamiento en mar abierto.\n\nUsando una técnica especializada de 'drop-and-retrieve' (dejar y recoger), tu capitán experimentado posiciona cuidadosamente el bote adelante del grupo en movimiento, creando oportunidades para que los invitados entren al agua con máscaras y aletas. A medida que los delfines pasan por el área, el bote recoge al grupo y lo reposiciona para nuevos encuentros.\n\nNaturalmente curiosos y notablemente sociales, los delfines pueden regresar hacia los nadadores, acercarse al grupo y a veces venir sorprendentemente cerca. La aventura también puede revelar un espectáculo extraordinario de vida marina, incluyendo atún, pez vela y marlin alimentándose de cardúmenes de sardinas.\n\nMás que una excursión de snorkel, esta es una expedición inmersiva de vida silvestre diseñada para entusiastas del océano que buscan una conexión rara y significativa con el mundo natural.",
+          "species": "Delfines · Atún · Pez Vela · Marlin · Cardúmenes de sardina",
+          "included": "Hidratación y bebidas, equipo de snorkel, guía experimentado, comida a medida y fruta.",
+          "duration": "Día Completo",
+          "departure": "Pueblo de Sierpe",
+          "wildlifeNote": "Esta es una expedición de vida silvestre marina salvaje y todos los encuentros ocurren en el ambiente natural de los animales. Los avistamientos de delfines, las interacciones cercanas y las oportunidades de nadar junto a ellos no pueden garantizarse — el comportamiento de la fauna y las condiciones oceánicas son naturalmente impredecibles.",
+          "tiers": [
+            {
+              "guests": 4,
+              "perPerson": 300,
+              "total": 1200
+            },
+            {
+              "guests": 5,
+              "perPerson": 240,
+              "total": 1200
+            },
+            {
+              "guests": 6,
+              "perPerson": 200,
+              "total": 1200
+            },
+            {
+              "guests": 7,
+              "perPerson": 171.43,
+              "total": 1200
+            }
+          ]
         },
         {
-          "name": "Manglar, Avistamiento y Playa",
-          "species": "Aves y fauna de manglar",
-          "priceLabel": "Variable",
-          "priceValue": 0,
-          "duration": "Día completo",
-          "description": "Salida temprano en la mañana para ver aves, con regreso por la tarde después de ir a la playa."
+          "name": "Experiencia de Manglar y Vida Silvestre del Río Sierpe",
+          "tagline": "Un recorrido tranquilo de 3 horas por los humedales Térraba-Sierpe",
+          "description": "Descubre el corazón salvaje del Pacífico sur de Costa Rica. Explora la biodiversidad extraordinaria del Río Sierpe, hogar de uno de los ecosistemas de manglar más grandes e importantes de Centroamérica. Serpenteando por los humedales Térraba-Sierpe, estas aguas tranquilas crean un santuario natural donde el bosque lluvioso, el río y el océano se encuentran.\n\nDurante esta expedición guiada de tres horas en bote, navegarás lentamente por canales de manglar entre raíces imponentes y exuberante vegetación tropical. Con la ayuda de un guía local experimentado, explorarás hábitats conocidos y estarás atento a criaturas fascinantes — cocodrilos americanos y caimanes en las orillas, monos aulladores, capuchinos de cara blanca y monos araña en las copas, lapas rojas, garzas, ibis y martín pescador, perezosos descansando entre las ramas del manglar e iguanas camufladas entre las vías de agua.\n\nDurante el viaje, tu guía compartirá datos interesantes sobre el ecosistema del manglar, su asombrosa biodiversidad y su papel vital en la protección de la costa y en el sustento de la vida marina. Ideal para amantes de la naturaleza, fotógrafos de vida silvestre, familias y exploradores curiosos.",
+          "species": "Cocodrilos · Monos aulladores, capuchinos y araña · Lapas rojas · Garzas · Perezosos · Iguanas",
+          "included": "Hidratación y bebidas, guía local experimentado y navegación por el río.",
+          "duration": "Aprox. 3 horas · 7:00 am, 11:00 am o 3:00 pm",
+          "departure": "Pueblo de Sierpe",
+          "wildlifeNote": "Los avistamientos de vida silvestre no están garantizados — los animales se mueven libremente en su hábitat natural. Las salidas de primera hora de la mañana o al final de la tarde ofrecen la mejor actividad de fauna.",
+          "tiers": [
+            {
+              "guests": 2,
+              "perPerson": 150,
+              "total": 300
+            },
+            {
+              "guests": 3,
+              "perPerson": 150,
+              "total": 450
+            },
+            {
+              "guests": 4,
+              "perPerson": 150,
+              "total": 600
+            },
+            {
+              "guests": 5,
+              "perPerson": 150,
+              "total": 750
+            },
+            {
+              "guests": 6,
+              "perPerson": 125,
+              "total": 750
+            },
+            {
+              "guests": 7,
+              "perPerson": 125,
+              "total": 875
+            },
+            {
+              "guests": 8,
+              "perPerson": 125,
+              "total": 1000
+            }
+          ]
         }
       ]
     },
     "conditions": {
       "heading": "Bueno Saber",
       "items": [
-        "Tours de medio día: aproximadamente $650–$700, frente a $1,200 del día completo offshore.",
-        "Alimentación en medio día: solo bebidas y frutas — no incluye almuerzo completo en los tours más cortos.",
-        "Frutas a bordo: solo se ofrece piña y sandía. Se evita el banano y la papaya, ya que se dañan rápidamente y dejan mal olor a bordo.",
-        "Equipo de snorkel: no se ofrece en el tour de la Isla del Caño — requiere reservas especiales, pagos al parque nacional y equipo certificado del cual el bote no dispone actualmente."
+        "Cada experiencia está sujeta a las condiciones del mar, el clima, la temporada y factores locales — las especies específicas y la fauna no pueden garantizarse.",
+        "Todas las salidas son desde el pueblo de Sierpe salvo que se coordine de otra forma.",
+        "Los tours de medio día incluyen hidratación, fruta y carnada; los de día completo incluyen una comida a medida.",
+        "Frutas a bordo: solo piña y sandía. Se evita el banano y la papaya, ya que se dañan rápidamente y dejan mal olor a bordo.",
+        "El equipo de snorkel no se ofrece en los tours de pesca de Isla del Caño — la isla requiere permisos especiales del parque y equipo certificado que el bote no lleva actualmente."
       ]
     },
+    "summary": {
+      "eyebrow": "Resumen del pedido",
+      "heading": "Revisa tu selección",
+      "description": "Revisa las experiencias elegidas y agrega notas para el capitán, luego añade todo a tu pedido. Llenarás tus datos en el checkout.",
+      "yourSelection": "Tu selección",
+      "emptyState": "Aún no has seleccionado experiencias — explora las secciones de arriba.",
+      "totalLabel": "Total",
+      "notesLabel": "Notas para el capitán",
+      "notesPlaceholder": "Nivel del grupo, movilidad, especies preferidas, pedidos de salida — cualquier cosa que la tripulación deba saber con antelación…"
+    },
     "ctaHeading": "¿Listo para salir al mar?",
-    "ctaSubheading": "Escríbenos por WhatsApp y te ayudamos a elegir el tour ideal.",
-    "note": "Los precios son estimados por bote/grupo y pueden variar según condiciones, tamaño del grupo y temporada. Tu capitán confirmará el precio final antes de zarpar."
+    "ctaSubheading": "Escríbenos por WhatsApp y te ayudamos a elegir la experiencia ideal.",
+    "note": "Los precios indicados son por grupo según la cantidad de personas seleccionada. Tu capitán confirmará el precio final según condiciones, tamaño del grupo y temporada antes de zarpar.",
+    "closingQuote": {
+      "body": "El mar, una vez que lanza su hechizo, te retiene para siempre en su red de asombro.",
+      "attribution": "— Jacques-Yves Cousteau"
+    }
   },
   "services": {
     "privateChef": {
@@ -2260,6 +2603,7 @@
       "preferencesHeading": "Tus preferencias"
     },
     "addToCart": "Agregar al carrito",
+    "addToOrder": "Agregar al pedido actual",
     "update": "Actualizar pedido",
     "inOrder": "En tu pedido",
     "days": "Días",
@@ -2285,6 +2629,10 @@
     "checkout": "Continuar al checkout",
     "clear": "Vaciar pedido",
     "clearConfirm": "¿Quitar todo de tu pedido?",
+    "clearConfirmTitle": "¿Vaciar tu pedido?",
+    "clearConfirmBody": "Se eliminarán todas las experiencias, servicios y vehículos que agregaste. Esta acción no se puede deshacer.",
+    "clearConfirmAction": "Sí, vaciar pedido",
+    "clearCancel": "Mantenerlo",
     "viewOrder": "Ver pedido"
   },
   "checkout": {

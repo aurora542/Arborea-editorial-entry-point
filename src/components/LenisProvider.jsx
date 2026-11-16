@@ -12,6 +12,11 @@ export default function LenisProvider() {
     const lenis = new Lenis({
       duration: 1.2,
       easing: (t) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
+      /* Let Lenis intercept same-page hash links (nav anchors like /#tours)
+       * and perform a smooth scroll instead of the browser's instant jump.
+       * The negative offset lands the section below the fixed navbar instead
+       * of hidden under it. */
+      anchors: { offset: -96 },
     });
     lenisRef.current = lenis;
 

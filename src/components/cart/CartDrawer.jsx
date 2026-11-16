@@ -1,8 +1,8 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { TbX, TbTrash, TbShoppingBag, TbArrowRight, TbPencil, TbPlus, TbChevronRight } from "react-icons/tb";
+import { TbX, TbTrash, TbShoppingBag, TbArrowRight, TbPencil, TbPlus, TbChevronRight, TbAlertTriangle } from "react-icons/tb";
 import { useCart } from "@/app/context/CartContext";
 import { useI18n } from "@/app/context/I18nContext";
 import { money, describeLine } from "@/lib/format";
@@ -22,7 +22,7 @@ import QtyStepper from "@/components/ui/QtyStepper";
 export default function CartDrawer() {
   const {
     isOpen, closeCart, linesByService, subtotal, count,
-    setQty, removeLine, clear, serviceForms,
+    setQty, removeLine, clear, serviceForms, requestEdit,
   } = useCart();
   const { t, locale } = useI18n();
 
@@ -83,8 +83,11 @@ export default function CartDrawer() {
     return () => { document.body.style.overflow = previous; };
   }, [isOpen]);
 
-  const handleClear = () => {
-    if (window.confirm(t("cart.clearConfirm"))) clear();
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const handleClear = () => setConfirmOpen(true);
+  const confirmClear = () => {
+    clear();
+    setConfirmOpen(false);
   };
 
   return (
@@ -169,8 +172,10 @@ export default function CartDrawer() {
                       <h3 className="font-sans font-semibold text-sm text-[#222E2C] flex-1 min-w-0 truncate">
                         {t(service.labelKey)}
                       </h3>
-                      <span className="font-sans text-sm font-medium text-[#222E2C]/50 tabular-nums shrink-0">
-                        {money(groupTotal)}
+                      <span className="font-sans text-sm font-medium text-[#222E2C]/50 shrink-0 tabular-nums">
+                        {groupTotal > 0 ? money(groupTotal) : (
+                          <span className="uppercase tracking-wide text-xs font-semibold">By quote</span>
+                        )}
                       </span>
                     </div>
 
@@ -217,7 +222,14 @@ export default function CartDrawer() {
                       )}
                       <Link
                         href={service.href}
-                        onClick={closeCart}
+                        onClick={() => {
+                          /* requestEdit bumps a token the matching service page
+                           * watches via useSeedDraftFromCart's `trigger`, so the
+                           * draft rehydrates even when the href is the page the
+                           * guest is already on (soft nav keeps it mounted). */
+                          requestEdit(service.id);
+                          closeCart();
+                        }}
                         className="inline-flex items-center gap-1 w-fit font-sans text-xs font-medium text-[#222E2C]/50 hover:text-[#213B2F] transition-colors"
                       >
                         <TbPencil size={12} />
@@ -238,9 +250,15 @@ export default function CartDrawer() {
               <span className="font-sans font-semibold text-sm text-[#222E2C]">
                 {t("cart.subtotal")}
               </span>
-              <span className="font-sans font-bold text-2xl text-[#213B2F] tabular-nums">
-                {money(subtotal)}
-              </span>
+              {subtotal > 0 ? (
+                <span className="font-sans font-bold text-2xl text-[#213B2F] tabular-nums">
+                  {money(subtotal)}
+                </span>
+              ) : (
+                <span className="font-sans font-bold text-base text-[#213B2F] uppercase tracking-wide">
+                  By quote
+                </span>
+              )}
             </div>
 
             <p className="font-sans text-xs leading-relaxed text-[#222E2C]/50">
@@ -272,14 +290,114 @@ export default function CartDrawer() {
             <button
               type="button"
               onClick={handleClear}
-              className="font-sans text-xs text-[#222E2C]/45 hover:text-[#222E2C]/80 transition-colors self-center"
+              aria-label={t("cart.clearConfirm")}
+              className="inline-flex items-center justify-center gap-2 self-center px-4 py-2 rounded-full border border-[#222E2C]/20 font-sans text-xs font-semibold text-[#222E2C]/55 hover:text-red-700 hover:border-red-700/40 hover:bg-red-700/5 transition-colors"
             >
+              <TbTrash size={13} />
               {t("cart.clear")}
             </button>
           </footer>
         )}
       </aside>
+
+      <ClearConfirmDialog
+        open={confirmOpen}
+        onCancel={() => setConfirmOpen(false)}
+        onConfirm={confirmClear}
+        t={t}
+      />
     </>
+  );
+}
+
+/* ── clear-all confirmation ─────────────────────────────────────── */
+
+/*
+ * Replaces the browser's native `window.confirm`. Rendered as a sibling to the
+ * drawer (not inside it) so its z-index can sit above the drawer panel. Mounts
+ * only when `open` so there's no idle overlay catching clicks.
+ *
+ * Focus is pushed to the Cancel button on open (safer default than Confirm for
+ * a destructive action), and Escape dismisses without touching the cart.
+ */
+function ClearConfirmDialog({ open, onCancel, onConfirm, t }) {
+  const cancelRef = useRef(null);
+  const panelRef = useRef(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const prevActive = document.activeElement;
+    cancelRef.current?.focus();
+    const onKey = (e) => {
+      if (e.key === "Escape") {
+        e.stopPropagation();
+        onCancel();
+      }
+    };
+    document.addEventListener("keydown", onKey, true);
+    return () => {
+      document.removeEventListener("keydown", onKey, true);
+      if (prevActive instanceof HTMLElement) prevActive.focus();
+    };
+  }, [open, onCancel]);
+
+  if (!open) return null;
+
+  return (
+    <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="cart-clear-title"
+      className="fixed inset-0 z-[600] flex items-center justify-center px-6"
+    >
+      {/* Overlay */}
+      <div
+        className="absolute inset-0 bg-[#222E2C]/55 backdrop-blur-sm"
+        onClick={onCancel}
+        aria-hidden
+      />
+
+      {/* Panel */}
+      <div
+        ref={panelRef}
+        className="relative w-full max-w-md rounded-2xl bg-[#EDE5D8] border border-[#213B2F]/15 shadow-2xl overflow-hidden"
+      >
+        <div className="px-7 pt-7 pb-6 flex flex-col items-center text-center gap-4">
+          <span className="size-14 rounded-full bg-red-700/12 flex items-center justify-center">
+            <TbAlertTriangle size={26} className="text-red-700/85" />
+          </span>
+          <h2
+            id="cart-clear-title"
+            className="text-2xl md:text-3xl text-[#222E2C] tracking-tight leading-tight"
+            style={{ fontFamily: "var(--font-alpina)" }}
+          >
+            {t("cart.clearConfirmTitle")}
+          </h2>
+          <p className="font-sans text-sm text-[#222E2C]/65 leading-relaxed max-w-sm">
+            {t("cart.clearConfirmBody")}
+          </p>
+        </div>
+
+        <div className="px-7 pb-6 flex flex-col sm:flex-row-reverse gap-2.5">
+          <button
+            type="button"
+            onClick={onConfirm}
+            className="inline-flex items-center justify-center gap-2 flex-1 px-5 py-3 rounded-full bg-red-700 text-white font-sans text-sm font-semibold hover:bg-red-800 transition-colors"
+          >
+            <TbTrash size={15} />
+            {t("cart.clearConfirmAction")}
+          </button>
+          <button
+            ref={cancelRef}
+            type="button"
+            onClick={onCancel}
+            className="flex-1 px-5 py-3 rounded-full border border-[#213B2F]/25 bg-white font-sans text-sm font-semibold text-[#213B2F] hover:bg-[#213B2F]/5 transition-colors"
+          >
+            {t("cart.clearCancel")}
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -315,12 +433,20 @@ function LineRow({ line, locale, t, onQty, onRemove }) {
           label={`${t("cart.quantity")} — ${line.title}`}
         />
         <div className="flex flex-col items-end leading-tight">
-          <span className="font-sans font-semibold text-sm text-[#222E2C] tabular-nums">
-            {money(line.lineTotal)}
-          </span>
-          {line.qty > 1 && (
-            <span className="font-sans text-[11px] text-[#222E2C]/40 tabular-nums">
-              {money(line.unitPrice)} {t("cart.each")}
+          {line.unitPrice > 0 ? (
+            <>
+              <span className="font-sans font-semibold text-sm text-[#222E2C] tabular-nums">
+                {money(line.lineTotal)}
+              </span>
+              {line.qty > 1 && (
+                <span className="font-sans text-[11px] text-[#222E2C]/40 tabular-nums">
+                  {money(line.unitPrice)} {t("cart.each")}
+                </span>
+              )}
+            </>
+          ) : (
+            <span className="font-sans text-xs font-semibold uppercase tracking-wide text-[#222E2C]/55">
+              By quote
             </span>
           )}
         </div>

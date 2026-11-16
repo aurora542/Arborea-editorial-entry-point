@@ -86,8 +86,10 @@ export default function CheckoutPage() {
                           <TbPencil size={12} />
                           {t("cart.editPreferences")}
                         </Link>
-                        <span className="font-sans font-semibold text-sm text-[#222E2C] tabular-nums shrink-0 ml-1">
-                          {money(groupTotal)}
+                        <span className="font-sans font-semibold text-sm text-[#222E2C] shrink-0 ml-1 tabular-nums">
+                          {groupTotal > 0 ? money(groupTotal) : (
+                            <span className="uppercase tracking-wide text-xs">By quote</span>
+                          )}
                         </span>
                       </div>
 
@@ -115,12 +117,20 @@ export default function CheckoutPage() {
                               />
 
                               <div className="flex flex-col items-end leading-tight w-20 shrink-0">
-                                <span className="font-sans font-semibold text-sm text-[#222E2C] tabular-nums">
-                                  {money(line.lineTotal)}
-                                </span>
-                                {line.qty > 1 && (
-                                  <span className="font-sans text-[11px] text-[#222E2C]/40 tabular-nums">
-                                    {money(line.unitPrice)} {t("cart.each")}
+                                {line.unitPrice > 0 ? (
+                                  <>
+                                    <span className="font-sans font-semibold text-sm text-[#222E2C] tabular-nums">
+                                      {money(line.lineTotal)}
+                                    </span>
+                                    {line.qty > 1 && (
+                                      <span className="font-sans text-[11px] text-[#222E2C]/40 tabular-nums">
+                                        {money(line.unitPrice)} {t("cart.each")}
+                                      </span>
+                                    )}
+                                  </>
+                                ) : (
+                                  <span className="font-sans text-[11px] font-semibold uppercase tracking-wide text-[#222E2C]/55 text-right">
+                                    By quote
                                   </span>
                                 )}
                               </div>
@@ -168,9 +178,15 @@ export default function CheckoutPage() {
                   <span className="font-sans font-semibold text-sm text-[#D8DDB8]">
                     {t("cart.subtotal")}
                   </span>
-                  <span className="font-sans font-bold text-3xl text-[#EDE5D8] tabular-nums">
-                    {money(subtotal)}
-                  </span>
+                  {subtotal > 0 ? (
+                    <span className="font-sans font-bold text-3xl text-[#EDE5D8] tabular-nums">
+                      {money(subtotal)}
+                    </span>
+                  ) : (
+                    <span className="font-sans font-bold text-lg text-[#EDE5D8] uppercase tracking-wide">
+                      By quote
+                    </span>
+                  )}
                 </div>
                 <p className="font-sans text-sm text-[#D8DDB8]/60 tabular-nums">
                   {count} {count === 1 ? t("cart.itemsOne") : t("cart.itemsMany")}

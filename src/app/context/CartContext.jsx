@@ -75,6 +75,15 @@ export function CartProvider({ children }) {
   const [hydrated, setHydrated] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
+  /* Signal fired from the drawer's "Edit" link so a signature page can rehydrate
+   * its draft from the committed cart lines even when the guest is already on
+   * that same URL (no unmount, so a mount-only seed would be missed). `token` is
+   * bumped per click; pages subscribe and re-seed when the token changes. */
+  const [editSignal, setEditSignal] = useState({ service: null, token: 0 });
+  const requestEdit = useCallback((serviceId) => {
+    setEditSignal({ service: serviceId, token: Date.now() });
+  }, []);
+
   /* Read once on mount. Never during render: the HTML is prerendered at build
    * time, so touching sessionStorage in the render pass desyncs hydration. */
   useEffect(() => {
@@ -235,12 +244,13 @@ export function CartProvider({ children }) {
       openCart: () => setIsOpen(true),
       closeCart: () => setIsOpen(false),
       toggleCart: () => setIsOpen((v) => !v),
+      editSignal, requestEdit,
     }),
     [
       lines, linesByService, subtotal, count, getLine, has,
       setLine, addLine, updateLine, removeLine, setQty, clearService, clear,
       serviceForms, getServiceForm, setServiceForm, replaceServiceForm,
-      hydrated, isOpen,
+      hydrated, isOpen, editSignal, requestEdit,
     ]
   );
 

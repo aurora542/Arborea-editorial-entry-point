@@ -8,11 +8,12 @@ import Footer from "@/components/layout/Footer";
 import { useCart } from "@/app/context/CartContext";
 import { skuOf, lineIdOf } from "@/lib/sku";
 import { money } from "@/lib/format";
+import DateField from "@/components/ui/DateField";
 import {
   TbArrowLeft, TbLeaf, TbCircleCheck, TbBrandWhatsapp, TbCheck,
   TbGlassCocktail, TbCoffee, TbSalad, TbToolsKitchen2,
-  TbHandClick, TbAdjustments, TbSend, TbListCheck, TbCalendarEvent, TbPlus,
-  TbNotes, TbShoppingBag,
+  TbHandClick, TbAdjustments, TbSend, TbListCheck, TbPlus,
+  TbNotes, TbShoppingBag, TbTrash,
 } from "react-icons/tb";
 
 const WHATSAPP = "50685011042";
@@ -39,8 +40,29 @@ const SERVICE = "private-chef";
 
 export default function PrivateChefPage() {
   const { t } = useI18n();
-  const { setLine, clearService, setServiceForm, openCart, linesByService, lines, serviceForms, hydrated } = useCart();
+  const { setLine, addLine, clearService, setServiceForm, openCart, linesByService, lines, serviceForms, hydrated, editSignal } = useCart();
   const [notes, setNotes] = useState("");
+
+  /*
+   * Page has two commit modes:
+   *
+   *   - "add"  (default): page represents a *new* chef booking that should
+   *     concatenate with whatever the cart already has for this service. New
+   *     per-day lines get fresh unique ids so they append rather than replace;
+   *     qty-based add-ons (beverages / desserts / bakery) sum into existing
+   *     lines via `addLine`.
+   *
+   *   - "edit": guest came in via the drawer's Edit link; the page shows the
+   *     cart's current chef section in full. Commit replaces (clearService +
+   *     setLine all) and flips back to "add" afterwards so further edits are
+   *     additive again.
+   */
+  const [mode, setMode] = useState("add");
+
+  /* Null until the drawer's Edit link bumps a token — the seed effect fires
+   * ONLY on that signal. A fresh visit to /private-chef/ keeps the page empty
+   * no matter what the cart already contains. */
+  const seedTrigger = editSignal.service === SERVICE ? editSignal.token : null;
 
   const nav             = t("privateChef.nav");
   const breakfastItems  = t("privateChef.breakfast.items");
@@ -57,85 +79,138 @@ export default function PrivateChefPage() {
   const sweets          = t("privateChef.sweetsSection");
   const fridgeBeverages = t("fullFridge.beverages");
 
-  const [selectedServiceIdx, setSelectedServiceIdx] = useState(null);
-  const [guests, setGuests] = useState(2);
-  const [serviceDate, setServiceDate] = useState("");
-  const [selectedNightIdx, setSelectedNightIdx] = useState(null);
-  const [themedGuests, setThemedGuests] = useState(2);
-  const [themedDate, setThemedDate] = useState("");
+  /*
+   * `serviceItems` is the list of chef bookings — one entry per DAY the guest
+   * wants a chef service. Each item is fully self-contained: it carries its own
+   * service type, guest count, date, dish picks and active meal tab. This lets
+   * a long stay combine, say, "Lunch Dec 15 for 4" + "Full Day Dec 22 for 6"
+   * each with their own menu picks.
+   *
+   * Each item:
+   *   - id: ephemeral per-session token; becomes the cart lineId's variant so
+   *     same-service bookings don't collide in the cart.
+   *   - serviceIdx: index into pricingPS (0 = Breakfast, 1 = Lunch, ...).
+   *   - guests: 2+. New items inherit the previous item's guest count.
+   *   - date: YYYY-MM-DD, optional.
+   *   - dishes: Record<dishId, { label, group }> — only picks for meals this
+   *     service type covers (SERVICE_MEALS[serviceIdx]).
+   *   - activeMeal: which dish tab is currently shown (Full Day only; others
+   *     just show their one meal).
+   */
+  const [serviceItems, setServiceItems] = useState([]);
+  /*
+   * `themedItems` — list of themed-night bookings. Same shape idea as
+   * `serviceItems`: one entry per occasion (nightIdx + guests + date).
+   * Multiple entries with the SAME nightIdx are allowed (e.g. a Mexican Fiesta
+   * on Dec 15 and another Mexican Fiesta on Dec 22 — different parties).
+   */
+  const [themedItems, setThemedItems] = useState([]);
   const [bevQty, setBevQty] = useState({});
   const [bartenderIdx, setBartenderIdx] = useState(null);
-  const [activeMeal, setActiveMeal] = useState(null);
-
-  // Dish picks are preferences for the chef, not priced line items.
-  const [dishes, setDishes] = useState({});
   const [dishQty, setDishQty] = useState({});
 
-  const toggleDish = (id, label, group) => {
-    const limit = guests >= 5 ? 2 : 1;
-    setDishes((prev) => {
-      if (prev[id]) {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      }
-      const groupEntries = Object.entries(prev).filter(([, d]) => d.group === group);
-      if (groupEntries.length >= limit) {
-        // Auto-replace the oldest pick in this group
-        const [oldestId] = groupEntries[0];
-        const next = { ...prev };
-        delete next[oldestId];
-        return { ...next, [id]: { label, group } };
-      }
-      return { ...prev, [id]: { label, group } };
+  const nextItemId = () => `psi-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+
+  /* New items inherit the previous item's guest count AND service type so the
+   * guest doesn't have to redo the obvious. First item defaults to 2 guests
+   * and Lunch (idx 1) because that's the most common booking. */
+  const addServiceItem = () => {
+    setServiceItems((prev) => {
+      const last = prev[prev.length - 1];
+      const serviceIdx = last ? last.serviceIdx : 1;
+      const guests = last ? last.guests : 2;
+      const activeMeal = (SERVICE_MEALS[serviceIdx] || [])[0] ?? null;
+      return [
+        ...prev,
+        { id: nextItemId(), serviceIdx, guests, date: "", dishes: {}, activeMeal },
+      ];
     });
   };
+
+  /* Supports a plain patch OR a functional updater that returns a patch —
+   * needed by the dish toggler which has to read-then-write the item's dishes. */
+  const updateServiceItem = (id, patchOrFn) => {
+    setServiceItems((prev) =>
+      prev.map((it) => {
+        if (it.id !== id) return it;
+        const patch = typeof patchOrFn === "function" ? patchOrFn(it) : patchOrFn;
+        return { ...it, ...patch };
+      }),
+    );
+  };
+
+  /* Switching an item's service type blows away its dish picks — the old picks
+   * may be for meals the new service doesn't cover. Active meal resets to the
+   * first meal of the new service. */
+  const changeItemService = (id, serviceIdx) => {
+    updateServiceItem(id, () => ({
+      serviceIdx,
+      dishes: {},
+      activeMeal: (SERVICE_MEALS[serviceIdx] || [])[0] ?? null,
+    }));
+  };
+
+  const removeServiceItem = (id) => {
+    setServiceItems((prev) => prev.filter((it) => it.id !== id));
+  };
+
+  /* Toggle a dish pick for ONE item. Limit (1 or 2 per meal) comes from that
+   * item's guest count — larger parties get 2 options so the chef can prep
+   * both. Hitting the limit auto-replaces the oldest pick in that meal. */
+  const toggleDishInItem = (itemId, dishId, label, group) => {
+    updateServiceItem(itemId, (it) => {
+      const prevDishes = it.dishes || {};
+      const limit = (Number(it.guests) || 2) >= 5 ? 2 : 1;
+      if (prevDishes[dishId]) {
+        const next = { ...prevDishes };
+        delete next[dishId];
+        return { dishes: next };
+      }
+      const groupEntries = Object.entries(prevDishes).filter(([, d]) => d.group === group);
+      let nextDishes;
+      if (groupEntries.length >= limit) {
+        const [oldestId] = groupEntries[0];
+        const next = { ...prevDishes };
+        delete next[oldestId];
+        nextDishes = { ...next, [dishId]: { label, group } };
+      } else {
+        nextDishes = { ...prevDishes, [dishId]: { label, group } };
+      }
+      return { dishes: nextDishes };
+    });
+  };
+
+  const setItemActiveMeal = (itemId, meal) => updateServiceItem(itemId, { activeMeal: meal });
 
   const DISH_PRICE = 15;
 
   /* Desserts and bakery are priced items, so they are quantities — not the dish
-   * "preferences" that `dishes` tracks for the meal menus. The old version wrote to
-   * both, and the copy in `dishes` was never read back. */
+   * "preferences" that `item.dishes` tracks for the meal menus. */
   const changeDishQty = (id, qty) => {
     setDishQty((prev) => ({ ...prev, [id]: Math.max(0, qty) }));
   };
 
-  const visibleMeals = selectedServiceIdx === null ? [] : SERVICE_MEALS[selectedServiceIdx];
-  const maxDishes = guests >= 5 ? 2 : 1;
+  /* Add a new themed-night instance for `nightIdx`. Guests inherit from the
+   * last themed instance (any night) so a party size set earlier persists. */
+  const addThemedItem = (nightIdx) => {
+    setThemedItems((prev) => {
+      const lastGuests = prev.length ? prev[prev.length - 1].guests : 2;
+      return [
+        ...prev,
+        { id: nextItemId(), nightIdx, guests: Math.max(2, Math.min(15, lastGuests)), date: "" },
+      ];
+    });
+  };
 
-  useEffect(() => {
-    const meals = selectedServiceIdx === null ? [] : SERVICE_MEALS[selectedServiceIdx];
-    setActiveMeal(meals.length ? meals[0] : null);
-  }, [selectedServiceIdx]);
-
-  const pickService = (i) => {
-    const deselecting = selectedServiceIdx === i;
-    const nextIdx = deselecting ? null : i;
-    setSelectedServiceIdx(nextIdx);
-
-    // Drop dish picks whose menu is no longer on screen.
-    const stillVisible = nextIdx === null ? [] : SERVICE_MEALS[nextIdx];
-    setDishes((prev) =>
-      Object.fromEntries(
-        Object.entries(prev).filter(([, d]) => !["breakfast", "lunch", "dinner"].includes(d.group) || stillVisible.includes(d.group))
-      )
+  const updateThemedItem = (id, patch) => {
+    setThemedItems((prev) =>
+      prev.map((it) => (it.id === id ? { ...it, ...patch } : it)),
     );
   };
 
-  const changeGuests = (val) => setGuests(Math.max(2, Number(val) || 2));
-
-  const pickNight = (i) => {
-    if (selectedNightIdx === i) {
-      setSelectedNightIdx(null);
-      setThemedDate("");
-      return;
-    }
-    setSelectedNightIdx(i);
+  const removeThemedItem = (id) => {
+    setThemedItems((prev) => prev.filter((it) => it.id !== id));
   };
-
-  const changeThemedGuests = (g) => setThemedGuests(Math.max(2, Math.min(15, g)));
-
-  const handleThemedDate = (d) => setThemedDate(d);
 
   const changeBevQty = (i, qty) => setBevQty((prev) => ({ ...prev, [i]: Math.max(0, qty) }));
 
@@ -146,39 +221,88 @@ export default function PrivateChefPage() {
   const inCart = linesByService.some((g) => g.service.id === SERVICE);
 
   /*
-   * Restore the page when the guest returns via the cart's "Edit" link, so
-   * re-committing doesn't wipe what they already added (every commit clears this
-   * service first). Each committed line is matched back to the control that made it.
+   * Rehydrate the page from committed cart lines. Fires on first hydration AND
+   * whenever `seedTrigger` changes — the drawer's "Edit" link bumps that token
+   * so the page re-fills even on same-URL soft nav. Every field is explicitly
+   * reset first so an Edit after a submit (which cleared local state) also
+   * cleanly re-populates any field that would otherwise linger from before.
    */
-  const seeded = useRef(false);
+  const lastSeed = useRef(null);
   useEffect(() => {
-    if (seeded.current || !hydrated) return;
-    seeded.current = true;
+    if (!hydrated) return;
+    /* seedTrigger is null until the drawer's Edit link fires — no seed on a
+     * fresh visit. Only re-populate when the guest explicitly asks to edit. */
+    if (seedTrigger === null) return;
+    if (lastSeed.current === seedTrigger) return;
+    lastSeed.current = seedTrigger;
 
     const mine = lines.filter((l) => l.service === SERVICE);
-    if (!mine.length) return;
+
+    /* Reset first so the restore starts from a clean slate. */
+    setServiceItems([]);
+    setThemedItems([]);
+    setBartenderIdx(null);
+    setBevQty({});
+    setDishQty({});
+    setNotes("");
+
+    if (!mine.length) {
+      setMode("add");
+      return;
+    }
+    setMode("edit");
     const bySku = new Map(mine.map((l) => [l.sku, l]));
 
+    /* Per-day items — parse dishes back out of `options._dishes`. One
+     * serviceItem per committed line, preserving cart order. */
     if (Array.isArray(pricingPS)) {
+      const perServiceSkus = new Map();
       pricingPS.forEach((_, i) => {
-        const line = bySku.get(skuOf("privateChef.pricing.perService.items", i, "label"));
-        if (!line) return;
-        setSelectedServiceIdx(i);
-        setServiceDate(line.date ?? "");
-        const n = parseInt(line.options?.guests, 10);
-        if (Number.isFinite(n)) setGuests(Math.max(2, n));
+        perServiceSkus.set(skuOf("privateChef.pricing.perService.items", i, "label"), i);
       });
+      const restored = [];
+      for (const line of mine) {
+        const idx = perServiceSkus.get(line.sku);
+        if (idx === undefined) continue;
+        const n = parseInt(line.options?.guests, 10);
+        let dishes = {};
+        if (typeof line.options?._dishes === "string") {
+          try { dishes = JSON.parse(line.options._dishes) || {}; } catch { dishes = {}; }
+        }
+        const meals = SERVICE_MEALS[idx] || [];
+        restored.push({
+          id: nextItemId(),
+          serviceIdx: idx,
+          guests: Number.isFinite(n) ? Math.max(2, n) : 2,
+          date: line.date ?? "",
+          dishes,
+          activeMeal: meals[0] ?? null,
+        });
+      }
+      if (restored.length) setServiceItems(restored);
     }
 
+    /* Themed nights — multiple instances per night are allowed, so iterate
+     * `mine` instead of `bySku` (which would only keep the last line of each
+     * sku). Order follows cart order. */
     if (Array.isArray(themedNights)) {
+      const nightSkus = new Map();
       themedNights.forEach((_, i) => {
-        const line = bySku.get(skuOf("privateChef.themedNights.nights", i, "title"));
-        if (!line) return;
-        setSelectedNightIdx(i);
-        setThemedDate(line.date ?? "");
-        const n = parseInt(line.options?.guests, 10);
-        if (Number.isFinite(n)) setThemedGuests(Math.max(2, Math.min(15, n)));
+        nightSkus.set(skuOf("privateChef.themedNights.nights", i, "title"), i);
       });
+      const restoredThemed = [];
+      for (const line of mine) {
+        const idx = nightSkus.get(line.sku);
+        if (idx === undefined) continue;
+        const n = parseInt(line.options?.guests, 10);
+        restoredThemed.push({
+          id: nextItemId(),
+          nightIdx: idx,
+          guests: Number.isFinite(n) ? Math.max(2, Math.min(15, n)) : 2,
+          date: line.date ?? "",
+        });
+      }
+      if (restoredThemed.length) setThemedItems(restoredThemed);
     }
 
     if (Array.isArray(pricingBar)) {
@@ -210,7 +334,7 @@ export default function PrivateChefPage() {
     const saved = serviceForms[SERVICE];
     if (saved?.notes) setNotes(saved.notes);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated]);
+  }, [hydrated, seedTrigger]);
 
   /*
    * Everything priced on this page: the chosen service, a themed night, beverages,
@@ -222,35 +346,55 @@ export default function PrivateChefPage() {
   const buildLines = () => {
     const out = [];
 
-    if (selectedServiceIdx !== null && Array.isArray(pricingPS)) {
-      const item = pricingPS[selectedServiceIdx];
-      const sku = skuOf("privateChef.pricing.perService.items", selectedServiceIdx, "label");
-      out.push({
-        lineId: lineIdOf(SERVICE, sku),
-        service: SERVICE,
-        sku,
-        title: item.label,
-        qty: 1,
-        unitPrice: computeServicePrice(item, guests),
-        date: serviceDate,
-        options: { guests: `${guests} guests` },
-      });
+    if (Array.isArray(pricingPS)) {
+      /* One cart line per booked occasion. `it.id` is the lineId variant so
+       * same-service bookings (e.g. two Lunches) don't collide in the cart.
+       *
+       * `_dishes` encodes this day's dish picks as JSON. The underscore prefix
+       * tells `describeLine` (format.js) to keep it out of the drawer caption;
+       * the seed effect parses it back on an Edit from the cart. */
+      for (const it of serviceItems) {
+        const item = pricingPS[it.serviceIdx];
+        if (!item) continue;
+        const sku = skuOf("privateChef.pricing.perService.items", it.serviceIdx, "label");
+        const dishesJson = Object.keys(it.dishes || {}).length
+          ? JSON.stringify(it.dishes)
+          : "";
+        out.push({
+          lineId: lineIdOf(SERVICE, sku, it.id),
+          service: SERVICE,
+          sku,
+          title: item.label,
+          qty: 1,
+          unitPrice: computeServicePrice(item, it.guests),
+          date: it.date,
+          options: {
+            guests: `${it.guests} guests`,
+            ...(dishesJson ? { _dishes: dishesJson } : {}),
+          },
+        });
+      }
     }
 
-    if (selectedNightIdx !== null && Array.isArray(themedNights) && Array.isArray(themedTiers)) {
-      const night = themedNights[selectedNightIdx];
-      const tier = findThemedTier(themedTiers, themedGuests);
-      const sku = skuOf("privateChef.themedNights.nights", selectedNightIdx, "title");
-      out.push({
-        lineId: lineIdOf(SERVICE, sku),
-        service: SERVICE,
-        sku,
-        title: night.title,
-        qty: 1,
-        unitPrice: tier?.priceValue ?? 0,
-        date: themedDate,
-        options: { guests: `${themedGuests} guests` },
-      });
+    /* One cart line per themed-night instance. `it.id` as the lineId variant
+     * lets two Mexican Fiestas on different dates coexist in the cart. */
+    if (Array.isArray(themedNights) && Array.isArray(themedTiers)) {
+      for (const it of themedItems) {
+        const night = themedNights[it.nightIdx];
+        if (!night) continue;
+        const tier = findThemedTier(themedTiers, it.guests);
+        const sku = skuOf("privateChef.themedNights.nights", it.nightIdx, "title");
+        out.push({
+          lineId: lineIdOf(SERVICE, sku, it.id),
+          service: SERVICE,
+          sku,
+          title: night.title,
+          qty: 1,
+          unitPrice: tier?.priceValue ?? 0,
+          date: it.date,
+          options: { guests: `${it.guests} guests` },
+        });
+      }
     }
 
     if (Array.isArray(fridgeBeverages?.items)) {
@@ -313,51 +457,125 @@ export default function PrivateChefPage() {
   const draftLines = buildLines();
   const draftTotal = draftLines.reduce((sum, l) => sum + l.qty * l.unitPrice, 0);
 
-  /* Dish picks per meal, grouped by meal. These are free-text preferences for the
-   * chef to read, so they stay as the titles in the guest's own language — unlike
-   * `sku`, which must be locale-independent because it identifies a priced item. */
+  /* Per-day dish picks, formatted as an object keyed by day header so
+   * describeServiceForm renders each day on its own row — "Day 1 — Lunch":
+   * "Gallo Pinto, Casado". For Full Day items each meal is prefixed so the
+   * chef can tell apart the three menus of the same day. */
   const buildDishPicks = () => {
     const picks = {};
-    for (const d of Object.values(dishes)) {
-      if (!["breakfast", "lunch", "dinner"].includes(d.group)) continue;
-      (picks[d.group] ??= []).push(d.label);
-    }
+    serviceItems.forEach((it, idx) => {
+      const service = Array.isArray(pricingPS) ? pricingPS[it.serviceIdx] : null;
+      if (!service) return;
+      const byMeal = {};
+      for (const d of Object.values(it.dishes || {})) {
+        if (!["breakfast", "lunch", "dinner"].includes(d.group)) continue;
+        (byMeal[d.group] ??= []).push(d.label);
+      }
+      if (!Object.keys(byMeal).length) return;
+      const multiMeal = (SERVICE_MEALS[it.serviceIdx] || []).length > 1;
+      const mealsOrder = ["breakfast", "lunch", "dinner"];
+      const parts = mealsOrder
+        .filter((m) => byMeal[m]?.length)
+        .map((m) => {
+          const names = byMeal[m].join(", ");
+          return multiMeal ? `${m.charAt(0).toUpperCase() + m.slice(1)}: ${names}` : names;
+        });
+      const dateSuffix = it.date ? ` (${it.date})` : "";
+      const key = `Day ${idx + 1} — ${service.label}${dateSuffix}`;
+      picks[key] = parts.join(" · ");
+    });
     return picks;
+  };
+
+  /* SKUs that are qty-based add-ons. In add mode these use `addLine` so the
+   * guest's existing beverages / desserts / bakery in the cart grow rather
+   * than get overwritten. Per-day items, themed nights and bartender keep
+   * `setLine` semantics (each either has a unique lineId that just appends, or
+   * an idempotent one that should mirror the page's state). */
+  const isQtyAddOn = (line) => {
+    if (line.sku?.startsWith("dessert-") || line.sku?.startsWith("bakery-")) return true;
+    /* Beverages — their skus come from fullFridge.beverages.items via skuOf. */
+    const bevSkus = Array.isArray(fridgeBeverages?.items)
+      ? fridgeBeverages.items.map((_, i) => skuOf("fullFridge.beverages.items", i, "title"))
+      : [];
+    return bevSkus.includes(line.sku);
   };
 
   const addToCart = (dietary) => {
     if (!draftLines.length) return;
 
-    /* Replace rather than append, so deselecting something and re-adding doesn't
-     * leave the old line behind. */
-    clearService(SERVICE);
-    draftLines.forEach(setLine);
+    if (mode === "edit") {
+      /* Edit mode: the page represents the full chef section; wipe the cart's
+       * copy first so deselections actually disappear. */
+      clearService(SERVICE);
+      draftLines.forEach(setLine);
+    } else {
+      /* Add mode: concatenate. Per-day items have fresh unique ids so they
+       * append as new lines; themed-night and bartender are idempotent
+       * replacements for their own skus; qty add-ons SUM into existing lines
+       * via `addLine`. */
+      draftLines.forEach((line) => {
+        if (isQtyAddOn(line)) addLine(line);
+        else setLine(line);
+      });
+    }
 
+    /* Service-form shape: dietary + notes + dish picks (keyed per day). In
+     * edit mode we pass the full fresh object (clearService wiped the old
+     * form). In add mode, setServiceForm MERGES top-level keys for us, but
+     * the `dishes` key itself needs a manual merge so prior days don't get
+     * lost. */
     const form = { ...dietary };
     const picks = buildDishPicks();
-    if (Object.keys(picks).length) form.dishes = picks;
+    if (Object.keys(picks).length) {
+      if (mode === "add") {
+        const existing = serviceForms[SERVICE]?.dishes;
+        form.dishes = existing && typeof existing === "object"
+          ? { ...existing, ...picks }
+          : picks;
+      } else {
+        form.dishes = picks;
+      }
+    }
     if (notes.trim()) form.notes = notes.trim();
     if (Object.keys(form).length) setServiceForm(SERVICE, form);
 
     openCart();
+
+    /* Clear the page and flip back to add mode so the next interaction
+     * concatenates (whether the guest keeps adding days or walks away). */
+    setServiceItems([]);
+    setThemedItems([]);
+    setBartenderIdx(null);
+    setBevQty({});
+    setDishQty({});
+    setNotes("");
+    setMode("add");
   };
 
+  /* Preview rows shown on the page BEFORE commit — one block per day: the
+   * service header, then any dish picks for that day. */
   const buildInfoLines = () => {
-    const groups = [
-      { key: "breakfast", label: t("privateChef.breakfast.heading") },
-      { key: "lunch", label: t("privateChef.lunch.heading") },
-      { key: "dinner", label: t("privateChef.dinner.heading") },
-    ];
+    const lines = [];
+    serviceItems.forEach((it, idx) => {
+      const service = Array.isArray(pricingPS) ? pricingPS[it.serviceIdx] : null;
+      if (!service) return;
+      const parts = [`${it.guests} guests`];
+      if (it.date) parts.push(`date: ${it.date}`);
+      lines.push({ label: `Day ${idx + 1} · ${service.label} — ${parts.join(" · ")}`, price: 0 });
 
-    const picked = Object.values(dishes);
-    const lines = groups
-      .map(({ key, label }) => {
-        const names = picked.filter((d) => d.group === key).map((d) => d.label);
-        return names.length ? { label: `${label}: ${names.join(", ")}`, price: 0 } : null;
-      })
-      .filter(Boolean);
-
-    if (serviceDate) lines.push({ label: `Preferred date: ${serviceDate}`, price: 0 });
+      const byMeal = {};
+      for (const d of Object.values(it.dishes || {})) {
+        if (!["breakfast", "lunch", "dinner"].includes(d.group)) continue;
+        (byMeal[d.group] ??= []).push(d.label);
+      }
+      const multiMeal = (SERVICE_MEALS[it.serviceIdx] || []).length > 1;
+      for (const m of ["breakfast", "lunch", "dinner"]) {
+        if (!byMeal[m]) continue;
+        const prefix = multiMeal ? `${m.charAt(0).toUpperCase() + m.slice(1)}: ` : "";
+        lines.push({ label: `  ${prefix}${byMeal[m].join(", ")}`, price: 0 });
+      }
+    });
 
     return lines;
   };
@@ -468,166 +686,225 @@ export default function PrivateChefPage() {
                 </h2>
               </div>
 
-              {/* Service type selector */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                {Array.isArray(pricingPS) && pricingPS.map((item, i) => (
-                  <button key={i} type="button" aria-pressed={selectedServiceIdx === i} onClick={() => pickService(i)}
-                    className={`text-left rounded-xl px-5 py-5 flex flex-col gap-2 border-2 transition-all duration-200 ${
-                      selectedServiceIdx === i
-                        ? "bg-[#213B2F] border-[#213B2F]"
-                        : "bg-white border-[#222E2C]/10 hover:border-[#222E2C]/30"
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-2">
-                      <span className={`font-sans font-semibold text-base ${selectedServiceIdx === i ? "text-[#D8DDB8]" : "text-[#222E2C]"}`}>
-                        {item.label}
-                      </span>
-                      {selectedServiceIdx === i && <TbCheck size={16} className="text-[#D8DDB8] shrink-0 mt-0.5" />}
-                    </div>
-                    <span className={`font-sans text-sm ${selectedServiceIdx === i ? "text-[#D8DDB8]/70" : "text-[#222E2C]/65"}`}>
-                      ${item.basePrice} for up to {item.baseGuests} guests
-                    </span>
-                    {selectedServiceIdx === i && (
-                      <span className="font-sans font-bold text-xl text-[#D8DDB8] mt-1">
-                        ${computeServicePrice(item, guests)}
-                      </span>
-                    )}
-                  </button>
-                ))}
-              </div>
+              {/* One card per DAY of chef service. Each is a self-contained
+               * menu builder — service type, guests, date, dish picks. Empty
+               * state: the add-day card appears on its own. */}
+              <div className="flex flex-col gap-5">
+                {serviceItems.map((it, idx) => {
+                  const service = Array.isArray(pricingPS) ? pricingPS[it.serviceIdx] : null;
+                  if (!service) return null;
+                  const itemMeals = SERVICE_MEALS[it.serviceIdx] || [];
+                  const itemActive = it.activeMeal && itemMeals.includes(it.activeMeal)
+                    ? it.activeMeal
+                    : itemMeals[0] ?? null;
+                  const itemMaxDishes = (Number(it.guests) || 2) >= 5 ? 2 : 1;
+                  const lineTotal = computeServicePrice(service, it.guests);
 
-              {/* Hint when no service selected yet */}
-              {selectedServiceIdx === null && (
-                <p className="font-sans text-sm text-[#222E2C]/40 italic text-center py-2">
-                  Select a service above — Breakfast, Lunch, Dinner, or Full Day — to start building your menu.
-                </p>
-              )}
+                  const mealsI18n = {
+                    breakfast: { heading: t("privateChef.breakfast.heading"), items: breakfastItems, note: t("privateChef.breakfast.note"), extras: breakfastExtras, extrasHeading: t("privateChef.breakfast.extrasHeading") },
+                    lunch:     { heading: t("privateChef.lunch.heading"),     items: lunchItems },
+                    dinner:    { heading: t("privateChef.dinner.heading"),    items: dinnerItems },
+                  };
 
-              {/* Guest count + preferred date */}
-              {selectedServiceIdx !== null && (() => {
-                const todayIso = new Date().toISOString().slice(0, 10);
-                return (
-                  <div className="flex flex-wrap items-end gap-6 bg-[#213B2F]/5 rounded-2xl px-6 py-5 border border-[#213B2F]/10">
-                    <div className="flex flex-col gap-1.5">
-                      <span className="font-sans text-xs font-semibold uppercase tracking-widest text-[#222E2C]/40">{ob.guestsLabel}</span>
-                      <div className="flex items-center gap-2">
-                        <button type="button" onClick={() => changeGuests(String(Math.max(2, guests - 1)))}
-                          className="size-9 flex items-center justify-center rounded-full border-2 border-[#213B2F]/25 text-[#213B2F] font-sans text-lg hover:bg-[#213B2F]/8 transition-colors select-none">−</button>
-                        <div className="flex items-center justify-center px-5 py-2 rounded-full bg-[#213B2F] min-w-[3.5rem]">
-                          <span className="font-sans font-bold text-lg text-[#EDE5D8]">{guests}</span>
+                  return (
+                    <div key={it.id} className="rounded-2xl border border-[#213B2F]/15 bg-white overflow-hidden flex flex-col">
+                      {/* Day header — gold eyebrow + remove */}
+                      <div className="flex items-center justify-between gap-4 px-6 py-4 bg-[#213B2F]/6 border-b border-[#213B2F]/10">
+                        <div className="flex items-baseline gap-3 min-w-0">
+                          <span className="font-sans text-[10px] font-bold text-[#C9974F] uppercase tracking-widest shrink-0">
+                            Day {idx + 1}
+                          </span>
+                          <span className="font-sans font-semibold text-sm text-[#213B2F] truncate">
+                            {service.label}
+                            {it.date && <span className="font-normal text-[#222E2C]/55"> · {it.date}</span>}
+                          </span>
                         </div>
-                        <button type="button" onClick={() => changeGuests(String(guests + 1))}
-                          className="size-9 flex items-center justify-center rounded-full border-2 border-[#213B2F]/25 text-[#213B2F] font-sans text-lg hover:bg-[#213B2F]/8 transition-colors select-none">+</button>
-                      </div>
-                    </div>
-
-                    <div className="flex flex-col gap-1.5">
-                      <label className="flex items-center gap-1.5 font-sans text-xs font-semibold uppercase tracking-widest text-[#222E2C]/40 cursor-default">
-                        <TbCalendarEvent size={11} />
-                        Preferred date
-                        <span className="font-normal normal-case tracking-normal text-[#222E2C]/30">(optional)</span>
-                      </label>
-                      <input
-                        type="date"
-                        min={todayIso}
-                        value={serviceDate}
-                        onChange={(e) => setServiceDate(e.target.value)}
-                        className="font-sans text-sm rounded-xl px-4 py-2.5 bg-white border border-[#222E2C]/12 text-[#222E2C] focus:outline-none focus:ring-2 focus:ring-[#213B2F]/30 focus:border-transparent transition-all shadow-sm"
-                      />
-                    </div>
-
-                    <div className="ml-auto flex flex-col items-end gap-0.5 shrink-0">
-                      <span className="font-sans text-xs text-[#222E2C]/40 uppercase tracking-widest">Total</span>
-                      <span className="font-sans font-bold text-3xl text-[#222E2C]">
-                        ${computeServicePrice(pricingPS[selectedServiceIdx], guests).toLocaleString("en-US")}
-                      </span>
-                    </div>
-                  </div>
-                );
-              })()}
-            </div>
-
-            {/* Dish selection */}
-            {visibleMeals.length > 0 && (
-              <div className="flex flex-col gap-6" data-aos="fade-up">
-
-                {/* Dish limit banner */}
-                <div className={`rounded-2xl px-6 py-5 flex flex-col sm:flex-row sm:items-center gap-4 ${maxDishes === 2 ? "bg-[#213B2F]" : "bg-[#222E2C]/6 border border-[#222E2C]/12"}`}>
-                  <div className="flex-1">
-                    {maxDishes === 2 ? (
-                      <>
-                        <p className="font-sans font-semibold text-base text-[#D8DDB8]">With {guests} guests, choose up to 2 dishes per meal</p>
-                        <p className="font-sans text-sm text-[#D8DDB8]/70 mt-0.5">The chef will prepare both options for your group. Selecting a third dish replaces the first.</p>
-                      </>
-                    ) : (
-                      <>
-                        <p className="font-sans font-semibold text-base text-[#222E2C]">Choose 1 dish per meal</p>
-                        <p className="font-sans text-sm text-[#222E2C]/65 mt-0.5">Select the dish you'd like the chef to prepare. Picking another automatically replaces the current one.</p>
-                      </>
-                    )}
-                  </div>
-                  <div className={`flex items-center gap-2 px-4 py-2 rounded-full shrink-0 font-sans text-sm font-semibold ${maxDishes === 2 ? "bg-[#D8DDB8]/15 text-[#D8DDB8]" : "bg-[#222E2C]/10 text-[#222E2C]"}`}>
-                    {maxDishes === 2 ? "Up to 2 dishes" : "1 dish per meal"}
-                  </div>
-                </div>
-
-                {/* Meal tabs for Full Day */}
-                {visibleMeals.length > 1 && (
-                  <div className="flex flex-wrap gap-2">
-                    {visibleMeals.map((meal) => {
-                      const Icon = MEAL_META[meal]?.icon;
-                      const mealPicked = Object.values(dishes).filter(d => d.group === meal).length;
-                      return (
-                        <button key={meal} type="button" aria-pressed={activeMeal === meal} onClick={() => setActiveMeal(meal)}
-                          className={`flex items-center gap-2 px-4 py-2.5 rounded-full border font-sans text-sm font-medium transition-colors duration-200 ${
-                            activeMeal === meal
-                              ? "bg-[#213B2F] border-[#213B2F] text-[#D8DDB8]"
-                              : "border-[#222E2C]/20 text-[#222E2C] hover:border-[#222E2C]/40"
-                          }`}
+                        <button
+                          type="button"
+                          onClick={() => removeServiceItem(it.id)}
+                          aria-label={`Remove Day ${idx + 1}`}
+                          className="inline-flex items-center gap-1.5 shrink-0 px-3 py-1.5 rounded-full font-sans text-xs font-medium text-[#222E2C]/55 hover:text-red-700 hover:bg-red-700/8 transition-colors"
                         >
-                          {Icon && <Icon size={15} />}
-                          {t(`privateChef.${meal}.heading`)}
-                          {mealPicked > 0 && (
-                            <span className={`size-5 flex items-center justify-center rounded-full text-xs font-bold ${activeMeal === meal ? "bg-[#D8DDB8]/20 text-[#D8DDB8]" : "bg-[#213B2F] text-[#D8DDB8]"}`}>
-                              {mealPicked}
-                            </span>
-                          )}
+                          <TbTrash size={13} />
+                          Remove day
                         </button>
-                      );
-                    })}
+                      </div>
+
+                      {/* Service type picker — per item */}
+                      <div className="px-6 py-5 border-b border-[#213B2F]/8 flex flex-col gap-3">
+                        <p className="font-sans text-[10px] font-semibold uppercase tracking-widest text-[#222E2C]/45">
+                          Service type
+                        </p>
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                          {Array.isArray(pricingPS) && pricingPS.map((opt, i) => {
+                            const active = it.serviceIdx === i;
+                            return (
+                              <button
+                                key={i}
+                                type="button"
+                                onClick={() => changeItemService(it.id, i)}
+                                aria-pressed={active}
+                                className={`text-left rounded-xl px-4 py-3 flex flex-col gap-0.5 border-2 transition-colors duration-200 ${
+                                  active
+                                    ? "bg-[#213B2F] border-[#213B2F]"
+                                    : "bg-white border-[#222E2C]/10 hover:border-[#222E2C]/30"
+                                }`}
+                              >
+                                <span className={`font-sans font-semibold text-sm ${active ? "text-[#D8DDB8]" : "text-[#222E2C]"}`}>
+                                  {opt.label}
+                                </span>
+                                <span className={`font-sans text-xs ${active ? "text-[#D8DDB8]/70" : "text-[#222E2C]/55"}`}>
+                                  ${opt.basePrice} base
+                                </span>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Guests + date + total */}
+                      <div className="px-6 py-5 border-b border-[#213B2F]/8 flex flex-wrap items-end gap-5">
+                        <div className="flex flex-col gap-1.5">
+                          <span className="font-sans text-[10px] font-semibold uppercase tracking-widest text-[#222E2C]/40">
+                            {ob.guestsLabel}
+                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => updateServiceItem(it.id, { guests: Math.max(2, (it.guests || 2) - 1) })}
+                              aria-label="Decrease guests"
+                              className="size-9 flex items-center justify-center rounded-full border-2 border-[#213B2F]/25 text-[#213B2F] font-sans text-lg hover:bg-[#213B2F]/8 transition-colors select-none"
+                            >−</button>
+                            <div className="flex items-center justify-center px-4 py-2 rounded-full bg-[#213B2F] min-w-[3rem]">
+                              <span className="font-sans font-bold text-base text-[#EDE5D8] tabular-nums">{it.guests}</span>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => updateServiceItem(it.id, { guests: (it.guests || 2) + 1 })}
+                              aria-label="Increase guests"
+                              className="size-9 flex items-center justify-center rounded-full border-2 border-[#213B2F]/25 text-[#213B2F] font-sans text-lg hover:bg-[#213B2F]/8 transition-colors select-none"
+                            >+</button>
+                          </div>
+                        </div>
+
+                        <DateField
+                          value={it.date}
+                          onChange={(d) => updateServiceItem(it.id, { date: d })}
+                          optional
+                          tone="light"
+                          className="min-w-[12rem]"
+                        />
+
+                        <div className="ml-auto flex flex-col items-end gap-0.5">
+                          <span className="font-sans text-[10px] text-[#222E2C]/40 uppercase tracking-widest">Day total</span>
+                          <span className="font-sans font-bold text-2xl tabular-nums" style={{ color: "#C9974F" }}>
+                            ${lineTotal.toLocaleString("en-US")}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Dish picker — per item; shows the meals this service covers */}
+                      {itemMeals.length > 0 && (
+                        <div className="px-6 py-6 flex flex-col gap-5">
+                          {/* Limit banner */}
+                          <div className={`rounded-2xl px-5 py-4 flex flex-col sm:flex-row sm:items-center gap-3 ${
+                            itemMaxDishes === 2 ? "bg-[#213B2F]" : "bg-[#222E2C]/6 border border-[#222E2C]/12"
+                          }`}>
+                            <div className="flex-1">
+                              {itemMaxDishes === 2 ? (
+                                <>
+                                  <p className="font-sans font-semibold text-sm text-[#D8DDB8]">With {it.guests} guests, choose up to 2 dishes per meal</p>
+                                  <p className="font-sans text-xs text-[#D8DDB8]/70 mt-0.5">The chef will prepare both options for your group.</p>
+                                </>
+                              ) : (
+                                <>
+                                  <p className="font-sans font-semibold text-sm text-[#222E2C]">Choose 1 dish per meal</p>
+                                  <p className="font-sans text-xs text-[#222E2C]/60 mt-0.5">Picking another automatically replaces the current one.</p>
+                                </>
+                              )}
+                            </div>
+                            <span className={`shrink-0 font-sans text-xs font-semibold px-3 py-1.5 rounded-full ${
+                              itemMaxDishes === 2 ? "bg-[#D8DDB8]/15 text-[#D8DDB8]" : "bg-[#222E2C]/10 text-[#222E2C]"
+                            }`}>
+                              {itemMaxDishes === 2 ? "Up to 2 dishes" : "1 dish per meal"}
+                            </span>
+                          </div>
+
+                          {/* Meal tabs — only shown for Full Day */}
+                          {itemMeals.length > 1 && (
+                            <div className="flex flex-wrap gap-2">
+                              {itemMeals.map((meal) => {
+                                const Icon = MEAL_META[meal]?.icon;
+                                const picked = Object.values(it.dishes || {}).filter((d) => d.group === meal).length;
+                                const tabActive = itemActive === meal;
+                                return (
+                                  <button
+                                    key={meal}
+                                    type="button"
+                                    aria-pressed={tabActive}
+                                    onClick={() => setItemActiveMeal(it.id, meal)}
+                                    className={`flex items-center gap-2 px-4 py-2 rounded-full border font-sans text-sm font-medium transition-colors duration-200 ${
+                                      tabActive
+                                        ? "bg-[#213B2F] border-[#213B2F] text-[#D8DDB8]"
+                                        : "border-[#222E2C]/20 text-[#222E2C] hover:border-[#222E2C]/40"
+                                    }`}
+                                  >
+                                    {Icon && <Icon size={14} />}
+                                    {t(`privateChef.${meal}.heading`)}
+                                    {picked > 0 && (
+                                      <span className={`size-5 flex items-center justify-center rounded-full text-[10px] font-bold ${
+                                        tabActive ? "bg-[#D8DDB8]/20 text-[#D8DDB8]" : "bg-[#213B2F] text-[#D8DDB8]"
+                                      }`}>{picked}</span>
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          )}
+
+                          {itemActive && mealsI18n[itemActive] && (
+                            <MenuSection
+                              heading={mealsI18n[itemActive].heading}
+                              items={Array.isArray(mealsI18n[itemActive].items) ? mealsI18n[itemActive].items : []}
+                              note={mealsI18n[itemActive].note}
+                              extras={Array.isArray(mealsI18n[itemActive].extras) ? mealsI18n[itemActive].extras : []}
+                              extrasHeading={mealsI18n[itemActive].extrasHeading}
+                              group={itemActive}
+                              dishes={it.dishes || {}}
+                              onToggle={(dishId, label, group) => toggleDishInItem(it.id, dishId, label, group)}
+                              maxDishes={itemMaxDishes}
+                              hideHeading={itemMeals.length > 1}
+                            />
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* "Add another day" card — always visible at the end. On first
+                 * use (no items yet), it's the primary call-to-action. */}
+                <button
+                  type="button"
+                  onClick={() => addServiceItem()}
+                  className="rounded-2xl border-2 border-dashed border-[#213B2F]/30 bg-[#213B2F]/3 hover:bg-[#213B2F]/6 hover:border-[#213B2F]/55 transition-colors px-6 py-8 flex flex-col items-center justify-center gap-3 group"
+                >
+                  <span className="size-12 rounded-full bg-[#213B2F] text-[#D8DDB8] flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                    <TbPlus size={20} />
+                  </span>
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="font-sans font-semibold text-base text-[#213B2F]">
+                      {serviceItems.length === 0 ? "Start building your menu" : "Add a menu for another day"}
+                    </span>
+                    <span className="font-sans text-sm text-[#222E2C]/60">
+                      {serviceItems.length === 0
+                        ? "Pick a day and meal type. You can combine several across a long stay."
+                        : `Great for long stays — each day has its own service, guest count and dish picks.`}
+                    </span>
                   </div>
-                )}
-
-                {activeMeal === "breakfast" && (
-                  <MenuSection
-                    heading={t("privateChef.breakfast.heading")}
-                    items={Array.isArray(breakfastItems) ? breakfastItems : []}
-                    note={t("privateChef.breakfast.note")}
-                    extras={Array.isArray(breakfastExtras) ? breakfastExtras : []}
-                    extrasHeading={t("privateChef.breakfast.extrasHeading")}
-                    group="breakfast" dishes={dishes} onToggle={toggleDish}
-                    maxDishes={maxDishes} hideHeading={visibleMeals.length > 1}
-                  />
-                )}
-                {activeMeal === "lunch" && (
-                  <MenuSection
-                    heading={t("privateChef.lunch.heading")}
-                    items={Array.isArray(lunchItems) ? lunchItems : []}
-                    group="lunch" dishes={dishes} onToggle={toggleDish}
-                    maxDishes={maxDishes} hideHeading={visibleMeals.length > 1}
-                  />
-                )}
-                {activeMeal === "dinner" && (
-                  <MenuSection
-                    heading={t("privateChef.dinner.heading")}
-                    items={Array.isArray(dinnerItems) ? dinnerItems : []}
-                    group="dinner" dishes={dishes} onToggle={toggleDish}
-                    maxDishes={maxDishes} hideHeading={visibleMeals.length > 1}
-                  />
-                )}
-
+                </button>
               </div>
-            )}
+            </div>
           </div>
 
           {/* 03 — Themed Nights */}
@@ -646,20 +923,23 @@ export default function PrivateChefPage() {
             </div>
 
             <div className="flex flex-col gap-3">
-              {Array.isArray(themedNights) && themedNights.map((night, i) => (
-                <ThemedNightPanel
-                  key={i}
-                  night={night}
-                  image={NIGHT_IMAGES[i]}
-                  selected={selectedNightIdx === i}
-                  onClick={() => pickNight(i)}
-                  guests={themedGuests}
-                  onGuestsChange={changeThemedGuests}
-                  date={themedDate}
-                  onDateChange={handleThemedDate}
-                  price={findThemedTier(themedTiers, themedGuests)?.priceValue}
-                />
-              ))}
+              {Array.isArray(themedNights) && themedNights.map((night, i) => {
+                const instancesOfThisNight = themedItems
+                  .map((it, idx) => ({ ...it, _globalIdx: idx }))
+                  .filter((it) => it.nightIdx === i);
+                return (
+                  <ThemedNightPanel
+                    key={i}
+                    night={night}
+                    image={NIGHT_IMAGES[i]}
+                    instances={instancesOfThisNight}
+                    onAddInstance={() => addThemedItem(i)}
+                    onUpdateInstance={updateThemedItem}
+                    onRemoveInstance={removeThemedItem}
+                    priceOf={(g) => findThemedTier(themedTiers, g)?.priceValue}
+                  />
+                );
+              })}
             </div>
 
             {/* Beverage add-ons */}
@@ -801,6 +1081,7 @@ export default function PrivateChefPage() {
               onNotesChange={setNotes}
               onAddToCart={addToCart}
               inCart={inCart}
+              mode={mode}
             />
           </div>
 
@@ -972,8 +1253,9 @@ function DarkField({ label, placeholder, value, onChange }) {
  * the cart's `serviceForms["private-chef"]`, not flattened into zero-price lines the
  * way the old version did.
  */
-function ChefSummary({ lines, infoLines = [], total, notes, onNotesChange, onAddToCart, inCart }) {
+function ChefSummary({ lines, infoLines = [], total, notes, onNotesChange, onAddToCart, inCart, mode = "add" }) {
   const { t } = useI18n();
+  const { serviceForms, editSignal, hydrated } = useCart();
 
   const df  = t("privateChef.dietaryForm");
 
@@ -990,6 +1272,31 @@ function ChefSummary({ lines, infoLines = [], total, notes, onNotesChange, onAdd
     });
   };
 
+  const resetDietary = () => {
+    setRestrictionCounts({});
+    setRestrictionOther("");
+    setAllergies("");
+    setPreferences("");
+  };
+
+  /* Re-sync dietary fields ONLY when the drawer's Edit link fires. A fresh
+   * visit to /private-chef/ keeps the form empty even if the cart already
+   * carries dietary info — matching the parent's seed-on-edit-only rule. */
+  const seedTrigger = editSignal.service === SERVICE ? editSignal.token : null;
+  const lastSeed = useRef(null);
+  useEffect(() => {
+    if (!hydrated) return;
+    if (seedTrigger === null) return;
+    if (lastSeed.current === seedTrigger) return;
+    lastSeed.current = seedTrigger;
+
+    const saved = serviceForms[SERVICE];
+    setRestrictionCounts(saved?.restrictions && typeof saved.restrictions === "object" ? saved.restrictions : {});
+    setRestrictionOther(saved?.restrictionOther ?? "");
+    setAllergies(saved?.allergies ?? "");
+    setPreferences(saved?.preferences ?? "");
+  }, [hydrated, seedTrigger, serviceForms]);
+
   const handleAddToCart = () => {
     const dietary = {};
     if (Object.keys(restrictionCounts).length) dietary.restrictions = restrictionCounts;
@@ -997,6 +1304,9 @@ function ChefSummary({ lines, infoLines = [], total, notes, onNotesChange, onAdd
     if (allergies.trim())        dietary.allergies        = allergies.trim();
     if (preferences.trim())      dietary.preferences      = preferences.trim();
     onAddToCart(dietary);
+    /* Clear the dietary form after the submit — the parent clears the rest of
+     * the page state in its addToCart. */
+    resetDietary();
   };
 
   return (
@@ -1107,8 +1417,8 @@ function ChefSummary({ lines, infoLines = [], total, notes, onNotesChange, onAdd
           disabled={lines.length === 0}
           className="flex items-center justify-center gap-2 px-6 py-3.5 rounded-full font-sans font-medium text-sm shadow-sm hover:shadow transition-all duration-200 w-fit disabled:opacity-50 bg-[#D8DDB8] text-[#213B2F] hover:bg-[#D8DDB8]/90"
         >
-          {inCart ? <TbCheck size={16} /> : <TbShoppingBag size={16} />}
-          {inCart ? t("cart.update") : t("cart.addToCart")}
+          {mode === "edit" ? <TbCheck size={16} /> : <TbShoppingBag size={16} />}
+          {mode === "edit" ? t("cart.update") : (inCart ? t("cart.addToOrder") : t("cart.addToCart"))}
         </button>
 
       </div>
@@ -1150,8 +1460,10 @@ const NIGHT_IMAGES = [
   "/assets/Chef/pizza.avif",
 ];
 
-function ThemedNightPanel({ night, image, selected, onClick, guests, onGuestsChange, date, onDateChange, price }) {
-  const todayIso = new Date().toISOString().slice(0, 10);
+function ThemedNightPanel({ night, image, instances = [], onAddInstance, onUpdateInstance, onRemoveInstance, priceOf }) {
+  const selected = instances.length > 0;
+
+  const clampGuests = (g) => Math.max(2, Math.min(15, g));
 
   // Extract the choice count for a menu section by scanning the includes summary
   const getChoiceCount = (sectionHeading) => {
@@ -1173,7 +1485,7 @@ function ThemedNightPanel({ night, image, selected, onClick, guests, onGuestsCha
         <div className="overflow-hidden">
           <button
             type="button"
-            onClick={onClick}
+            onClick={onAddInstance}
             className="w-full flex items-stretch text-left bg-white hover:bg-[#213B2F]/4 transition-colors duration-200"
           >
             <div className="w-44 shrink-0 overflow-hidden">
@@ -1187,7 +1499,8 @@ function ThemedNightPanel({ night, image, selected, onClick, guests, onGuestsCha
             <div className="px-6 py-5 flex flex-col items-end justify-center gap-2 shrink-0">
               <span className="font-sans text-xs text-[#222E2C]/40">from $530</span>
               <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#213B2F]/20 text-[#213B2F] font-sans text-sm font-medium">
-                Select night
+                <TbPlus size={13} />
+                Add this night
               </span>
             </div>
           </button>
@@ -1199,11 +1512,8 @@ function ThemedNightPanel({ night, image, selected, onClick, guests, onGuestsCha
         <div className="overflow-hidden">
           <div className={`transition-opacity duration-300 ${selected ? "opacity-100 delay-200" : "opacity-0"}`}>
 
-            {/* Photo header with gradient overlay — click to deselect */}
-            <div
-              className="relative h-72 overflow-hidden cursor-pointer"
-              onClick={onClick}
-            >
+            {/* Photo header with gradient overlay — shows instance count badge */}
+            <div className="relative h-72 overflow-hidden">
               <img src={image} alt={night.title} className="w-full h-full object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#213B2F] via-[#213B2F]/40 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 px-8 py-6 flex items-end justify-between gap-4">
@@ -1213,49 +1523,91 @@ function ThemedNightPanel({ night, image, selected, onClick, guests, onGuestsCha
                 </div>
                 <span className="shrink-0 flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#D8DDB8] text-[#213B2F] font-sans text-sm font-bold shadow-lg">
                   <TbCheck size={15} />
-                  Selected
+                  {instances.length} {instances.length === 1 ? "night" : "nights"}
                 </span>
               </div>
             </div>
 
-            {/* Controls bar: guests + date + price */}
+            {/* Instances list — one row per occasion. Each has its own guests,
+              * date, total and remove. Below them, "Add another date" adds a
+              * new instance that inherits the last guest count. */}
             <div
-              className="bg-[#213B2F] px-8 py-6 flex flex-wrap items-end gap-6 border-t border-white/10"
+              className="bg-[#213B2F] px-8 py-6 flex flex-col gap-4 border-t border-white/10"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex flex-col gap-1.5">
-                <span className="font-sans text-xs font-semibold uppercase tracking-widest text-[#D8DDB8]/50">Guests</span>
-                <div className="flex items-center bg-white/12 rounded-xl overflow-hidden w-fit border border-white/10">
-                  <button type="button" onClick={() => onGuestsChange(guests - 1)}
-                    className="size-10 flex items-center justify-center font-sans text-xl leading-none text-[#D8DDB8]/70 hover:bg-white/10 transition-colors select-none">−</button>
-                  <span className="w-10 text-center font-sans text-sm font-bold text-[#EDE5D8]">{guests}</span>
-                  <button type="button" onClick={() => onGuestsChange(guests + 1)}
-                    className="size-10 flex items-center justify-center font-sans text-xl leading-none text-[#D8DDB8]/70 hover:bg-white/10 transition-colors select-none">+</button>
-                </div>
-              </div>
+              {instances.map((instance, instanceIdx) => {
+                const instancePrice = priceOf?.(instance.guests);
+                return (
+                  <div
+                    key={instance.id}
+                    className="flex flex-wrap items-end gap-6 pb-4 border-b border-white/10 last:border-0 last:pb-0"
+                  >
+                    <div className="flex flex-col gap-1.5">
+                      <span className="font-sans text-[10px] font-bold uppercase tracking-widest text-[#C9974F]">
+                        Occasion {instanceIdx + 1}
+                      </span>
+                      <div className="flex items-center bg-white/12 rounded-xl overflow-hidden w-fit border border-white/10">
+                        <button
+                          type="button"
+                          onClick={() => onUpdateInstance(instance.id, { guests: clampGuests(instance.guests - 1) })}
+                          aria-label="Decrease guests"
+                          className="size-10 flex items-center justify-center font-sans text-xl leading-none text-[#D8DDB8]/70 hover:bg-white/10 transition-colors select-none"
+                        >−</button>
+                        <span className="w-10 text-center font-sans text-sm font-bold text-[#EDE5D8] tabular-nums">{instance.guests}</span>
+                        <button
+                          type="button"
+                          onClick={() => onUpdateInstance(instance.id, { guests: clampGuests(instance.guests + 1) })}
+                          aria-label="Increase guests"
+                          className="size-10 flex items-center justify-center font-sans text-xl leading-none text-[#D8DDB8]/70 hover:bg-white/10 transition-colors select-none"
+                        >+</button>
+                      </div>
+                    </div>
 
-              <div className="flex flex-col gap-1.5">
-                <label className="flex items-center gap-1.5 font-sans text-xs font-semibold uppercase tracking-widest text-[#D8DDB8]/50 cursor-default">
-                  <TbCalendarEvent size={11} />
-                  Preferred date
-                  <span className="font-normal normal-case tracking-normal text-[#D8DDB8]/35">(optional)</span>
-                </label>
-                <input
-                  type="date"
-                  min={todayIso}
-                  value={date}
-                  onClick={(e) => e.stopPropagation()}
-                  onChange={(e) => { e.stopPropagation(); onDateChange(e.target.value); }}
-                  className="font-sans text-sm rounded-xl px-4 py-2.5 bg-white/12 border border-white/15 text-[#D8DDB8] focus:outline-none focus:ring-2 focus:ring-white/25 [color-scheme:dark] transition-all"
-                />
-              </div>
+                    <div
+                      onClick={(e) => e.stopPropagation()}
+                      onKeyDown={(e) => e.stopPropagation()}
+                    >
+                      <DateField
+                        value={instance.date}
+                        onChange={(d) => onUpdateInstance(instance.id, { date: d })}
+                        optional
+                        tone="dark"
+                        className="min-w-[12rem]"
+                      />
+                    </div>
 
-              {price && (
-                <div className="flex flex-col gap-0.5 ml-auto text-right">
-                  <span className="font-sans text-xs text-[#D8DDB8]/50 uppercase tracking-widest">Total · {guests} guests</span>
-                  <span className="font-sans font-bold text-3xl text-[#EDE5D8]">${price.toLocaleString("en-US")}</span>
-                </div>
-              )}
+                    <div className="ml-auto flex items-end gap-4">
+                      {instancePrice && (
+                        <div className="flex flex-col gap-0.5 text-right">
+                          <span className="font-sans text-[10px] text-[#D8DDB8]/50 uppercase tracking-widest">
+                            Total · {instance.guests} guests
+                          </span>
+                          <span className="font-sans font-bold text-2xl text-[#EDE5D8] tabular-nums">
+                            ${instancePrice.toLocaleString("en-US")}
+                          </span>
+                        </div>
+                      )}
+                      <button
+                        type="button"
+                        onClick={() => onRemoveInstance(instance.id)}
+                        aria-label={`Remove occasion ${instanceIdx + 1}`}
+                        className="size-10 rounded-full flex items-center justify-center text-[#D8DDB8]/50 hover:text-red-300 hover:bg-red-400/10 transition-colors shrink-0"
+                      >
+                        <TbTrash size={16} />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+
+              <button
+                type="button"
+                onClick={onAddInstance}
+                className="w-fit inline-flex items-center gap-2 px-4 py-2 rounded-full border border-dashed border-[#D8DDB8]/40 text-[#D8DDB8] hover:bg-white/10 hover:border-[#D8DDB8]/70 transition-colors font-sans text-sm font-semibold"
+              >
+                <TbPlus size={14} />
+                Add another date for this night
+              </button>
             </div>
 
             {/* Menu content */}

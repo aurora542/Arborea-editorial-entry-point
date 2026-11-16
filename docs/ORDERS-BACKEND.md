@@ -1,95 +1,112 @@
-# Orders backend — integration handoff
+# Orders backend — plan e integración
 
 **Read this before changing anything in the cart, checkout, or order-submission path.**
 
-This document is the running record of the order flow. The front end is being built
-by one developer; the Google Apps Script backend will be connected by a different
-developer in a later session. This file is the contract between the two.
+Last updated: 2026-11-15 · Status: **planeado, sin implementar**
 
-Last updated: 2026-10-01 · Status: **front end in progress, backend not started**
+This file is the contract for the order flow. Sections 1–8 are the forward-looking
+plan agreed with the product owner on 2026-11-15. Section 9 is the historical
+progress log — append to it, don't rewrite it.
 
 ---
 
-## 1. Current state
+## 1. Current state (verificado 2026-11-15)
 
 | Piece | Status |
 |---|---|
 | Shared UI primitives (`ui/QtyStepper`, `DateField`, `Chip`, `SelectableCard`) | ✅ done |
 | Service registry (`src/data/services.js` + `services.*` i18n keys) | ✅ done |
-| Dead code / unused deps removed | ✅ done |
 | Global cart context (`CartContext` + `lib/sku.js`, mounted in `layout.tsx`) | ✅ done |
-| Cart drawer + floating badge | ✅ done |
+| Cart drawer + cart button | ✅ done |
 | Home wired to cart (activities + vehicles) | ✅ done |
 | Spa, Chef, Full Fridge wired to cart | ✅ done |
-| Fishing tours wired to cart | ⏸ **deliberately deferred** — keeps `useOrderCart` + `OrderCheckoutForm` alive |
-| `/checkout/` page | 🟡 review section done; guest form + submit pending |
-| Payload builder (`buildOrderPayload`) | 🔜 pending |
-| **Mock submit (front end works end-to-end)** | 🔜 pending |
-| **Real Apps Script `doPost`** | ❌ **not started — this is the handoff** |
-| Google Sheet + Drive folder provisioned | ❌ not started |
-| `.env` values set in build environment | ❌ not started |
+| **Fishing tours wired to cart** | ✅ done — *uncommitted* |
+| **Per-service notes on all four signature experiences** | ✅ done — *uncommitted* |
+| `/checkout/` review section | ✅ done |
+| `/checkout/` guest form + submit | ❌ not started |
+| Payload builder (`src/lib/orderPayload.js`) | ❌ not started |
+| Prices consolidated to a single source | ❌ not started |
+| Apps Script `doPost` for the new model | ❌ not started |
+| Drive folder + template + master index provisioned | ❌ not started |
+| Vercel migration | ❌ not started (decided: yes) |
 
-Progress log is at the bottom of this file. Update it as work lands.
+**There is no submit path in the app right now.** `OrderCheckoutForm.jsx` and
+`useOrderCart.js` are orphaned — nothing imports them — and `submitOrder` is only
+referenced from that dead file. A guest can fill the entire cart and has no way to
+send it.
 
-## 2. Why the browser posts straight to Apps Script
+**No backward compatibility is needed.** `NEXT_PUBLIC_ORDERS_BACKEND_URL` has never
+been set in any build, so every bundle ever published has `BACKEND_URL === ""` and
+returns `missing-backend-url` without ever posting. No legacy-schema traffic exists
+or can exist. The old flat payload (`{ service, name, casa, dateNeeded, items }`)
+can be deleted outright rather than supported for a release.
 
-`next.config.ts` sets `output: "export"`. The site is static HTML on a CDN — there
-is **no server, no API route, no server action**. There is nowhere to put a secret
-or a proxy. So the only option is: browser `fetch` → Apps Script Web App.
+## 2. Decisions taken 2026-11-15
 
-Two consequences to accept up front:
+1. **One Google Sheet per reservation**, living in a folder on a Shared Drive in the
+   client's Google Workspace. The concierge opens a reservation's file and finds
+   everything that reservation ever ordered.
+2. **The reservation number is the identity.** It comes from Simple Booking, the
+   client's PMS, and is entered by the guest at checkout. Multiple checkouts across
+   different sessions accumulate into the same file.
+3. **The sheet is a reference document, not a billing surface.** Invoices are
+   produced in a separate system. Totals stay precomputed and static; there are no
+   live formulas and no editable price cells.
+4. **Hosting moves to Vercel.** This gives a server, which moves the shared secret
+   out of the client bundle and removes the `text/plain` CORS workaround. It is also
+   a precondition for ever taking payment on the site.
+5. **Prices consolidate to a single source** consumed by both locales.
+6. **Notes exist at two levels**: one free-form note per signature experience
+   (chef, fridge, spa, fishing) and one general note for the whole order.
 
-- `orderApi.js` posts with `Content-Type: text/plain` **on purpose** — it avoids the
-  CORS preflight that Apps Script cannot answer. Do not "fix" this to
-  `application/json`; the request will start failing. Apps Script still receives the
-  body and `JSON.parse`s it in `doPost`.
-- The shared secret is a `NEXT_PUBLIC_*` value, so it is **visible in the JS
-  bundle**. It is anti-noise, not authentication. Don't design anything around it
-  being private. Real auth would need a proxy (Cloudflare Worker), which is out of
-  scope and was consciously deferred.
+## 3. Target architecture
 
-## 3. The seam: where to plug in
+```
+Browser (Vercel-hosted Next.js)
+   │  POST /api/orders          ← JSON, same-origin, no CORS, no public secret
+   ▼
+Next.js route handler            ← validates, holds ORDERS_SHARED_SECRET server-side
+   │  POST  (secret in body)
+   ▼
+Apps Script Web App              ← owned by the CLIENT's Workspace account
+   ├─ master index Sheet         ← dedupe log + reservation→fileId map
+   ├─ reservation Sheet          ← found or created from the template
+   └─ notification email         ← to operations, with a link to the file
+```
 
-Everything the backend needs flows through one file: **`src/lib/orderApi.js`**.
+The Apps Script layer is identical whether the browser posts to it directly or
+through the Vercel route. Going to Vercel first means `orderApi.js` is written once
+and the live round-trip is tested once.
 
-It exports `submitOrder(payload)` and returns `{ ok: true, submissionId }` or
-`{ ok: false, error }`. It currently resolves against a **mock** that waits ~1.2s
-and returns success, so the whole UI can be demoed without a backend.
+### Why this replaces the old constraints
 
-To go live:
-
-1. Provision the Sheet + Drive folder, deploy the Apps Script Web App
-   ("Execute as: me", "Who has access: Anyone").
-2. Set `NEXT_PUBLIC_ORDERS_BACKEND_URL` and `NEXT_PUBLIC_ORDERS_SHARED_SECRET` in
-   the **build** environment (they are inlined at build time — setting them only in
-   a local `.env.local` will not affect the deployed site).
-3. Flip the mock off. The switch is a single constant at the top of `orderApi.js`;
-   the real `fetch` path is already written next to the mock.
-
-**No UI file needs to change to connect the backend.** If you find yourself editing
-a component under `src/components/sections/` to make the backend work, something has
-gone wrong — the payload builder is the only thing that should need adjusting.
+`output: "export"` forced browser→Apps Script directly, which forced a
+`NEXT_PUBLIC_*` secret visible in the bundle and `Content-Type: text/plain` to dodge
+a CORS preflight Apps Script cannot answer. On Vercel none of that applies. Those
+two rules are **withdrawn**; see §7.
 
 ## 4. Payload contract
 
-`buildOrderPayload()` in `src/lib/orderPayload.js` produces exactly this. Treat it
-as frozen; if the Apps Script needs a different shape, change it in the builder and
-update this section in the same commit.
+Produced by `buildOrderPayload()` in `src/lib/orderPayload.js`. `schemaVersion` is
+there so the Apps Script can branch when this shape changes — this is a living
+system and it will.
 
 ```jsonc
 {
+  "schemaVersion": 2,
   "submissionId": "9f2c…",        // uuid, generated ONCE per checkout attempt
-  "createdAt":    "2026-09-28T18:52:00.000Z",
+  "createdAt":    "2026-11-15T18:52:00.000Z",
   "locale":       "en",           // "en" | "es"
   "currency":     "USD",
-  "secret":       "…",            // injected by submitOrder, not by the builder
 
-  "guest": {                      // all five REQUIRED, validated in the UI
+  "guest": {                      // all seven REQUIRED, validated in the UI
+    "reservationNumber": "SB-10432",   // Simple Booking · THE grouping key
     "firstName": "Ana",
     "lastName":  "Rodríguez",
     "email":     "ana@example.com",
     "phone":     "+506 8888 8888",
-    "casa":      "casa-mango"     // slug from src/data/properties.js
+    "casa":      "casa-mango",         // slug from src/data/properties.js
+    "checkInDate": "2026-12-02"
   },
 
   "cart": [
@@ -99,109 +116,205 @@ update this section in the same commit.
       "sku":       "massage-deep-tissue",
       "title":     "Deep Tissue Massage",
       "qty":       2,
-      "unitPrice": 130,
+      "unitPrice": 130,            // 0 means BY QUOTE, never "free"
       "lineTotal": 260,            // qty * unitPrice, precomputed
-      "date":      "2026-10-04",   // optional preferred date, "" if unset
+      "date":      "2026-12-04",   // optional preferred date, "" if unset
       "options":   { "duration": "90 min" }
     }
   ],
 
-  "serviceForms": {               // free-form preferences, only present services appear
+  "serviceForms": {               // only services present in the cart appear
     "private-chef": {
       "dishes":       { "breakfast": ["Gallo Pinto"], "dinner": ["Whole Fish"] },
       "restrictions": { "Vegetarian": 2, "Gluten-Free": 1 },
       "restrictionOther": "low sodium",
       "allergies":    "severe peanut allergy",
-      "preferences":  "no cilantro"
+      "preferences":  "no cilantro",
+      "notes":        "the chef can arrive at 5pm"
     },
     "full-fridge": {
       "adults": 4, "children": 2, "days": 5,
-      "produce": ["dairy:milk", "fruits:mango"],
-      "cooking": "…", "groceries": "…", "snacksFor": ["kids"], "preferredSnacks": "…"
+      "produce": ["dairy:milk", "fruits:mango"],   // FULL list — it is a shopping list
+      "cooking": "…", "groceries": "…", "snacksFor": ["kids"],
+      "preferredSnacks": "…", "notes": "…"
     },
-    "wellness-spa": { "allergies": "…" }
+    "wellness-spa":  { "allergies": "…", "notes": "…" },
+    "fishing-tours": { "notes": "…" }
   },
 
-  "totals": { "itemCount": 5, "subtotal": 1240, "total": 1240 },
-  "notes":  "Arriving late on the 3rd."
+  "totals": {
+    "itemCount": 5,
+    "subtotal":  1240,            // sum of priced lines only
+    "quotePending": 1             // count of unitPrice === 0 lines
+  },
+  "notes": "Arriving late on the 2nd."   // general, order-level
 }
 ```
 
-Notes on the shape:
+Rules that hold:
 
-- **One submission per order.** A guest who booked chef + spa + a car sends *one*
-  POST containing all of it. The previous design sent one POST per service page;
-  that is gone by design. Do not re-introduce per-service submissions.
-- `lineTotal` and `totals` are precomputed so the Sheet doesn't need formulas.
-- **All prices are estimates.** The checkout states this explicitly to the guest
-  ("estimated, subject to change"). Don't treat `total` as a binding amount, and
-  don't add payment logic — no money is collected anywhere in this product.
-- `serviceForms` keys are the same service ids as `cart[].service`. Services with no
-  preference form (transport, tours, fishing) simply don't appear.
-- `produce` uses stable `category:item` keys, not translated labels.
+- **One submission per checkout.** Chef + spa + a car is one POST. Never
+  re-introduce per-service submissions.
+- **`submissionId` is generated once per checkout attempt and reused on retry.**
+  Generating it inside the submit handler means a retry after a network error gets a
+  new id, defeats the dedupe, and writes the order twice. The old
+  `OrderCheckoutForm` had exactly this bug.
+- **`unitPrice: 0` means "by quote", not free.** Transport and tours produce these.
+  They must never render or total as `$0`.
+- **Prices come from the single source (§6), not from `t()`.**
+- `serviceForms` is copied raw and complete. Do **not** build it through
+  `describeServiceForm()` from `src/lib/serviceForm.js` — that is a UI formatter and
+  it collapses `produce` to a count (`COUNT_ONLY`). The guest's 40-item grocery list
+  would be written to the sheet as "18 items selected".
+- Never copy a `tours.activities` object wholesale into a line. `commission`,
+  `contactName` and `whatsapp` are internal margin data that ship in the bundle.
+  `normalizeLine` whitelists for this reason.
 
-## 5. What the Apps Script must do
+## 5. The reservation Sheet
 
-The existing `apps-script/Code.gs` was written for the **old flat payload**
-(`{ service, name, casa, dateNeeded, items: [{label, price}] }`) and needs a rewrite.
-Keep from it: the `json()` helper, the `LockService` lock, and the `Log`-tab dedupe
-by `submissionId`.
+One file per reservation number, created from a template on the first checkout,
+appended to on every later one.
 
-Target behaviour:
+**Name:** `SB-10432 — Rodríguez — Casa Mango`, reservation code first so the folder
+sorts and searches usefully.
 
-1. **`Orders` tab** — one row per order: timestamp, `submissionId`, guest name,
-   email, phone, casa, list of services, item count, total, notes, link to the Drive
-   file.
-2. **`OrderItems` tab** — one row per cart line, joined to the order by
-   `submissionId`: service, sku, title, qty, unitPrice, lineTotal, date,
-   `JSON.stringify(options)`. This is what makes the order queryable per item while
-   still being one order.
-3. **Drive** — write the entire payload verbatim as
-   `<submissionId>.json` into a dedicated folder. This is the guarantee that
-   *nothing* is lost even when the Sheet has no column for it (explicit
-   requirement: "TODA la información"). Put the file URL in the `Orders` row.
-4. **Notification email** — grouped by service, with the guest's contact details and
-   the preference forms rendered readably.
+| Tab | Contents | Who writes it |
+|---|---|---|
+| `Consolidado` | Every item from every checkout in one flat list: service, item, qty, unit price, total, date, options. The "what did this reservation order, in total" view. | script |
+| `Pedidos` | One block per checkout, newest appended at the bottom: form header (guest, casa, check-in, reservation number, general notes, order date+time, status) then that checkout's item list with each service's notes. | script |
+| `Payload` (hidden) | The raw JSON of every checkout. The guarantee that nothing is lost even when no column exists for it. | script |
 
-### Bugs in the current `Code.gs` to fix while rewriting
+Two rules for `Pedidos`:
 
-- It **requires** `payload.name`, `payload.casa`, `payload.dateNeeded` and returns
-  `Missing required fields` otherwise. The new payload has no top-level `name` or
-  `dateNeeded` at all. Validate `guest.firstName` / `guest.lastName` /
-  `guest.email` / `guest.phone` / `guest.casa` and `cart.length > 0` instead.
-- Consider accepting the old flat shape as a fallback for one release. The site is
-  static and CDN-cached, so a stale bundle can post the old schema after you deploy.
-- **Apps Script Web Apps need a new deployment version** for code edits to take
-  effect. Editing the script and saving is not enough.
+- **Never sort or filter it.** Header rows and item rows are different shapes; a sort
+  destroys the structure irrecoverably. The per-block **status column** exists so the
+  concierge can track what she has arranged by typing, without reordering anything.
+- Block layout is for reading. Anything that needs filtering belongs in
+  `Consolidado`.
 
-## 6. Do not change
+### Master index
 
-These were deliberate decisions. Changing them silently will cost the other
-developer real time.
+Technically required, not a nice-to-have: with one file per reservation there is
+nowhere else for the dedupe log to live.
 
-1. **Don't refactor UI components to make the backend work.** The seam is
-   `orderApi.js` + `orderPayload.js`. Nothing under `src/components/sections/`
-   should need to change.
-2. **Don't switch `Content-Type` to `application/json`** in `orderApi.js` (§2).
-3. **Don't re-introduce per-service submissions** or per-page submit buttons. Pages
+| Column | Why |
+|---|---|
+| `reservationNumber` → `fileId` | Finding the file by name is fragile; this is the lookup. |
+| `submissionId`, processed-at | Dedupe. A retry must not write twice. |
+| guest, casa, check-in, checkout count, total, link | The client's overview, and the safety net below. |
+
+**Typo safety net.** The reservation number is typed by a guest and is now the file
+key, so a typo creates a *second file* for an existing reservation and the concierge
+may miss half the order. Mitigations: normalise hard (uppercase, strip spaces and
+dashes) before using it as a key; show it back for confirmation before submitting;
+keep `lastName` as a secondary reconciliation key; and sort the index so near-identical
+codes land next to each other and can be spotted. The real fix is validating against
+the Simple Booking API — worth checking whether the client has access.
+
+## 6. Prices: single source
+
+Measured 2026-11-15. The same price is currently written in up to three places.
+
+| Where | Count | Notes |
+|---|---|---|
+| Structured numeric values in i18n | **50 per locale** | `priceValue`, `basePrice`, `extraPersonPrice`, `priceValues[]`. These feed the cart. Sections: `wellnessSpa` 16, `privateChef` 13, `tours` 12, `fullFridge` 9. |
+| Prices written inside translated prose | **102 per locale** | `"$200 / day"`, `"From $230 for 2 · +$24 per extra person"`, `"$1,140 total"`. |
+| Hardcoded in a component | 1 | `dailyRate: 200` in `MulaRentalSection.jsx:37`, duplicating `mulaRental.priceTag`. |
+
+**Verified: the 50 numeric values are currently identical across `en` and `es` — 0
+missing, 0 divergent.** This is latent risk, not a live bug.
+
+Target: `src/data/pricing.js` keyed by the `sku` that `src/lib/sku.js` already
+produces. i18n keeps copy; display strings get **templated** (`"From {base} for 2 ·
++{extra} per extra person"`) so a number is injected from the source and never
+retyped in either language.
+
+**The safety net is what makes this safe to do.** Before the migration, a script
+dumps every `(sku → price)` pair from both locales; after, it dumps them again and
+diffs. If the output is not byte-identical, it does not merge. Without that diff this
+is precisely the change that breaks live prices with nobody noticing until a
+mis-quoted order arrives.
+
+## 7. Do not change — and what was withdrawn
+
+Still binding:
+
+1. **The seam is `orderApi.js` + `orderPayload.js`.** If you are editing something
+   under `src/components/sections/` to make the backend work, something has gone
+   wrong.
+2. **Don't re-introduce per-service submissions** or per-page submit buttons. Pages
    add to the cart; only `/checkout/` submits.
-4. **Don't move prices out of the i18n files** as part of this work. It is a known
-   good follow-up (the 74 numeric values are currently in sync between `en`/`es`, so
-   it's a latent risk, not a live bug), but it is a ~65-entry migration touching both
-   locale files and it can break live prices. Separate task, separate review.
-5. **Don't add payment/checkout-session logic.** There is no payment in this
-   product by design.
-6. **Don't change cart persistence to `localStorage`.** Session-only is a product
+3. **Don't add payment logic yet.** Vercel makes it possible; it is not in scope.
+4. **Don't change cart persistence to `localStorage`.** Session-only is a product
    decision.
-7. **Don't put `commission` / `contactName` / `whatsapp` from `tours.activities`
-   into the payload.** They're internal margin data that happens to sit in the i18n
-   file. Cart lines whitelist fields for this reason.
-8. **Generate `submissionId` once per checkout attempt and reuse it on retry.** The
-   old code called `crypto.randomUUID()` inside the submit handler, so a retry after
-   a network error produced a new id and defeated the dedupe, creating duplicate
-   orders.
+5. **Don't put `commission` / `contactName` / `whatsapp` into the payload.**
+6. **Generate `submissionId` once per checkout attempt.**
+7. **Don't build the sheet from `describeServiceForm()`** (§4).
+8. **Apps Script Web Apps need a new deployment version** for code edits to take
+   effect. Saving the script is not enough. This is the most common way to lose half
+   an hour debugging the wrong layer.
 
-## 7. Progress log
+Withdrawn on 2026-11-15, with reasons, because the old text said the opposite:
+
+- *"Don't switch `Content-Type` to `application/json`"* — only applied to posting
+  straight from the browser to Apps Script. On Vercel the request is same-origin.
+- *"Accept the old flat shape for one release"* — unnecessary; no bundle has ever had
+  a working endpoint (§1).
+- *"Don't move prices out of the i18n files"* — now explicitly in scope (§6).
+- *"`lineTotal` and `totals` are precomputed so the Sheet doesn't need formulas"* —
+  briefly reversed while the sheet was thought to be the invoicing surface, then
+  restored. It is a reference document; static values are correct.
+
+## 8. Plan, with code / not-code split and sizing
+
+Sizing is relative (S/M/L/XL) with the measured driver, not clock hours.
+
+| Fase | Qué | Dónde | Tamaño | Riesgo |
+|---|---|---|---|---|
+| **0** | Revisar y commitear lo pendiente; borrar `OrderCheckoutForm.jsx` + `useOrderCart.js` | código | **M** — 20 archivos, +3,130/−642 líneas sin revisar; 314 líneas a borrar | **Alto** — es trabajo no revisado sobre producción |
+| **1** | Auditoría del modelo de datos → esquema de la plantilla, contrato del payload, inventario de precios | documento | **M** | Bajo |
+| **2** | Precios a fuente única + templating de los strings | código | **XL** — 50 valores + 204 strings + 1 constante; 4 secciones de i18n, ambos locales | **Alto** — mitigado por el diff de §6 |
+| **3** | Formulario final, `buildOrderPayload()`, `orderApi.js`, ~15 llaves i18n ×2 | código | **L** — 1 archivo nuevo, `CheckoutPage.jsx` +~250 líneas | Medio |
+| **4** | `Code.gs`: índice, buscar-o-crear, 3 pestañas, dedupe, correo | código | **L** — 171 líneas actuales → reescritura completa | Medio |
+| **5** | Vercel: quitar `output: "export"`, route handler, variables | código | **S** en código | Medio — `output: export` es restricción dura en `CLAUDE.md` |
+| **6** | Pruebas en vivo | ambos | **M** | — |
+
+### Fuera de código — el cliente o Marce, en Google / Vercel / Hostinger
+
+Estas no las puedo hacer yo y varias tienen tiempo de espera externo:
+
+1. Crear la **unidad compartida** y la carpeta de pedidos en el Workspace del cliente.
+   Unidad compartida y no Drive personal: los archivos sobreviven si esa cuenta se cierra.
+2. Crear y **estilizar el Sheet plantilla** (logo, colores, formatos de moneda, anchos).
+   El formato *es* el producto aquí, y así se reestiliza sin tocar código.
+3. Crear el **Sheet índice maestro**.
+4. Crear el proyecto de **Apps Script en la cuenta del cliente**, pegar el código y
+   rellenar `CONFIG` (ids de carpeta, plantilla e índice; secreto; correos).
+5. **Desplegar el Web App** ("Execute as: me", "Who has access: Anyone") — y
+   re-desplegar en cada cambio de código.
+6. **Autorizar los scopes OAuth** la primera vez (Drive + Sheets + Gmail), en la
+   pantalla de permisos de Google.
+7. Confirmar el **formato del número de Simple Booking**, y averiguar si el cliente
+   tiene acceso a su **API**.
+8. Decidir los **correos de notificación** de operaciones.
+9. Crear el proyecto en **Vercel**, conectar el repo, configurar las variables de
+   entorno (en el entorno de *build*, no en `.env.local`).
+10. **Migrar el DNS** de Hostinger a Vercel y elegir la ventana de cambio.
+11. **Validar con la concierge** que la hoja le sirve de verdad, con un pedido real
+    delante.
+
+Workspace es de pago, así que la cuota de `MailApp` es 1,500 destinatarios/día y no
+es un factor. El almacenamiento tampoco: cada archivo de reserva pesa pocos KB.
+
+### Orden y dependencias
+
+- **1 y 2 no dependen de Vercel ni de los accesos de Google** — se pueden arrancar ya.
+- **5 (Vercel) va antes de 3**, para escribir `orderApi.js` una sola vez.
+- **4 depende de las tareas externas 1–4** — es la ruta con espera externa, conviene
+  arrancarla en paralelo desde el principio.
+- **6 depende de todo.**
+
+## 9. Progress log
 
 Append an entry per session. Newest last.
 
@@ -485,3 +598,33 @@ disappear if the guest empties the field and re-commits).
 Noted: `FullFridgePage`'s `form.dietaryPreferences` is dead state — declared and read
 in the `answered` derivation but never bound to any input. It is deliberately absent
 from the committed payload.
+
+### 2026-11-15 — planning session: the real backend
+
+No code written. This session replanned the integration end to end and rewrote
+sections 1–8 of this file. Decisions and measurements are in those sections; what
+follows is what *changed* versus the previous plan, so a reader of the old version
+knows what to unlearn.
+
+- **Fishing tours is wired** and all four signature experiences have per-service
+  notes. The old §1 said fishing was deliberately deferred. That work exists but is
+  **uncommitted** (20 files, +3,130/−642).
+- **`OrderCheckoutForm.jsx` and `useOrderCart.js` are orphaned**, so the app
+  currently has *no* submit path at all, and `submitOrder` has no live caller.
+- **There is no mock.** The old §3 described `orderApi.js` as resolving against a
+  mock with a switch at the top of the file. It is 25 lines with a direct `fetch`.
+- **No backward compatibility is needed** — reasoned in §1. Removes the old plan's
+  "accept the flat shape for one release" requirement.
+- **Model changed**: one Sheet per reservation in a Drive folder, keyed by the Simple
+  Booking reservation number, rather than one master Orders/OrderItems book. A real
+  `.xlsx` per order was considered and dropped — Apps Script cannot append to an
+  xlsx, so accumulating into one would mean convert→append→export→replace on every
+  checkout, which is racy and can corrupt the only copy.
+- **The sheet is a reference document, not a billing surface.** Invoices happen in a
+  separate system. Live formulas and editable price cells were briefly planned on the
+  wrong premise and removed; precomputed totals stay.
+- **Hosting moves to Vercel**, which withdraws the `text/plain` and public-secret
+  constraints and unblocks payment later.
+- **Prices measured**: 50 structured values per locale (0 divergences today), 102
+  prose strings per locale carrying prices, 1 hardcoded `dailyRate: 200`. The old
+  doc's "~65-entry migration" understated it by about 4×.

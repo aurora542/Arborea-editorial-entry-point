@@ -87,7 +87,7 @@ export default function HeroSection() {
       </div>
 
       {/* ── Carousel ── */}
-      <div id="casas" className="w-full px-8 md:px-16">
+      <div id="casas" className="w-full px-8 md:px-16 scroll-mt-24">
         <PropertiesCarousel swiperRef={swiperRef} />
       </div>
 

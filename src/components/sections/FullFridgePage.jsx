@@ -125,10 +125,13 @@ const SERVICE = "full-fridge";
 
 export default function FullFridgePage() {
   const { t } = useI18n();
-  const { setLine, clearService, setServiceForm, openCart, linesByService, lines, serviceForms, hydrated } = useCart();
+  const { setLine, clearService, setServiceForm, openCart, linesByService, lines, serviceForms, hydrated, editSignal } = useCart();
   const [notes, setNotes] = useState("");
   /* Beverage quantities, keyed by index: { [i]: qty }. Page-local draft only. */
   const [bevQty, setBevQty] = useState({});
+
+  /* Bumps re-seeding when the drawer's "Edit" link targets this service. */
+  const seedTrigger = editSignal.service === SERVICE ? editSignal.token : "__initial__";
 
   const produceCategories = t("fullFridge.produce.categories");
   const steps              = t("fullFridge.howItWorks.steps");
@@ -193,18 +196,34 @@ export default function FullFridgePage() {
   const inCart = linesByService.some((g) => g.service.id === SERVICE);
 
   /*
-   * Restore the page when the guest returns via the cart's "Edit" link. Almost
-   * everything comes back from `serviceForms` (which already holds the counts, the
-   * produce ids and every questionnaire answer); only beverage quantities have to be
-   * read back off the committed lines.
-   *
-   * Without this, re-committing from a blank page would wipe the previous selection,
-   * because every commit calls clearService() first.
+   * Rehydrate the page from cart on first hydration AND whenever the drawer's
+   * "Edit" link bumps `seedTrigger` — so the page also re-fills on same-URL
+   * soft nav (otherwise a mount-only seed would miss it). Fields are reset to
+   * defaults first so an Edit after a submit cleanly restores from cart rather
+   * than merging over stale local state.
    */
-  const seeded = useRef(false);
+  const lastSeed = useRef(null);
   useEffect(() => {
-    if (seeded.current || !hydrated) return;
-    seeded.current = true;
+    if (!hydrated) return;
+    if (lastSeed.current === seedTrigger) return;
+    lastSeed.current = seedTrigger;
+
+    /* Reset first — a clean slate before applying whatever's in the cart. */
+    setAdults(2);
+    setChildren(0);
+    setDays(3);
+    setSelectedProduce([]);
+    setNotes("");
+    setBevQty({});
+    setForm({
+      dietary: [],
+      dietaryOther: "",
+      dietaryPreferences: "",
+      cooking: "",
+      groceries: "",
+      snacksFor: [],
+      preferredSnacks: "",
+    });
 
     const saved = serviceForms[SERVICE];
     if (saved) {
@@ -234,7 +253,7 @@ export default function FullFridgePage() {
       if (Object.keys(restored).length) setBevQty(restored);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated]);
+  }, [hydrated, seedTrigger]);
 
   /*
    * The stocking package plus any beverages. The package tier is the NEAREST match
@@ -308,6 +327,25 @@ export default function FullFridgePage() {
     });
 
     openCart();
+
+    /* Clear the page so the guest can build a new order with different specs.
+     * The cart keeps the committed state; re-opening via the drawer's Edit link
+     * bumps `seedTrigger` which rehydrates everything from serviceForms + lines. */
+    setAdults(2);
+    setChildren(0);
+    setDays(3);
+    setSelectedProduce([]);
+    setBevQty({});
+    setNotes("");
+    setForm({
+      dietary: [],
+      dietaryOther: "",
+      dietaryPreferences: "",
+      cooking: "",
+      groceries: "",
+      snacksFor: [],
+      preferredSnacks: "",
+    });
   };
 
   return (
