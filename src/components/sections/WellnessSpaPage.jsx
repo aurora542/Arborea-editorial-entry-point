@@ -53,7 +53,7 @@ function MassageCard({ name, description, image, groupId, durations, draft }) {
       className={`rounded-2xl overflow-hidden flex flex-col h-full border transition-all duration-200 ${selected ? "border-[#C9974F]/40 ring-1 ring-[#C9974F]/20" : "bg-white border-[#213B2F]/10"}`}
     >
       <div className="h-44 bg-[#D8CEBC] flex items-center justify-center shrink-0 overflow-hidden">
-        {image ? <img src={image} alt={name} className="w-full h-full object-cover" /> : <TbPhoto size={28} className="text-[#222E2C]/20" />}
+        {image ? <img src={image} alt={name} className="w-full h-full object-cover" loading="lazy" decoding="async" /> : <TbPhoto size={28} className="text-[#222E2C]/20" />}
       </div>
 
       <div className="px-5 pt-5 pb-5 flex flex-col gap-3 flex-1">
@@ -155,7 +155,7 @@ function FacialItemCard({ item, id, draft }) {
       className={`rounded-2xl overflow-hidden flex flex-col h-full border transition-all duration-200 ${selected ? "border-[#C9974F]/40 ring-1 ring-[#C9974F]/20" : "bg-white border-[#213B2F]/10"}`}
     >
       <div className="h-52 bg-[#D8CEBC] flex items-center justify-center shrink-0 overflow-hidden">
-        {item.image ? <img src={item.image} alt={item.name} className="w-full h-full object-cover" /> : <TbPhoto size={28} className="text-[#222E2C]/20" />}
+        {item.image ? <img src={item.image} alt={item.name} className="w-full h-full object-cover" loading="lazy" decoding="async" /> : <TbPhoto size={28} className="text-[#222E2C]/20" />}
       </div>
       <div className="px-6 pt-6 pb-6 flex flex-col gap-4 flex-1">
         <div className="flex flex-col gap-2">
@@ -516,7 +516,7 @@ export default function WellnessSpaPage() {
               <p className="font-sans text-sm text-[#D8DDB8]/65 leading-relaxed whitespace-pre-line max-w-md">{t("wellnessSpa.story.body")}</p>
             </div>
             <div className="h-56 lg:h-full order-1 lg:order-2 overflow-hidden">
-              <img src="/assets/Massages/PseudoHeroSection.avif" alt={t("wellnessSpa.story.heading")} className="w-full h-full object-cover" />
+              <img src="/assets/Massages/PseudoHeroSection.avif" alt={t("wellnessSpa.story.heading")} className="w-full h-full object-cover" loading="lazy" decoding="async" />
             </div>
           </div>
 

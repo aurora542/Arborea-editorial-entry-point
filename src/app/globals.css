@@ -33,7 +33,13 @@ html.kiosk body {
   padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
 }
 html.kiosk input, html.kiosk textarea { -webkit-user-select: text; user-select: text; }
-html.kiosk a, html.kiosk button, html.kiosk [role="button"] { touch-action: manipulation; }
+/* pan-y (not `manipulation`): the home's service/property cards are full-size <a>
+ * links, and under Fully's WebView `touch-action: manipulation` on them swallowed
+ * vertical swipes that started on a card — the page wouldn't scroll while taps still
+ * worked. pan-y keeps vertical scrolling and only blocks pinch-zoom / horizontal
+ * gestures. If scroll still sticks on the tablet, remove this line entirely (the
+ * default `auto` always scrolls; Fully blocks double-tap-zoom on its own). */
+html.kiosk a, html.kiosk button, html.kiosk [role="button"] { touch-action: pan-y; }
 html.kiosk img { -webkit-user-drag: none; }
 
 .no-scrollbar {

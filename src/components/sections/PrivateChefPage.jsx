@@ -636,7 +636,7 @@ export default function PrivateChefPage() {
                 </p>
               </div>
               <div className="h-56 lg:h-full order-1 lg:order-2 overflow-hidden">
-                <img src={STORY_IMAGE} alt={t("privateChef.story.heading")} className="w-full h-full object-cover" />
+                <img src={STORY_IMAGE} alt={t("privateChef.story.heading")} className="w-full h-full object-cover" loading="lazy" decoding="async" />
               </div>
             </div>
 
@@ -1489,7 +1489,7 @@ function ThemedNightPanel({ night, image, instances = [], onAddInstance, onUpdat
             className="w-full flex items-stretch text-left bg-white hover:bg-[#213B2F]/4 transition-colors duration-200"
           >
             <div className="w-44 shrink-0 overflow-hidden">
-              <img src={image} alt={night.title} className="w-full h-full object-cover" />
+              <img src={image} alt={night.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
             </div>
             <div className="flex-1 px-6 py-5 flex flex-col justify-center gap-1 min-w-0">
               <h3 className="font-sans font-semibold text-base text-[#222E2C]">{night.title}</h3>
@@ -1514,7 +1514,7 @@ function ThemedNightPanel({ night, image, instances = [], onAddInstance, onUpdat
 
             {/* Photo header with gradient overlay — shows instance count badge */}
             <div className="relative h-72 overflow-hidden">
-              <img src={image} alt={night.title} className="w-full h-full object-cover" />
+              <img src={image} alt={night.title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#213B2F] via-[#213B2F]/40 to-transparent" />
               <div className="absolute bottom-0 left-0 right-0 px-8 py-6 flex items-end justify-between gap-4">
                 <div>

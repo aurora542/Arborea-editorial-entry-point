@@ -26,7 +26,7 @@ export default function Navbar() {
   const { lineCount, openCart, hydrated } = useCart();
   const [isOpen, setIsOpen] = useState(false);
   const [visible, setVisible] = useState(true);
-  const [lastY, setLastY] = useState(0);
+  const lastYRef = useRef(0);
   const [expOpen, setExpOpen] = useState(false);
   const expRef = useRef(null);
 
@@ -35,14 +35,27 @@ export default function Navbar() {
     .filter(Boolean);
 
   useEffect(() => {
-    const onScroll = () => {
+    // Throttle to one read per frame and only re-render when `visible` flips —
+    // the previous version called setLastY on every scroll event, re-rendering the
+    // navbar continuously. Behaviour is unchanged: hide on scroll down, show on
+    // scroll up or near the top.
+    let ticking = false;
+    const update = () => {
+      ticking = false;
       const y = window.scrollY;
-      setVisible(y < lastY || y < 80);
-      setLastY(y);
+      const next = y < lastYRef.current || y < 80;
+      lastYRef.current = y;
+      setVisible((prev) => (prev === next ? prev : next));
+    };
+    const onScroll = () => {
+      if (!ticking) {
+        ticking = true;
+        requestAnimationFrame(update);
+      }
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [lastY]);
+  }, []);
 
   useEffect(() => {
     const onKey = (e) => {

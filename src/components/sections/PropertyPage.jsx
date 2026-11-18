@@ -78,17 +78,17 @@ export default function PropertyPage({ property }) {
             >
               {images.map((src, i) => (
                 <SwiperSlide key={i}>
-                  <img src={src} alt={`${name} ${i + 1}`} className="w-full h-80 object-cover rounded-2xl" />
+                  <img src={src} alt={`${name} ${i + 1}`} className="w-full h-80 object-cover rounded-2xl" loading="lazy" decoding="async" />
                 </SwiperSlide>
               ))}
             </Swiper>
           </div>
           {/* Desktop: 1 large + 2×2 grid */}
           <div className="hidden md:grid px-8 md:px-16 grid-cols-[55fr_45fr] gap-3 min-h-[600px]">
-            <img src={images[0]} alt={name} className="w-full h-full object-cover rounded-2xl" />
+            <img src={images[0]} alt={name} className="w-full h-full object-cover rounded-2xl" decoding="async" fetchPriority="high" />
             <div className="grid grid-cols-2 grid-rows-2 gap-3">
               {images.slice(1, 5).map((src, i) => (
-                <img key={i} src={src} alt={`${name} ${i + 2}`} className="w-full h-full object-cover rounded-2xl" />
+                <img key={i} src={src} alt={`${name} ${i + 2}`} className="w-full h-full object-cover rounded-2xl" loading="lazy" decoding="async" />
               ))}
             </div>
           </div>
