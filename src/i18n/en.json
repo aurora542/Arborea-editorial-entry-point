@@ -2666,6 +2666,7 @@
   },
   "kiosk": {
     "bar": {
+      "back": "Back",
       "home": "Home",
       "requests": "Request",
       "yourHome": "Your house"

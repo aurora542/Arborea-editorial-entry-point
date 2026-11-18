@@ -1,17 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { TbHome, TbBellRinging, TbHomeHeart, TbLanguage } from "react-icons/tb";
+import { usePathname, useRouter } from "next/navigation";
+import { TbArrowLeft, TbHome, TbBellRinging, TbHomeHeart, TbLanguage } from "react-icons/tb";
 import { useKiosk } from "@/app/context/KioskContext";
 import { useI18n } from "@/app/context/I18nContext";
 
 /*
- * Fixed bottom bar, kiosk only. Four large touch targets (≥48px). Respects the
+ * Fixed bottom bar, kiosk only. Up to five large touch targets (min-h 64px):
+ * Back (hidden on "/") · Home · Requests · Your house · Language. Respects the
  * safe-area inset; body gets matching padding-bottom in globals.css.
  */
 export default function KioskBar() {
   const { isKiosk, casaSlug } = useKiosk();
   const { t, toggleLocale, locale } = useI18n();
+  const router = useRouter();
+  const pathname = usePathname();
 
   if (!isKiosk) return null;
 
@@ -23,6 +27,12 @@ export default function KioskBar() {
       className="fixed bottom-0 inset-x-0 z-[750] flex items-stretch bg-[#213B2F] border-t border-[#EDE5D8]/10"
       style={{ paddingBottom: "env(safe-area-inset-bottom)" }}
     >
+      {pathname !== "/" && (
+        <button type="button" onClick={() => router.back()} className={itemClass}>
+          <TbArrowLeft size={24} />
+          {t("kiosk.bar.back")}
+        </button>
+      )}
       <Link href="/" className={itemClass}>
         <TbHome size={24} />
         {t("kiosk.bar.home")}
