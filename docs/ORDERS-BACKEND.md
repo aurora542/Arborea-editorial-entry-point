@@ -29,6 +29,7 @@ progress log — append to it, don't rewrite it.
 | Apps Script `doPost` for the new model | ❌ not started |
 | Drive folder + template + master index provisioned | ❌ not started |
 | Vercel migration | ❌ not started (decided: yes) |
+| Kiosk mode (Casa Ceiba tablet) — branch `kiosk-v2` | ✅ done — kiosk-only submit, see §4.1–4.2 |
 
 **There is no submit path in the app right now.** `OrderCheckoutForm.jsx` and
 `useOrderCart.js` are orphaned — nothing imports them — and `submitOrder` is only
@@ -40,6 +41,13 @@ been set in any build, so every bundle ever published has `BACKEND_URL === ""` a
 returns `missing-backend-url` without ever posting. No legacy-schema traffic exists
 or can exist. The old flat payload (`{ service, name, casa, dateNeeded, items }`)
 can be deleted outright rather than supported for a release.
+
+**Kiosk exception (`kiosk-v2`).** The kiosk tablet *does* submit: in kiosk mode
+`/checkout/` shows `GuestDetailsForm` + submit, and `/solicitudes/` sends quick
+requests, both through `orderApi.js` → the interim `apps-script/Code.gs` (v2). That
+path uses the kiosk payload of §4.1–4.2, **not** the planned `schemaVersion: 2`
+shape below. The public site (no `?kiosk`) still has no submit path, exactly as
+described above. When the planned backend lands, the kiosk payload migrates with it.
 
 ## 2. Decisions taken 2026-11-15
 
@@ -169,6 +177,60 @@ Rules that hold:
 - Never copy a `tours.activities` object wholesale into a line. `commission`,
   `contactName` and `whatsapp` are internal margin data that ship in the bundle.
   `normalizeLine` whitelists for this reason.
+
+### 4.1 Kiosk order — what is implemented today
+
+Built by `buildOrderPayload()` in `src/lib/orderPayload.js`. Orders carry a `source`
+field: `"web"` | `"kiosk"`; absent = `"web"`. Only the kiosk submits today.
+
+```jsonc
+{
+  "source": "kiosk",
+  "submissionId": "uuid",          // one per attempt, reused on retry
+  "createdAt": "2026-10-01T18:00:00.000Z",
+  "locale": "es",
+  "currency": "USD",
+  "guest": {
+    "name":  "Ana",                // required
+    "phone": "8888 8888",          // optional, "" if omitted
+    "casa":  "casa-ceiba"          // from the kiosk URL/config, not the guest
+  },
+  "cart": [ /* lineId, service, sku, title, qty, unitPrice, lineTotal, date, options */ ],
+  "serviceForms": { /* raw, as in the cart */ },
+  "totals": { "itemCount": 5, "subtotal": 1240, "total": 1240 },
+  "notes": "…"
+}
+```
+
+### 4.2 Kiosk request — `type: "request"`
+
+Quick requests (cleaning, electricity, free message, …) from `/solicitudes/`, built
+by `buildRequestPayload()`:
+
+```jsonc
+{
+  "type":     "request",
+  "source":   "kiosk",
+  "submissionId": "uuid",
+  "createdAt": "2026-10-01T18:00:00.000Z",
+  "locale":   "es",
+  "guest":    { "name": "Ana", "phone": "", "casa": "casa-ceiba" },
+  "request": {
+    "category": "electricity", // id from KIOSK_CONFIG.requestCategories, or "message"
+    "message":  "Se fue la luz" // optional, except required when category === "message"
+  }
+}
+```
+
+Backend responses for both: `{ ok: true, submissionId }` ·
+`{ ok: true, submissionId, dedup: true }` · `{ ok: false, error }`.
+`apps-script/Code.gs` (v2; v1 kept in `apps-script/_legacy/`) validates web vs kiosk
+guests, de-dupes by `submissionId` under a `LockService` lock, writes `Pedidos` /
+`Pedidos — Ítems` / `Solicitudes`, archives the raw JSON to Drive and emails
+operations. Deploy steps: run `setup()` once, deploy as Web App, set
+`NEXT_PUBLIC_ORDERS_BACKEND_URL` / `NEXT_PUBLIC_ORDERS_SHARED_SECRET` in the build env.
+`orderApi.js` posts `text/plain` (no CORS preflight) — this still applies while the
+site is a static export on Hostinger.
 
 ## 5. The reservation Sheet
 
@@ -628,3 +690,28 @@ knows what to unlearn.
 - **Prices measured**: 50 structured values per locale (0 divergences today), 102
   prose strings per locale carrying prices, 1 hardcoded `dailyRate: 200`. The old
   doc's "~65-entry migration" understated it by about 4×.
+
+### 2026-10-02 — checkout submit wired + kiosk mode (Casa Ceiba tablet)
+
+Built on branch `feat/kiosk-casa-ceiba` (base 2026-10-01), merged into `kiosk-v2`
+on 2026-11-18.
+
+- `src/lib/orderPayload.js` — `buildOrderPayload()` (§4.1) and
+  `buildRequestPayload()` (§4.2).
+- `src/lib/orderApi.js` — shared `post()`; dev mock only when no URL **and** not
+  production; `submitRequest()`.
+- `src/components/checkout/GuestDetailsForm.jsx` — web (5 fields) vs kiosk (name,
+  optional WhatsApp, casa read-only).
+- Kiosk mode: `KioskContext`, `kioskConfig.js`, `officeHours.js`,
+  `useOnlineStatus.js`, `IdleReset`, `KioskBar`, `KioskLinkGuard` +
+  `ExternalLinkModal`, `OfflineBanner`, `SuccessScreen`, `/solicitudes/`.
+  `LenisProvider` early-returns in kiosk. New dep: `qrcode`.
+
+### 2026-11-18 — `kiosk-v2`: kiosk merged onto the 2026-11-16 main
+
+- Main's content and UI win (prices, options, fishing, vehicles, chef, "By quote").
+- `/checkout/`: guest form + submit render **only in kiosk mode**. Without `?kiosk`
+  the page is main's review-only checkout, so the public site still has no submit
+  path (§1). The kiosk payload is §4.1, not the planned `schemaVersion: 2`.
+- KioskBar gained a Back button (hidden on `/`).
+

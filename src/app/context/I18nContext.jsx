@@ -16,10 +16,20 @@ export function I18nProvider({ children }) {
     if (saved === "en" || saved === "es") setLocale(saved);
   }, []);
 
-  const toggleLocale = () => {
-    const next = locale === "es" ? "en" : "es";
+  // Set the locale explicitly and persist it. The kiosk reset uses this to force
+  // the default locale back; toggleLocale is kept for the ES/EN switch.
+  const changeLocale = (next) => {
+    if (next !== "en" && next !== "es") return;
     setLocale(next);
-    localStorage.setItem("locale", next);
+    try {
+      localStorage.setItem("locale", next);
+    } catch {
+      /* private mode / disabled storage — locale still changes in memory */
+    }
+  };
+
+  const toggleLocale = () => {
+    changeLocale(locale === "es" ? "en" : "es");
   };
 
   // t("common.seeMore") → navega el JSON con dot notation
@@ -33,7 +43,7 @@ export function I18nProvider({ children }) {
   };
 
   return (
-    <I18nContext.Provider value={{ locale, toggleLocale, t }}>
+    <I18nContext.Provider value={{ locale, toggleLocale, setLocale: changeLocale, t }}>
       {children}
     </I18nContext.Provider>
   );

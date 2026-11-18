@@ -68,12 +68,21 @@ Consequences that bite:
 
 ### Cart
 
-> **Partly built.** The context, sku helper, shared primitives, service registry,
-> drawer, floating button and the `/checkout/` review section exist. The six
-> service pages are **not** wired yet — they still use their own local state — and
-> `/checkout/` has no guest form or submit. See the status table in
-> [docs/ORDERS-BACKEND.md](docs/ORDERS-BACKEND.md) before assuming a section below
-> is live.
+> **Two cart systems coexist — know which one a page uses.**
+>
+> 1. **Session cart** — `useCart()` from
+>    [src/app/context/CartContext.jsx](src/app/context/CartContext.jsx). This is the
+>    real, documented order. The in-house service pages (`PrivateChefPage`,
+>    `FullFridgePage`, `WellnessSpaPage`), `MulaRentalSection`, and the `/checkout/`
+>    review (`CheckoutPage`) use it. Everything below describes this system.
+> 2. **Local `useOrderCart`** — [src/hooks/useOrderCart.js](src/hooks/useOrderCart.js),
+>    a plain `useState` map that does **not** touch the session cart or
+>    `sessionStorage`. Only `FishingToursPage` uses it, paired with
+>    `OrderCheckoutForm` for its own inline submit. It is the odd one out; do not
+>    assume its selections reach `/checkout/`.
+>
+> See the status table in [docs/ORDERS-BACKEND.md](docs/ORDERS-BACKEND.md) for the
+> authoritative per-section state before assuming a flow is fully live.
 
 `LenisProvider` reads `isOpen` from the cart to stop smooth scrolling while the
 drawer is open, and to clear the `pointer-events: none` Lenis puts on `<body>`
@@ -163,8 +172,56 @@ one-off date inputs, and re-introducing a bespoke one re-opens that inconsistenc
 
 ## Orders backend
 
-The order submission path is **built but not connected**. `src/lib/orderApi.js`
-runs against a mock. Read
-[docs/ORDERS-BACKEND.md](docs/ORDERS-BACKEND.md) before touching anything in the
-order/checkout path — it holds the payload contract, the integration steps, and an
+`submitOrder` in [src/lib/orderApi.js](src/lib/orderApi.js) POSTs the order (plus a
+shared secret) as `text/plain` to a Google Apps Script web app
+([apps-script/Code.gs](apps-script/Code.gs)), which writes to a Google Sheet,
+de-dupes by `submissionId`, and emails operations. The script is included in-repo
+but is deployed separately; its `CONFIG` placeholders (`SHARED_SECRET`, `SHEET_ID`,
+`NOTIFY_EMAILS`) are filled in on the deployed copy, not here.
+
+The URL and secret come from `NEXT_PUBLIC_ORDERS_BACKEND_URL` /
+`NEXT_PUBLIC_ORDERS_SHARED_SECRET`, **inlined at build time** (static export — see
+Hard constraints). `orderApi.js` routes both `submitOrder` and `submitRequest`
+through one `post()`: with no URL and `NODE_ENV !== "production"` it returns a
+~1.2s dev mock (`{ ok: true, mock: true }`); in production a missing URL returns
+`missing-backend-url` (never a silent success — that would drop real orders).
+
+Payloads are built by [src/lib/orderPayload.js](src/lib/orderPayload.js)
+(`buildOrderPayload` / `buildRequestPayload`), which re-applies the line whitelist
+and computes `totals`. `apps-script/Code.gs` is already the live backend (orders +
+kiosk requests + web/kiosk validation + `setup()`/test fns) — deploy it, don't
+rewrite it.
+
+Read [docs/ORDERS-BACKEND.md](docs/ORDERS-BACKEND.md) before touching anything in
+the order/checkout path — it holds the payload contract (incl. the `source` field and
+the `type:"request"` shape), the required fields the Apps Script validates, and an
 explicit list of what not to change.
+
+## Kiosk mode (Casa Ceiba tablet)
+
+A guest-facing kiosk mode runs **inside the same static build**, for a tablet fixed in
+a house running Fully Kiosk Browser. Activated by URL
+(`/?kiosk=1&casa=<slug>`), persisted in `localStorage` (`arborea.kiosk.v1`), turned
+off by `?kiosk=0`. [src/app/context/KioskContext.jsx](src/app/context/KioskContext.jsx)
+owns it; `useKiosk()` exposes `{ isKiosk, casa, casaSlug, ready, pause, resume,
+resetKiosk }`.
+
+- **`isKiosk` gates everything.** Every kiosk surface is off when false, so without
+  `?kiosk` the public site is byte-for-byte what it was. When adding kiosk behaviour,
+  condition it on `isKiosk`; never change a shared component's default path.
+- **Config is centralized** in [src/lib/kioskConfig.js](src/lib/kioskConfig.js)
+  (`KIOSK_CONFIG`): idle/warning seconds, default locale, front-desk WhatsApp, office
+  hours, request categories. Values still to confirm are marked `// POR CONFIRMAR`.
+  Request category ids must stay aligned with `REQUEST_LABELS` in `Code.gs`.
+- **Reading activation**: parse `window.location.search` in an effect — **not**
+  `useSearchParams` (it needs a Suspense boundary under static export).
+- **Pieces**, all under `src/components/kiosk/`: `KioskBar` (fixed bottom nav),
+  `IdleReset` (180s → clean reset, 15s warning overlay; respects `pause`/`resume` so a
+  send isn't wiped mid-flight), `KioskLinkGuard` + `ExternalLinkModal` (catches
+  `wa.me`/`tel:`/`mailto:`/foreign-origin links and shows a QR instead — this is why
+  the ~8 components holding those links are never edited), `OfflineBanner`,
+  `RequestsPage` (`/solicitudes/`). `SuccessScreen` and `GuestDetailsForm` live under
+  `src/components/checkout/`. `LenisProvider` early-returns in kiosk (its 150ms
+  pointer-events lock eats taps after a swipe).
+- `resetKiosk()` clears the cart, resets to the default locale, wipes `arborea.*`
+  session keys (keeping the `localStorage` kiosk flag), and navigates home.

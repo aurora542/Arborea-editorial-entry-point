@@ -20,6 +20,22 @@ html, body {
   overflow-x: hidden;
 }
 
+/* ── Kiosk mode (Casa Ceiba tablet) ──────────────────────────────────────────
+ * Only applies when KioskProvider adds `kiosk` to <html>. The public site never
+ * gets these rules. Zoom stays enabled here (accessibility); the tablet blocks it
+ * from Fully Kiosk, not from the viewport meta. */
+html.kiosk, html.kiosk body { overscroll-behavior: none; }
+html.kiosk body {
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  /* Room for the fixed KioskBar (incl. safe-area). Keep in sync with KioskBar. */
+  padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
+}
+html.kiosk input, html.kiosk textarea { -webkit-user-select: text; user-select: text; }
+html.kiosk a, html.kiosk button, html.kiosk [role="button"] { touch-action: manipulation; }
+html.kiosk img { -webkit-user-drag: none; }
+
 .no-scrollbar {
   scrollbar-width: none;
   -ms-overflow-style: none;
