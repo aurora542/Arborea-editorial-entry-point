@@ -24,7 +24,10 @@ html, body {
  * Only applies when KioskProvider adds `kiosk` to <html>. The public site never
  * gets these rules. Zoom stays enabled here (accessibility); the tablet blocks it
  * from Fully Kiosk, not from the viewport meta. */
-html.kiosk, html.kiosk body { overscroll-behavior: none; }
+/* Only on <html>, never on body: `html, body { overflow-x: hidden }` above makes body
+ * a scroll container, and overscroll-behavior: none on it stopped one-finger swipes
+ * from chaining to the document, so no page scrolled by touch (pinch still worked). */
+html.kiosk { overscroll-behavior: none; }
 html.kiosk body {
   -webkit-user-select: none;
   user-select: none;
@@ -33,12 +36,10 @@ html.kiosk body {
   padding-bottom: calc(5.5rem + env(safe-area-inset-bottom));
 }
 html.kiosk input, html.kiosk textarea { -webkit-user-select: text; user-select: text; }
-/* pan-y (not `manipulation`): the home's service/property cards are full-size <a>
- * links, and under Fully's WebView `touch-action: manipulation` on them swallowed
- * vertical swipes that started on a card — the page wouldn't scroll while taps still
- * worked. pan-y keeps vertical scrolling and only blocks pinch-zoom / horizontal
- * gestures. If scroll still sticks on the tablet, remove this line entirely (the
- * default `auto` always scrolls; Fully blocks double-tap-zoom on its own). */
+/* pan-y on links/buttons: keeps vertical scrolling and blocks pinch-zoom / horizontal
+ * gestures that start on a control. It was added while chasing the tablet's "no touch
+ * scroll" bug, but it was not the cause — that was overscroll-behavior on body (see
+ * above). */
 html.kiosk a, html.kiosk button, html.kiosk [role="button"] { touch-action: pan-y; }
 html.kiosk img { -webkit-user-drag: none; }
 
