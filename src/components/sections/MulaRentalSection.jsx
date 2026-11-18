@@ -308,9 +308,9 @@ function PartnershipBanner() {
             Better rates than booking the rental brands directly
           </h3>
           <p className="font-sans text-sm text-[#D8DDB8]/75 leading-relaxed max-w-2xl">
-            We work with three of Costa Rica's largest rental brands — all under
+            We work with three of Costa Rica&apos;s largest rental brands — all under
             the same parent company. Thanks to our commercial agreement with them,
-            we're able to offer our guests preferential rates that aren't
+            we&apos;re able to offer our guests preferential rates that aren&apos;t
             available when booking directly.
           </p>
         </div>

@@ -7,7 +7,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 npm run dev      # dev server
 npm run build    # static export -> out/
-npm run lint     # next lint
+npm run lint     # eslint . (flat config; Next 16 removed `next lint`)
+npm run check:assets    # every /assets/... path in src exists with exact casing (Hostinger is case-sensitive)
+npm run images:optimize # cap public/assets at 2000px long edge, same names/paths
 npx tsc --noEmit # typecheck (passes clean; keep it that way)
 ```
 

@@ -246,7 +246,7 @@ function SpaSummary({ lines, total, allergies, onAllergiesChange, notes, onNotes
         <p className="font-sans text-xs font-semibold text-[#213B2F]/50 uppercase tracking-widest mb-1">Order Summary</p>
         <h2 className="font-sans font-semibold text-xl md:text-2xl text-[#213B2F] tracking-tight">Review your selection</h2>
         <p className="font-sans text-sm text-[#213B2F]/55 mt-2 max-w-2xl">
-          Review your selected treatments and add any allergies or notes, then add it all to your order. You'll fill in your details at checkout.
+          Review your selected treatments and add any allergies or notes, then add it all to your order. You&apos;ll fill in your details at checkout.
         </p>
       </div>
 
@@ -527,7 +527,7 @@ export default function WellnessSpaPage() {
                 How to book your treatments
               </h2>
               <p className="font-sans text-sm text-[#213B2F]/55 leading-relaxed">
-                Browse, customize, and submit — we'll take care of the rest before your stay.
+                Browse, customize, and submit — we&apos;ll take care of the rest before your stay.
               </p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
@@ -645,7 +645,7 @@ export default function WellnessSpaPage() {
           <div className="flex flex-col items-center text-center gap-5 py-8" data-aos="fade-up">
             <div className="w-10 h-px bg-[#213B2F]/25" />
             <blockquote className="text-2xl md:text-3xl text-[#213B2F]/80 leading-relaxed max-w-2xl italic" style={{ fontFamily: "var(--font-alpina)" }}>
-              "The trees are sanctuaries. Whoever knows how to speak to them, whoever knows how to listen to them, can learn the truth."
+              &quot;The trees are sanctuaries. Whoever knows how to speak to them, whoever knows how to listen to them, can learn the truth.&quot;
             </blockquote>
             <p className="font-sans text-sm text-[#213B2F]/45">— Hermann Hesse</p>
             <div className="w-10 h-px bg-[#213B2F]/25" />

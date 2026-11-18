@@ -1060,7 +1060,7 @@ export default function PrivateChefPage() {
           <div className="flex flex-col items-center text-center gap-5 py-8 border-t border-[#222E2C]/8 px-8 md:px-16" data-aos="fade-up">
             <div className="w-10 h-px bg-[#222E2C]/25" />
             <blockquote className="text-2xl md:text-3xl text-[#213B2F]/80 leading-relaxed max-w-2xl italic" style={{ fontFamily: "var(--font-alpina)" }}>
-              "Tell me what you eat, and I will tell you what you are."
+              &quot;Tell me what you eat, and I will tell you what you are.&quot;
             </blockquote>
             <p className="font-sans text-sm text-[#222E2C]/45">— Jean Anthelme Brillat-Savarin</p>
             <div className="w-10 h-px bg-[#222E2C]/25" />

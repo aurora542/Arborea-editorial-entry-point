@@ -6,7 +6,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "images:optimize": "node scripts/optimize-images.mjs",
     "check:assets": "node scripts/check-asset-paths.mjs"
   },

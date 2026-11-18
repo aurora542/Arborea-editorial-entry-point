@@ -767,7 +767,7 @@ export default function FullFridgePage() {
           <div className="flex flex-col items-center text-center gap-5 py-8" data-aos="fade-up">
             <div className="w-10 h-px bg-[#222E2C]/25" />
             <blockquote className="text-2xl md:text-3xl text-[#213B2F]/80 leading-relaxed max-w-2xl italic" style={{ fontFamily: "var(--font-alpina)" }}>
-              "Eating is an agricultural act."
+              &quot;Eating is an agricultural act.&quot;
             </blockquote>
             <p className="font-sans text-sm text-[#222E2C]/45">— Wendell Berry</p>
             <div className="w-10 h-px bg-[#222E2C]/25" />
