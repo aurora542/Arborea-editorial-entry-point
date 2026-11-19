@@ -312,7 +312,7 @@
     "title": "Renta de Mula",
     "subtitle": "Explora la propiedad y sus alrededores en tu propia Mula Yamaha Side-by-Side — ideal para ir a la playa, explorar senderos o simplemente moverte con estilo.",
     "vehicle": "Yamaha Side-by-Side 700",
-    "priceTag": "$200 / día",
+    "priceTag": "{{p:mulaRental.dailyRate}} / día",
     "terms": "Se renta por día o por semana completa.",
     "specs": [
       "Capacidad para 5 personas",
@@ -512,22 +512,6 @@
         {
           "title": "Huevos Rancheros de Finca",
           "description": "Tortillas de maíz criollo, frijoles orgánicos, huevos de libre pastoreo, salsa ranchera y mozzarella de finca."
-        }
-      ],
-      "extrasHeading": "Extras para el Desayuno",
-      "extrasSubheading": "Añade tu proteína favorita a cualquier desayuno.",
-      "extras": [
-        {
-          "title": "Tocino Hacienda Arborea",
-          "description": "Tocino de cerdo de pastoreo, curado y ahumado artesanalmente."
-        },
-        {
-          "title": "Chorizo de Res de Finca",
-          "description": "Sazonado con hierbas del huerto de nuestros productores asociados."
-        },
-        {
-          "title": "Brisket Ahumado de Finca",
-          "description": "Ahumado lentamente sobre leña — un pequeño lujo para empezar el día."
         }
       ]
     },
@@ -972,31 +956,23 @@
         "items": [
           {
             "label": "Desayuno",
-            "price": "Desde $230 para 2 · +$24 por persona adicional",
-            "basePrice": 230,
-            "baseGuests": 2,
-            "extraPersonPrice": 24
+            "price": "Desde {{p:privateChef.pricing.perService.items.0.basePrice}} para 2 · +{{p:privateChef.pricing.perService.items.0.extraPersonPrice}} por persona adicional",
+            "baseGuests": 2
           },
           {
             "label": "Almuerzo",
-            "price": "Desde $235 para 2 · +$28 por persona adicional",
-            "basePrice": 235,
-            "baseGuests": 2,
-            "extraPersonPrice": 28
+            "price": "Desde {{p:privateChef.pricing.perService.items.1.basePrice}} para 2 · +{{p:privateChef.pricing.perService.items.1.extraPersonPrice}} por persona adicional",
+            "baseGuests": 2
           },
           {
             "label": "Cena",
-            "price": "Desde $245 para 2 · +$52 por persona adicional",
-            "basePrice": 245,
-            "baseGuests": 2,
-            "extraPersonPrice": 52
+            "price": "Desde {{p:privateChef.pricing.perService.items.2.basePrice}} para 2 · +{{p:privateChef.pricing.perService.items.2.extraPersonPrice}} por persona adicional",
+            "baseGuests": 2
           },
           {
             "label": "Día Completo",
-            "price": "Desde $610 para 2 · +$80 por persona adicional",
-            "basePrice": 610,
-            "baseGuests": 2,
-            "extraPersonPrice": 80
+            "price": "Desde {{p:privateChef.pricing.perService.items.3.basePrice}} para 2 · +{{p:privateChef.pricing.perService.items.3.extraPersonPrice}} por persona adicional",
+            "baseGuests": 2
           }
         ]
       },
@@ -1006,22 +982,19 @@
         "items": [
           {
             "label": "2–5 personas",
-            "price": "$530 total",
-            "priceValue": 530,
+            "price": "{{p:privateChef.pricing.themedNights.items.0.priceValue}} total",
             "minGuests": 2,
             "maxGuests": 5
           },
           {
             "label": "6–10 personas",
-            "price": "$835 total",
-            "priceValue": 835,
+            "price": "{{p:privateChef.pricing.themedNights.items.1.priceValue}} total",
             "minGuests": 6,
             "maxGuests": 10
           },
           {
             "label": "11–15 personas",
-            "price": "$1,140 total",
-            "priceValue": 1140,
+            "price": "{{p:privateChef.pricing.themedNights.items.2.priceValue}} total",
             "minGuests": 11,
             "maxGuests": 15
           }
@@ -1032,13 +1005,11 @@
         "items": [
           {
             "label": "Solo atardecer (4–7 PM)",
-            "price": "$170",
-            "priceValue": 170
+            "price": "{{p:privateChef.pricing.bartender.items.0.priceValue}}"
           },
           {
             "label": "Atardecer + Cena (4–9 PM)",
-            "price": "$255",
-            "priceValue": 255
+            "price": "{{p:privateChef.pricing.bartender.items.1.priceValue}}"
           }
         ]
       }
@@ -1192,38 +1163,32 @@
         {
           "title": "Paquete de Vinos",
           "description": "Selección de 2 vinos naturales",
-          "price": "$45",
-          "priceValue": 45
+          "price": "{{p:fullFridge.beverages.items.0.priceValue}}"
         },
         {
           "title": "Paquete Premium de Vinos",
           "description": "Selección de 4 vinos naturales",
-          "price": "$85",
-          "priceValue": 85
+          "price": "{{p:fullFridge.beverages.items.1.priceValue}}"
         },
         {
           "title": "Cerveza Artesanal — Six-Pack",
           "description": "Selección artesanal costarricense",
-          "price": "$18",
-          "priceValue": 18
+          "price": "{{p:fullFridge.beverages.items.2.priceValue}}"
         },
         {
           "title": "Cerveza Artesanal — 24 Unidades",
           "description": "Selección artesanal costarricense",
-          "price": "$65",
-          "priceValue": 65
+          "price": "{{p:fullFridge.beverages.items.3.priceValue}}"
         },
         {
           "title": "Licor Individual",
           "description": "Ron, guaro o whisky",
-          "price": "Desde $30",
-          "priceValue": 30
+          "price": "Desde {{p:fullFridge.beverages.items.4.priceValue}}"
         },
         {
           "title": "Bar Completo",
           "description": "Ron, guaro, whisky, vodka y gin",
-          "price": "$150",
-          "priceValue": 150
+          "price": "{{p:fullFridge.beverages.items.5.priceValue}}"
         }
       ]
     },
@@ -1257,48 +1222,30 @@
           "label": "3 Días",
           "days": 3,
           "prices": [
-            "$299",
-            "$533",
-            "$728",
-            "$871"
-          ],
-          "priceValues": [
-            299,
-            533,
-            728,
-            871
+            "{{p:fullFridge.pricing.rows.0.priceValues.0}}",
+            "{{p:fullFridge.pricing.rows.0.priceValues.1}}",
+            "{{p:fullFridge.pricing.rows.0.priceValues.2}}",
+            "{{p:fullFridge.pricing.rows.0.priceValues.3}}"
           ]
         },
         {
           "label": "5 Días",
           "days": 5,
           "prices": [
-            "$494",
-            "$884",
-            "$1,209",
-            "$1,456"
-          ],
-          "priceValues": [
-            494,
-            884,
-            1209,
-            1456
+            "{{p:fullFridge.pricing.rows.1.priceValues.0}}",
+            "{{p:fullFridge.pricing.rows.1.priceValues.1}}",
+            "{{p:fullFridge.pricing.rows.1.priceValues.2}}",
+            "{{p:fullFridge.pricing.rows.1.priceValues.3}}"
           ]
         },
         {
           "label": "8 Días",
           "days": 8,
           "prices": [
-            "$793",
-            "$1,417",
-            "$1,937",
-            "$2,327"
-          ],
-          "priceValues": [
-            793,
-            1417,
-            1937,
-            2327
+            "{{p:fullFridge.pricing.rows.2.priceValues.0}}",
+            "{{p:fullFridge.pricing.rows.2.priceValues.1}}",
+            "{{p:fullFridge.pricing.rows.2.priceValues.2}}",
+            "{{p:fullFridge.pricing.rows.2.priceValues.3}}"
           ]
         }
       ]
@@ -1491,8 +1438,7 @@
     "activities": [
       {
         "title": "Parapente en Tándem — Zion",
-        "price": "$170 / persona",
-        "priceValue": 170,
+        "price": "{{p:tours.activities.0.priceValue}} / persona",
         "image": "/assets/ToursActivities/TandemParaglidingZion.avif",
         "description": "Vuelo en tándem de 15–20 minutos con 15 años de experiencia operativa. Pilotos licenciados y completamente asegurados. Sale desde Dominical.",
         "features": [
@@ -1522,8 +1468,7 @@
       },
       {
         "title": "Corcovado + Experiencia Marina",
-        "price": "Desde $110 / persona",
-        "priceValue": 110,
+        "price": "Desde {{p:tours.activities.1.priceValue}} / persona",
         "image": "/assets/ToursActivities/CorcovadoMarineExperience.avif",
         "description": "Operador premium de Corcovado y marina con un tour de ballenas único guiado por un biólogo marino con hidrofón. Incluye reserva privada Tapir Trail.",
         "features": [
@@ -1565,8 +1510,7 @@
       },
       {
         "title": "Naturaleza y Vida Silvestre en la Selva",
-        "price": "Desde $65 / persona",
-        "priceValue": 65,
+        "price": "Desde {{p:tours.activities.2.priceValue}} / persona",
         "image": "/assets/ToursActivities/NatureWildlifeJungleExperiences.avif",
         "description": "Reserva natural con tours de vida silvestre, avistamiento de aves, tours nocturnos y la experiencia premium Chilamate. Reserva privada de 330 hectáreas.",
         "features": [
@@ -1596,8 +1540,7 @@
       },
       {
         "title": "ATV en la Jungla con Experiencia Cultural",
-        "price": "Desde $150",
-        "priceValue": 150,
+        "price": "Desde {{p:tours.activities.3.priceValue}}",
         "image": "/assets/ToursActivities/JungleATVCulturalExperience.avif",
         "description": "Experiencia de 5 horas en ATV o side-by-side combinando paseo por la selva con visita a una familia costarricense, cosecha de café, buffet de bocadillos y guía bilingüe.",
         "features": [
@@ -1632,8 +1575,7 @@
       },
       {
         "title": "Parque Nacional Corcovado — Sirena & San Pedrillo",
-        "price": "Desde $100 / persona",
-        "priceValue": 100,
+        "price": "Desde {{p:tours.activities.4.priceValue}} / persona",
         "image": "/assets/ToursActivities/CorcovadoNational ParkSirenaSanPedrillo.avif",
         "description": "Operador integral con acceso a las mejores estaciones de guardaparques de Corcovado. Alta probabilidad de avistamiento: monos, perezosos, tapires, aves. Expediciones con pernocta disponibles.",
         "features": [
@@ -1675,8 +1617,7 @@
       },
       {
         "title": "ATV y Side-by-Side en la Selva",
-        "price": "Desde $150",
-        "priceValue": 150,
+        "price": "Desde {{p:tours.activities.5.priceValue}}",
         "image": "/assets/ToursActivities/ATVSidebySideJungleAdventure.avif",
         "description": "Experiencia en instalación privada a través de bosques, ríos y colinas con visita a una finca cafetalera. Ideal para riders con experiencia que buscan un ambiente premium.",
         "features": [
@@ -1710,8 +1651,7 @@
       },
       {
         "title": "Parapente en Tándem — Dominical y Rivas",
-        "price": "$155 / persona",
-        "priceValue": 155,
+        "price": "{{p:tours.activities.6.priceValue}} / persona",
         "image": "/assets/ToursActivities/TandemParaglidingDominicalRivas.avif",
         "description": "Vuelo en tándem de 20–30 minutos (más largo que la competencia) con instructor certificado. Empresa familiar, 14 años de experiencia. Se habla inglés. Pago después de la actividad.",
         "features": [
@@ -1741,8 +1681,7 @@
       },
       {
         "title": "Tour de Cascadas — Día Completo",
-        "price": "$130 / persona",
-        "priceValue": 130,
+        "price": "{{p:tours.activities.7.priceValue}} / persona",
         "image": "/assets/ToursActivities/FullDayWaterfallTour.avif",
         "description": "Tour guiado de día completo visitando 3 cascadas diferentes, parada en playa y almuerzo en restaurante con vista al mar. Transporte desde la oficina incluido.",
         "features": [
@@ -1763,8 +1702,7 @@
       },
       {
         "title": "Canopy Vuelo del Tucán",
-        "price": "$86 / persona",
-        "priceValue": 86,
+        "price": "{{p:tours.activities.8.priceValue}} / persona",
         "image": "/assets/ToursActivities/VueloTucanCanopy.avif",
         "description": "7 tirolesas a través de una reserva natural privada de 330 hectáreas. Grupos pequeños de 2–8 personas, con caminata ecológica y alta probabilidad de avistamiento de fauna.",
         "features": [
@@ -1785,8 +1723,7 @@
       },
       {
         "title": "Rapel en Cascadas y Cañonismo",
-        "price": "$150 / persona",
-        "priceValue": 150,
+        "price": "{{p:tours.activities.9.priceValue}} / persona",
         "image": "/assets/ToursActivities/CanyoningWatefallRappelling.avif",
         "description": "Múltiples rapeles en cascadas con caminata por la selva e interacción con pozas naturales. Un paquete completo para aventureros — principiantes bienvenidos.",
         "features": [
@@ -1820,8 +1757,7 @@
       },
       {
         "title": "Tour de Canopy Osa",
-        "price": "$91 / persona",
-        "priceValue": 91,
+        "price": "{{p:tours.activities.10.priceValue}} / persona",
         "image": "/assets/ToursActivities/OsaCanopyTour.avif",
         "description": "7 tirolesas incluyendo la más larga de 1.1 km, 2–3 rapeles y 2 puentes colgantes. Grupos pequeños a medianos, entorno montañoso con vistas panorámicas.",
         "features": [
@@ -1846,8 +1782,7 @@
       },
       {
         "title": "Combo Tirolesas + Cascadas",
-        "price": "$90 / persona",
-        "priceValue": 90,
+        "price": "{{p:tours.activities.11.priceValue}} / persona",
         "image": "/assets/ToursActivities/ZiplineWaterfallsAdventureCombo.avif",
         "description": "Aventura multideporte con 5 tirolesas, rapel en árbol, monkey drop al agua, poza natural y tobogán en cascada. Almuerzo local incluido al final.",
         "features": [
@@ -2064,23 +1999,19 @@
         "description": "Dos terapeutas trabajando en perfecta sincronía, duplicando la sensación de relajación. Una experiencia inmersiva y profundamente restauradora como ninguna otra.",
         "durationPricing": [
           {
-            "label": "60 min",
-            "priceValue": 180
+            "label": "60 min"
           },
           {
-            "label": "90 min",
-            "priceValue": 220
+            "label": "90 min"
           }
         ]
       },
       "durationPricing": [
         {
-          "label": "60 min",
-          "priceValue": 95
+          "label": "60 min"
         },
         {
-          "label": "90 min",
-          "priceValue": 120
+          "label": "90 min"
         }
       ]
     },
@@ -2091,14 +2022,12 @@
         {
           "name": "Facial Natural",
           "description": "Tratamiento formulado con té blanco como ingrediente base. Nutre y protege la piel con antioxidantes naturales mientras la revitaliza desde adentro. Ideal para todo tipo de piel, especialmente sensible o deshidratada.",
-          "duration": "60 min",
-          "priceValue": 80
+          "duration": "60 min"
         },
         {
           "name": "Limpieza Facial Profunda",
           "description": "Un tratamiento completo de 60 minutos que incluye limpieza, exfoliación, vapor, extracción, tónico, peeling ultrasónico y una máscara especializada según tu tipo de piel. El reset que tu rostro necesita.",
           "duration": "60 min",
-          "priceValue": 80,
           "features": [
             "Limpieza · Exfoliación · Vapor",
             "Extracción · Tónico",
@@ -2108,10 +2037,9 @@
       ],
       "addons": {
         "heading": "Complementos",
-        "tagline": "Agrega 20 minutos de tratamiento extra a cualquier servicio y personaliza tu experiencia por solo $40.",
+        "tagline": "Agrega 20 minutos de tratamiento extra a cualquier servicio y personaliza tu experiencia por solo {{p:wellnessSpa.facials.addons.priceValue}}.",
         "duration": "20 min",
-        "price": "$40 c/u",
-        "priceValue": 40,
+        "price": "{{p:wellnessSpa.facials.addons.priceValue}} c/u",
         "items": [
           "Mini Facial",
           "Exfoliación de Espalda",
@@ -2130,7 +2058,6 @@
         {
           "name": "Masaje en Pareja",
           "duration": "90 min",
-          "priceValue": 240,
           "description": "Dos terapeutas, dos camillas, un momento compartido de paz total. Ideal para parejas, amigos o familiares que quieren relajarse juntos en perfecta armonía.",
           "includes": [
             "Dos terapeutas trabajando simultáneamente",
@@ -2141,7 +2068,6 @@
         {
           "name": "Paquete de Luna de Miel",
           "duration": "90 min",
-          "priceValue": 235,
           "description": "La experiencia definitiva para una luna de miel perfecta en el Pacífico Sur de Costa Rica.",
           "includes": [
             "Masaje Relajante en Pareja",
@@ -2152,8 +2078,7 @@
         {
           "name": "Romantic Escape",
           "duration": "80 min",
-          "price": "$230",
-          "priceValue": 230,
+          "price": "{{p:wellnessSpa.packages.items.2.priceValue}}",
           "includes": [
             "Masaje en Pareja (Relajante, Tejido Profundo o Aromaterapia)",
             "Envoltura de Aloe Vera",
@@ -2163,8 +2088,7 @@
         {
           "name": "Romance",
           "duration": "90 min",
-          "price": "$230",
-          "priceValue": 230,
+          "price": "{{p:wellnessSpa.packages.items.3.priceValue}}",
           "includes": [
             "Masaje en Pareja con Aceite de Chocolate",
             "Envoltura de Chocolate",
@@ -2174,8 +2098,7 @@
         {
           "name": "Detox",
           "duration": "90 min",
-          "price": "$140",
-          "priceValue": 140,
+          "price": "{{p:wellnessSpa.packages.items.4.priceValue}}",
           "includes": [
             "Masaje de Piedras Calientes",
             "Exfoliación de Chocolate",
@@ -2185,8 +2108,7 @@
         {
           "name": "Balance",
           "duration": "90 min",
-          "price": "$140",
-          "priceValue": 140,
+          "price": "{{p:wellnessSpa.packages.items.5.priceValue}}",
           "includes": [
             "Masaje de Cuello, Espalda y Hombros",
             "Reflexología",
@@ -2196,8 +2118,7 @@
         {
           "name": "Organic",
           "duration": "90 min",
-          "price": "$140",
-          "priceValue": 140,
+          "price": "{{p:wellnessSpa.packages.items.6.priceValue}}",
           "includes": [
             "Masaje",
             "Envoltura de Chocolate",
@@ -2207,8 +2128,7 @@
         {
           "name": "Tropical",
           "duration": "80 min",
-          "price": "$135",
-          "priceValue": 135,
+          "price": "{{p:wellnessSpa.packages.items.7.priceValue}}",
           "includes": [
             "Limpieza Profunda de Espalda",
             "Masaje Relajante"
@@ -2217,8 +2137,7 @@
         {
           "name": "Calma",
           "duration": "80 min",
-          "price": "$140",
-          "priceValue": 140,
+          "price": "{{p:wellnessSpa.packages.items.8.priceValue}}",
           "includes": [
             "Masaje de Espalda",
             "Mini Facial",
@@ -2331,14 +2250,10 @@
           "departure": "Pueblo de Sierpe",
           "tiers": [
             {
-              "guests": 4,
-              "perPerson": 325,
-              "total": 1300
+              "guests": 4
             },
             {
-              "guests": 5,
-              "perPerson": 260,
-              "total": 1300
+              "guests": 5
             }
           ]
         },
@@ -2352,14 +2267,10 @@
           "departure": "Pueblo de Sierpe",
           "tiers": [
             {
-              "guests": 4,
-              "perPerson": 250,
-              "total": 1000
+              "guests": 4
             },
             {
-              "guests": 5,
-              "perPerson": 200,
-              "total": 1000
+              "guests": 5
             }
           ]
         },
@@ -2373,14 +2284,10 @@
           "departure": "Pueblo de Sierpe",
           "tiers": [
             {
-              "guests": 4,
-              "perPerson": 175,
-              "total": 700
+              "guests": 4
             },
             {
-              "guests": 5,
-              "perPerson": 140,
-              "total": 700
+              "guests": 5
             }
           ]
         },
@@ -2394,14 +2301,10 @@
           "departure": "Pueblo de Sierpe",
           "tiers": [
             {
-              "guests": 4,
-              "perPerson": 150,
-              "total": 600
+              "guests": 4
             },
             {
-              "guests": 5,
-              "perPerson": 120,
-              "total": 600
+              "guests": 5
             }
           ]
         }
@@ -2423,29 +2326,19 @@
           "capacityNote": "Capacidad máxima: 8 personas.",
           "tiers": [
             {
-              "guests": 4,
-              "perPerson": 225,
-              "total": 900
+              "guests": 4
             },
             {
-              "guests": 5,
-              "perPerson": 180,
-              "total": 900
+              "guests": 5
             },
             {
-              "guests": 6,
-              "perPerson": 150,
-              "total": 900
+              "guests": 6
             },
             {
-              "guests": 7,
-              "perPerson": 128.5,
-              "total": 900
+              "guests": 7
             },
             {
-              "guests": 8,
-              "perPerson": 112.5,
-              "total": 900
+              "guests": 8
             }
           ]
         },
@@ -2460,24 +2353,16 @@
           "wildlifeNote": "Esta es una expedición de vida silvestre marina salvaje y todos los encuentros ocurren en el ambiente natural de los animales. Los avistamientos de delfines, las interacciones cercanas y las oportunidades de nadar junto a ellos no pueden garantizarse — el comportamiento de la fauna y las condiciones oceánicas son naturalmente impredecibles.",
           "tiers": [
             {
-              "guests": 4,
-              "perPerson": 300,
-              "total": 1200
+              "guests": 4
             },
             {
-              "guests": 5,
-              "perPerson": 240,
-              "total": 1200
+              "guests": 5
             },
             {
-              "guests": 6,
-              "perPerson": 200,
-              "total": 1200
+              "guests": 6
             },
             {
-              "guests": 7,
-              "perPerson": 171.43,
-              "total": 1200
+              "guests": 7
             }
           ]
         },
@@ -2492,39 +2377,25 @@
           "wildlifeNote": "Los avistamientos de vida silvestre no están garantizados — los animales se mueven libremente en su hábitat natural. Las salidas de primera hora de la mañana o al final de la tarde ofrecen la mejor actividad de fauna.",
           "tiers": [
             {
-              "guests": 2,
-              "perPerson": 150,
-              "total": 300
+              "guests": 2
             },
             {
-              "guests": 3,
-              "perPerson": 150,
-              "total": 450
+              "guests": 3
             },
             {
-              "guests": 4,
-              "perPerson": 150,
-              "total": 600
+              "guests": 4
             },
             {
-              "guests": 5,
-              "perPerson": 150,
-              "total": 750
+              "guests": 5
             },
             {
-              "guests": 6,
-              "perPerson": 125,
-              "total": 750
+              "guests": 6
             },
             {
-              "guests": 7,
-              "perPerson": 125,
-              "total": 875
+              "guests": 7
             },
             {
-              "guests": 8,
-              "perPerson": 125,
-              "total": 1000
+              "guests": 8
             }
           ]
         }
@@ -2579,6 +2450,24 @@
     }
   },
   "cart": {
+    "units": {
+      "day": {
+        "one": "día",
+        "other": "días"
+      },
+      "adult": {
+        "one": "adulto",
+        "other": "adultos"
+      },
+      "child": {
+        "one": "niño",
+        "other": "niños"
+      },
+      "guest": {
+        "one": "persona",
+        "other": "personas"
+      }
+    },
     "formLabels": {
       "adults": "Adultos",
       "children": "Niños",

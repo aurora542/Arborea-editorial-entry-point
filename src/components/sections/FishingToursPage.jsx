@@ -7,8 +7,8 @@ import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/Footer";
 import { useDraft, useSeedDraftFromCart } from "@/hooks/useDraft";
 import { useCart } from "@/app/context/CartContext";
-import { skuOf, lineIdOf } from "@/lib/sku";
-import { money, formatDateLabel } from "@/lib/format";
+import { skuOf, titleOf, lineIdOf } from "@/lib/sku";
+import { money, formatDateLabel, countLabel } from "@/lib/format";
 import DateField from "@/components/ui/DateField";
 import {
   TbArrowLeft, TbAnchor, TbBrandWhatsapp, TbCircleCheck, TbCheck,
@@ -492,7 +492,7 @@ export default function FishingToursPage() {
   const buildLines = () => {
     const out = [];
 
-    const push = (id, sku, title) => {
+    const push = (id, sku, title, titleEn) => {
       const entry = draft.get(id);
       if (!entry?.tier) return;
       const { tier } = entry;
@@ -501,18 +501,34 @@ export default function FishingToursPage() {
         service: SERVICE,
         sku,
         title,
+        titleEn: titleEn || title,
+        kind: "charter",
         qty: 1,
         unitPrice: tier.total,
+        byQuote: false,
         date: entry.date ?? "",
-        options: { guests: `${tier.guests} ${labels.guests}` },
+        /* `options.guests` is a localised label for the caption; the number
+         * itself goes in `data` so the sheet gets a number. */
+        options: { guests: countLabel(t, tier.guests, "guest") },
+        data: { guests: tier.guests },
       });
     };
 
     anglerItems.forEach((item, i) =>
-      push(`angler-${i}`, skuOf("fishingTours.anglers.items", i, "name"), item.name)
+      push(
+        `angler-${i}`,
+        skuOf("fishingTours.anglers.items", i, "name"),
+        item.name,
+        titleOf("fishingTours.anglers.items", i, "name")
+      )
     );
     familyItems.forEach((item, i) =>
-      push(`family-${i}`, skuOf("fishingTours.family.items", i, "name"), item.name)
+      push(
+        `family-${i}`,
+        skuOf("fishingTours.family.items", i, "name"),
+        item.name,
+        titleOf("fishingTours.family.items", i, "name")
+      )
     );
     return out;
   };

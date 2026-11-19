@@ -63,6 +63,40 @@ export function skuOf(path, index, field = "title") {
   return `${slugify(tail)}-${index}`;
 }
 
+/**
+ * The same lookup as `skuOf`, but returns the raw ENGLISH string instead of a slug.
+ *
+ * Cart `title` comes from `t()`, so it is whatever language the guest was browsing
+ * in. That is right for the drawer and wrong for the order record: the concierge
+ * would get one reservation's sheet half in Spanish and half in English depending
+ * on who placed which checkout. Lines carry this as `titleEn` so the sheet has one
+ * stable, canonical column while the UI keeps showing the guest their own language.
+ *
+ * Returns "" when it can't resolve, so callers can fall back to the display title.
+ */
+export function titleOf(path, index, field = "title") {
+  const arr = resolve(path);
+  const entry = Array.isArray(arr) ? arr[index] : undefined;
+
+  if (typeof entry === "string") return entry;
+  if (entry && typeof entry === "object") {
+    const name = entry[field] ?? entry.title ?? entry.name ?? entry.label;
+    if (typeof name === "string") return name;
+  }
+  return "";
+}
+
+/**
+ * English string at a direct dot path — for the handful of items that are a named
+ * object rather than an entry in an array, so `titleOf` has no index to take.
+ *
+ *   enString("wellnessSpa.massages.fourHands.label")  -> "Four Hands Massage"
+ */
+export function enString(path) {
+  const value = resolve(path);
+  return typeof value === "string" ? value : "";
+}
+
 /** Composite id for a line: "wellness-spa:hot-stone-massage:90-min" */
 export function lineIdOf(service, sku, variant) {
   return [service, sku, variant ? slugify(variant) : null].filter(Boolean).join(":");

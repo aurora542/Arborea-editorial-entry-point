@@ -30,16 +30,38 @@ export function formatDateLabel(iso, locale = "en") {
 }
 
 /**
+ * "3 days" / "3 días" — a counted unit for a cart caption.
+ *
+ * Every surface used to build these inline with a hand-written English plural
+ * (`${n} ${n === 1 ? "day" : "days"}`), so a guest browsing in Spanish got English
+ * words in their own cart. Units live in `cart.units.<unit>` as `{ one, other }` in
+ * both locales; `unit` is the singular key ("day", "adult", "child", "guest").
+ *
+ * Only the caption needs this. The number itself belongs in the line's `data` bag,
+ * where it stays a number and has no language at all.
+ */
+export function countLabel(t, n, unit) {
+  const count = Number(n);
+  const forms = t(`cart.units.${unit}`);
+  const word =
+    forms && typeof forms === "object"
+      ? (count === 1 ? forms.one : forms.other)
+      : "";
+  return word ? `${count} ${word}` : String(count);
+}
+
+/**
  * Turns a cart line's `options` + `date` into one muted caption:
  *   { duration: "90 min", days: 3 } + "2026-10-04"  ->  "90 min · 3 days · Oct 4"
  *
- * Keys starting with `_` are treated as INTERNAL metadata — they stay in the
- * line for re-hydration or payload serialization but are kept out of the
- * caption. The private-chef page uses this to stash per-day dish picks under
- * `options._dishes` without leaking a JSON blob into the drawer.
- *
  * Values are rendered as-is; keys are never shown, so option values should
  * read as labels on their own ("90 min", not "90").
+ *
+ * Keys starting with `_` are skipped as internal metadata. Nothing writes one any
+ * more — the private-chef page used to stash per-day dish picks as a JSON string
+ * under `options._dishes`, and now puts them in the line's typed `data` bag — but
+ * the filter stays so a line persisted in sessionStorage by an older build can't
+ * dump a JSON blob into the caption.
  */
 export function describeLine(line, locale = "en") {
   const parts = Object.entries(line?.options ?? {})

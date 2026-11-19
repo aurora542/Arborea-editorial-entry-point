@@ -3,8 +3,15 @@
 import { createContext, useContext, useState, useEffect } from "react";
 import en from "@/i18n/en.json";
 import es from "@/i18n/es.json";
+import { applyPrices } from "@/data/pricing";
 
-const messages = { en, es };
+/*
+ * Prices are injected from `src/data/pricing.js` rather than living in the locale
+ * files, so both languages read the same numbers by construction — see the comment
+ * at the top of that module. Done once here at module load, not per render, and
+ * every `t("…").priceValue` in the app resolves through it without knowing.
+ */
+const messages = { en: applyPrices(en), es: applyPrices(es) };
 
 const I18nContext = createContext(null);
 

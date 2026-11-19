@@ -48,23 +48,52 @@ function toPrice(value) {
 /* Returns null for anything unusable, so bad input is dropped rather than stored.
  * Exported so the whitelist can be verified directly — it is the guard that keeps
  * internal i18n fields (commission, contactName, whatsapp) out of stored state and
- * therefore out of the outbound payload. */
+ * therefore out of the outbound payload.
+ *
+ * ADDING A FIELD TO A CART LINE MEANS ADDING IT HERE. This is a whitelist: a field a
+ * builder sets but this function doesn't copy is silently dropped on commit and on
+ * rehydration, which looks like the builder not running.
+ *
+ * `options` vs `data`:
+ *   options — DISPLAY bag. Values are strings meant to be read as labels on their
+ *             own, joined by `describeLine` into the drawer caption. Locale-dependent
+ *             by design.
+ *   data    — TYPED bag for the order record. Numbers stay numbers, objects stay
+ *             objects, nothing is localised. This is what the payload and the
+ *             concierge's sheet read. Build it field by field like `options` —
+ *             never spread an i18n object into it, or the whitelist above is moot.
+ */
 export function normalizeLine(raw) {
   if (!raw || typeof raw !== "object") return null;
   if (!raw.lineId || !raw.service) return null;
   if (!SERVICES[raw.service]) return null;
 
+  const title = String(raw.title ?? "");
+
   return {
     lineId: String(raw.lineId),
     service: String(raw.service),
     sku: String(raw.sku ?? ""),
-    title: String(raw.title ?? ""),
+    title,
+    /* Canonical English title for the order record. Falls back to the display
+     * title so a line always has something readable. */
+    titleEn: String(raw.titleEn || title),
+    /* What kind of thing this line is ("massage", "beverage", "vehicle", …).
+     * Lets the sheet group rows and lets page logic branch without parsing skus. */
+    kind: String(raw.kind ?? ""),
     qty: toQty(raw.qty),
     unitPrice: toPrice(raw.unitPrice),
+    /* Explicit "price to be confirmed", rather than inferring it from
+     * `unitPrice === 0` — which cannot tell a quote apart from a free item. */
+    byQuote: raw.byQuote === true,
     date: typeof raw.date === "string" ? raw.date : "",
     options:
       raw.options && typeof raw.options === "object" && !Array.isArray(raw.options)
         ? raw.options
+        : {},
+    data:
+      raw.data && typeof raw.data === "object" && !Array.isArray(raw.data)
+        ? raw.data
         : {},
   };
 }

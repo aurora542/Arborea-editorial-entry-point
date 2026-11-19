@@ -6,8 +6,8 @@ import { useI18n } from "@/app/context/I18nContext";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/Footer";
 import { useCart } from "@/app/context/CartContext";
-import { skuOf, lineIdOf } from "@/lib/sku";
-import { money } from "@/lib/format";
+import { skuOf, titleOf, lineIdOf } from "@/lib/sku";
+import { money, countLabel } from "@/lib/format";
 import QtyStepper from "@/components/ui/QtyStepper";
 import {
   TbArrowLeft, TbLeaf, TbCheck,
@@ -270,14 +270,32 @@ export default function FullFridgePage() {
         service: SERVICE,
         sku: "stocking-package",
         title: `${pricingRows[nearestRow].label} · ${pricingColumns[nearestCol].label}`,
+        /* Both halves of the composed title resolved from en.json, so the record
+         * reads the same whichever language the guest ordered in. */
+        titleEn: [
+          titleOf("fullFridge.pricing.rows", nearestRow, "label"),
+          titleOf("fullFridge.pricing.columns", nearestCol, "label"),
+        ]
+          .filter(Boolean)
+          .join(" · "),
+        kind: "stocking-package",
         qty: 1,
         unitPrice: pricingRows[nearestRow].priceValues[nearestCol],
+        byQuote: false,
         date: "",
         options: {
-          requested: `${days} ${days === 1 ? "day" : "days"} · ${adults} ${adults === 1 ? "adult" : "adults"}${
-            children ? ` · ${children} ${children === 1 ? "child" : "children"}` : ""
-          }`,
+          requested: [
+            countLabel(t, days, "day"),
+            countLabel(t, adults, "adult"),
+            children ? countLabel(t, children, "child") : null,
+          ]
+            .filter(Boolean)
+            .join(" · "),
         },
+        /* The package tier is the NEAREST match to what was asked for, so the
+         * exact request has to survive as numbers — `options.requested` is the
+         * same thing as a sentence, for the drawer caption. */
+        data: { requestedDays: days, requestedAdults: adults, requestedChildren: children },
       });
     }
 
@@ -291,10 +309,14 @@ export default function FullFridgePage() {
           service: SERVICE,
           sku,
           title: item.title,
+          titleEn: titleOf("fullFridge.beverages.items", i, "title"),
+          kind: "beverage",
           qty,
           unitPrice: item.priceValue,
+          byQuote: false,
           date: "",
           options: {},
+          data: {},
         });
       });
     }

@@ -6,8 +6,9 @@ import { useI18n } from "@/app/context/I18nContext";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/Footer";
 import { useCart } from "@/app/context/CartContext";
-import { skuOf, lineIdOf } from "@/lib/sku";
-import { money } from "@/lib/format";
+import { skuOf, titleOf, lineIdOf } from "@/lib/sku";
+import { money, countLabel } from "@/lib/format";
+import { DISH_PRICE } from "@/data/pricing";
 import DateField from "@/components/ui/DateField";
 import {
   TbArrowLeft, TbLeaf, TbCircleCheck, TbBrandWhatsapp, TbCheck,
@@ -38,6 +39,49 @@ const SERVICE_MEALS = [["breakfast"], ["lunch"], ["dinner"], ["breakfast", "lunc
 
 const SERVICE = "private-chef";
 
+/* Line kinds that are plain quantities rather than one-per-booking items. In add
+ * mode these SUM into whatever is already in the cart (`addLine`) instead of
+ * replacing it. Previously inferred by sku string prefix plus rebuilding the
+ * beverage sku list on every call; `kind` makes it a lookup. */
+const QTY_ADDON_KINDS = new Set(["beverage", "dessert", "bakery"]);
+
+/*
+ * The chef page sells the Full Fridge beverage list too, and used the bare
+ * `fullFridge.beverages.items` sku for it — so "red-wine" existed under BOTH
+ * `full-fridge` and `private-chef`. Cart lines were fine (lineId carries the
+ * service), but the sku stopped being a global product id, which an order sheet
+ * keyed on sku alone would silently merge.
+ *
+ * Namespaced the same way this page already namespaces desserts and bakery. One
+ * helper rather than the expression inline, because the builder and the seed have
+ * to agree and they are 150 lines apart.
+ */
+const beverageSku = (i) => `beverage-${skuOf("fullFridge.beverages.items", i, "title")}`;
+
+/*
+ * Reading a committed line back into page state.
+ *
+ * `data` is the typed source. The `options` fallbacks exist because the cart lives
+ * in sessionStorage: a guest who was mid-session when a new build shipped still has
+ * lines in the old shape, and an Edit click has to rehydrate them rather than reset
+ * their day to 2 guests with no dishes. Drop the fallbacks once no old cart can
+ * plausibly still be open.
+ */
+function guestsOf(line) {
+  const fromData = Number(line?.data?.guests);
+  if (Number.isFinite(fromData) && fromData > 0) return fromData;
+  return parseInt(line?.options?.guests, 10);
+}
+
+function dishesOf(line) {
+  const fromData = line?.data?.dishes;
+  if (fromData && typeof fromData === "object") return fromData;
+  if (typeof line?.options?._dishes === "string") {
+    try { return JSON.parse(line.options._dishes) || {}; } catch { return {}; }
+  }
+  return {};
+}
+
 export default function PrivateChefPage() {
   const { t } = useI18n();
   const { setLine, addLine, clearService, setServiceForm, openCart, linesByService, lines, serviceForms, hydrated, editSignal } = useCart();
@@ -66,7 +110,6 @@ export default function PrivateChefPage() {
 
   const nav             = t("privateChef.nav");
   const breakfastItems  = t("privateChef.breakfast.items");
-  const breakfastExtras = t("privateChef.breakfast.extras");
   const lunchItems      = t("privateChef.lunch.items");
   const dinnerItems     = t("privateChef.dinner.items");
   const dessertsItems   = t("privateChef.desserts.items");
@@ -182,7 +225,6 @@ export default function PrivateChefPage() {
 
   const setItemActiveMeal = (itemId, meal) => updateServiceItem(itemId, { activeMeal: meal });
 
-  const DISH_PRICE = 15;
 
   /* Desserts and bakery are priced items, so they are quantities — not the dish
    * "preferences" that `item.dishes` tracks for the meal menus. */
@@ -264,11 +306,8 @@ export default function PrivateChefPage() {
       for (const line of mine) {
         const idx = perServiceSkus.get(line.sku);
         if (idx === undefined) continue;
-        const n = parseInt(line.options?.guests, 10);
-        let dishes = {};
-        if (typeof line.options?._dishes === "string") {
-          try { dishes = JSON.parse(line.options._dishes) || {}; } catch { dishes = {}; }
-        }
+        const n = guestsOf(line);
+        const dishes = dishesOf(line);
         const meals = SERVICE_MEALS[idx] || [];
         restored.push({
           id: nextItemId(),
@@ -294,7 +333,7 @@ export default function PrivateChefPage() {
       for (const line of mine) {
         const idx = nightSkus.get(line.sku);
         if (idx === undefined) continue;
-        const n = parseInt(line.options?.guests, 10);
+        const n = guestsOf(line);
         restoredThemed.push({
           id: nextItemId(),
           nightIdx: idx,
@@ -314,7 +353,7 @@ export default function PrivateChefPage() {
     if (Array.isArray(fridgeBeverages?.items)) {
       const restored = {};
       fridgeBeverages.items.forEach((_, i) => {
-        const line = bySku.get(skuOf("fullFridge.beverages.items", i, "title"));
+        const line = bySku.get(beverageSku(i));
         if (line) restored[i] = line.qty;
       });
       if (Object.keys(restored).length) setBevQty(restored);
@@ -357,20 +396,25 @@ export default function PrivateChefPage() {
         const item = pricingPS[it.serviceIdx];
         if (!item) continue;
         const sku = skuOf("privateChef.pricing.perService.items", it.serviceIdx, "label");
-        const dishesJson = Object.keys(it.dishes || {}).length
-          ? JSON.stringify(it.dishes)
-          : "";
         out.push({
           lineId: lineIdOf(SERVICE, sku, it.id),
           service: SERVICE,
           sku,
           title: item.label,
+          titleEn: titleOf("privateChef.pricing.perService.items", it.serviceIdx, "label"),
+          kind: "chef-service",
           qty: 1,
           unitPrice: computeServicePrice(item, it.guests),
+          byQuote: false,
           date: it.date,
-          options: {
-            guests: `${it.guests} guests`,
-            ...(dishesJson ? { _dishes: dishesJson } : {}),
+          options: { guests: countLabel(t, it.guests, "guest") },
+          /* The guest count and this day's dish picks as real values. They used to
+           * ride in `options` as prose and a JSON string under an `_dishes` key
+           * that describeLine had to hide; the seed effect then parsed both back
+           * out with parseInt and JSON.parse. */
+          data: {
+            guests: it.guests,
+            ...(Object.keys(it.dishes || {}).length ? { dishes: it.dishes } : {}),
           },
         });
       }
@@ -389,10 +433,14 @@ export default function PrivateChefPage() {
           service: SERVICE,
           sku,
           title: night.title,
+          titleEn: titleOf("privateChef.themedNights.nights", it.nightIdx, "title"),
+          kind: "themed-night",
           qty: 1,
           unitPrice: tier?.priceValue ?? 0,
+          byQuote: false,
           date: it.date,
-          options: { guests: `${it.guests} guests` },
+          options: { guests: countLabel(t, it.guests, "guest") },
+          data: { guests: it.guests },
         });
       }
     }
@@ -401,16 +449,20 @@ export default function PrivateChefPage() {
       fridgeBeverages.items.forEach((item, i) => {
         const qty = bevQty[i] || 0;
         if (!qty) return;
-        const sku = skuOf("fullFridge.beverages.items", i, "title");
+        const sku = beverageSku(i);
         out.push({
           lineId: lineIdOf(SERVICE, sku),
           service: SERVICE,
           sku,
           title: item.title,
+          titleEn: titleOf("fullFridge.beverages.items", i, "title"),
+          kind: "beverage",
           qty,
           unitPrice: item.priceValue,
+          byQuote: false,
           date: "",
           options: {},
+          data: {},
         });
       });
     }
@@ -418,15 +470,20 @@ export default function PrivateChefPage() {
     if (bartenderIdx !== null && Array.isArray(pricingBar)) {
       const item = pricingBar[bartenderIdx];
       const sku = skuOf("privateChef.pricing.bartender.items", bartenderIdx, "label");
+      const labelEn = titleOf("privateChef.pricing.bartender.items", bartenderIdx, "label");
       out.push({
         lineId: lineIdOf(SERVICE, sku),
         service: SERVICE,
         sku,
         title: `Bartender — ${item.label}`,
+        titleEn: `Bartender — ${labelEn || item.label}`,
+        kind: "bartender",
         qty: 1,
         unitPrice: item.priceValue,
+        byQuote: false,
         date: "",
         options: {},
+        data: {},
       });
     }
 
@@ -443,10 +500,14 @@ export default function PrivateChefPage() {
           service: SERVICE,
           sku,
           title: item.title,
+          titleEn: titleOf(path, i, "title"),
+          kind: group, /* "dessert" | "bakery" */
           qty,
           unitPrice: DISH_PRICE,
+          byQuote: false,
           date: "",
           options: {},
+          data: {},
         });
       });
     }
@@ -492,14 +553,7 @@ export default function PrivateChefPage() {
    * than get overwritten. Per-day items, themed nights and bartender keep
    * `setLine` semantics (each either has a unique lineId that just appends, or
    * an idempotent one that should mirror the page's state). */
-  const isQtyAddOn = (line) => {
-    if (line.sku?.startsWith("dessert-") || line.sku?.startsWith("bakery-")) return true;
-    /* Beverages — their skus come from fullFridge.beverages.items via skuOf. */
-    const bevSkus = Array.isArray(fridgeBeverages?.items)
-      ? fridgeBeverages.items.map((_, i) => skuOf("fullFridge.beverages.items", i, "title"))
-      : [];
-    return bevSkus.includes(line.sku);
-  };
+  const isQtyAddOn = (line) => QTY_ADDON_KINDS.has(line.kind);
 
   const addToCart = (dietary) => {
     if (!draftLines.length) return;
@@ -701,7 +755,7 @@ export default function PrivateChefPage() {
                   const lineTotal = computeServicePrice(service, it.guests);
 
                   const mealsI18n = {
-                    breakfast: { heading: t("privateChef.breakfast.heading"), items: breakfastItems, note: t("privateChef.breakfast.note"), extras: breakfastExtras, extrasHeading: t("privateChef.breakfast.extrasHeading") },
+                    breakfast: { heading: t("privateChef.breakfast.heading"), items: breakfastItems, note: t("privateChef.breakfast.note") },
                     lunch:     { heading: t("privateChef.lunch.heading"),     items: lunchItems },
                     dinner:    { heading: t("privateChef.dinner.heading"),    items: dinnerItems },
                   };
@@ -867,8 +921,6 @@ export default function PrivateChefPage() {
                               heading={mealsI18n[itemActive].heading}
                               items={Array.isArray(mealsI18n[itemActive].items) ? mealsI18n[itemActive].items : []}
                               note={mealsI18n[itemActive].note}
-                              extras={Array.isArray(mealsI18n[itemActive].extras) ? mealsI18n[itemActive].extras : []}
-                              extrasHeading={mealsI18n[itemActive].extrasHeading}
                               group={itemActive}
                               dishes={it.dishes || {}}
                               onToggle={(dishId, label, group) => toggleDishInItem(it.id, dishId, label, group)}
@@ -1105,7 +1157,7 @@ function Eyebrow({ num, label, standalone = false }) {
 }
 
 
-function MenuSection({ heading, items, note, extras, extrasHeading, group, dishes, onToggle, maxDishes = 1, hideHeading = false }) {
+function MenuSection({ heading, items, note, group, dishes, onToggle, maxDishes = 1, hideHeading = false }) {
   const selectedCount = Object.values(dishes).filter(d => d.group === group).length;
 
   return (
@@ -1154,28 +1206,6 @@ function MenuSection({ heading, items, note, extras, extrasHeading, group, dishe
       </div>
 
       {note && <p className="font-sans text-sm text-[#222E2C]/65">{note}</p>}
-
-      {extras && extras.length > 0 && (
-        <div className="flex flex-col gap-3 pt-2 border-t border-[#222E2C]/10">
-          <p className="font-sans font-semibold text-sm text-[#222E2C]">{extrasHeading}</p>
-          <div className="flex flex-col sm:flex-row gap-2">
-            {extras.map((extra, i) => {
-              const id = `dish-${group}-extra-${i}`;
-              const selected = Boolean(dishes[id]);
-              return (
-                <button key={i} type="button" aria-pressed={selected} onClick={() => onToggle(id, extra.title, group)}
-                  className={`text-left border-2 rounded-xl px-4 py-4 flex flex-col gap-1.5 flex-1 transition-all duration-200 ${
-                    selected ? "bg-[#213B2F] border-[#213B2F]" : "bg-white border-[#222E2C]/10 hover:border-[#222E2C]/25"
-                  }`}
-                >
-                  <p className={`font-sans font-semibold text-sm ${selected ? "text-[#D8DDB8]" : "text-[#222E2C]"}`}>{extra.title}</p>
-                  <p className={`font-sans text-sm leading-relaxed ${selected ? "text-[#D8DDB8]/70" : "text-[#222E2C]/65"}`}>{extra.description}</p>
-                </button>
-              );
-            })}
-          </div>
-        </div>
-      )}
     </div>
   );
 }

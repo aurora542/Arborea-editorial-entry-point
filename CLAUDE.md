@@ -43,9 +43,18 @@ first client render disagree.
 ### i18n is the content database, not just copy
 
 `src/i18n/en.json` and `es.json` (~2180 lines each) hold the site's structured
-business data, not only translations: prices (`priceValue`, `basePrice`,
-`extraPersonPrice`, `priceValues[]`), menu items, package contents, guest-count
+business data, not only translations: menu items, package contents, guest-count
 tiers, and third-party operator details.
+
+**Prices are the exception — they are NOT in these files any more.** All 98 of them
+live in [src/data/pricing.js](src/data/pricing.js), injected into whichever locale
+is active by `applyPrices()` in `I18nContext`. Components still read them the old
+way (`t("…").priceValue`) and don't know the difference. To change a price, edit
+`pricing.js` — that is the whole procedure. Copy that quotes a price in prose uses
+a `{{p:<path>}}` token resolved from the same source, so the pricing tables cannot
+drift from the cart. Structural numbers (`guests`, `days`, `baseGuests`,
+`minGuests`, `maxGuests`) deliberately stay in the locale files: they describe the
+product, not its price.
 
 `t("path.to.key")` in [src/app/context/I18nContext.jsx](src/app/context/I18nContext.jsx)
 walks the JSON by dot notation and returns **whatever node it lands on** — a string,
@@ -54,13 +63,13 @@ guards; keep them, the JSON is the schema.
 
 Consequences that bite:
 
-- **Both locale files must stay structurally identical.** Array lengths and numeric
-  values are load-bearing. Adding an item to `en.json` only will silently break the
-  Spanish UI. The 74 numeric price/quantity keys are currently in sync — verify
+- **Both locale files must stay structurally identical.** Array lengths and the
+  remaining numeric values are load-bearing. Adding an item to `en.json` only will
+  silently break the Spanish UI. The 41 structural numbers are in sync — verify
   before and after touching either file.
-- Prices reach the cart through `t()`, so they are read from the *active locale*.
-  Extracting prices to a single non-i18n source is a known desirable follow-up
-  (see the handoff doc), deliberately not done yet.
+- Prices used to be duplicated across both locales and read from the *active
+  locale*, so a one-sided edit meant a Spanish guest was quoted a different number
+  than an English one. That is fixed — see the pricing note above.
 - `tours.activities` also carries **internal-only** fields (`commission`,
   `contactName`, `whatsapp`). These ship in the client bundle. Never copy an
   activity object wholesale into a cart line or an outbound payload — whitelist
@@ -82,7 +91,7 @@ stay clickable while the page scrolls needs an explicit `pointer-events-auto`.
 
 Cart line `options` values are rendered as a `·`-joined caption with the keys
 hidden, so each value must read as a label by itself — `{ days: "3 days" }`, not
-`{ days: 3 }`.
+`{ days: 3 }`. The typed number belongs in the line's `data` bag alongside it.
 
 Single session-scoped cart in `src/app/context/CartContext.jsx`, mounted in
 `layout.tsx` inside `I18nProvider`. Every service page adds lines to it; the drawer
@@ -107,7 +116,29 @@ the cart has read `sessionStorage`, so an initialiser captures an empty cart and
 never re-runs. Guard with a ref so it fires once and can't overwrite live edits
 (see `ActivityCard` and `MulaRentalSection` for the pattern).
 
-- One line shape for all services: `{ lineId, service, sku, title, qty, unitPrice, date, options }`.
+- One line shape for all services:
+  `{ lineId, service, sku, title, titleEn, kind, qty, unitPrice, byQuote, date, options, data }`.
+  `normalizeLine` in `CartContext.jsx` is a **whitelist** — a field a builder sets
+  but it doesn't copy is silently dropped on commit and on rehydration, which looks
+  exactly like the builder not running. Adding a field to a line means adding it there.
+- **`options` is for display, `data` is for the record.** `options` values are
+  rendered as a `·`-joined caption with the keys hidden, so each one must read as a
+  label by itself (`{ days: "3 days" }`, not `{ days: 3 }`) and is locale-dependent
+  by design. `data` holds the same facts typed and unlocalised (`{ days: 3 }`,
+  `{ guests: 6 }`, `{ durationMin: 90 }`, `{ dishes: {…} }`) and is what the payload
+  and the concierge's sheet read. Never spread an i18n object into `data` — that
+  would defeat the whitelist.
+- **`title` is the guest's language; `titleEn` is canonical.** `title` comes from
+  `t()`, so it is whatever locale was active. 72 of the 80 orderable items have a
+  different Spanish string, so without `titleEn` one reservation's sheet ends up
+  half in each language. Build it with `titleOf()` / `enString()` from
+  [src/lib/sku.js](src/lib/sku.js), which read `en.json` directly.
+- **`kind`** says what a line *is* (`"massage"`, `"beverage"`, `"vehicle"`,
+  `"chef-service"`, …). Page logic branches on it instead of parsing sku strings,
+  and the sheet groups rows by it.
+- **`byQuote`** is explicit rather than inferred from `unitPrice === 0`, which
+  cannot tell "we'll quote you" apart from a genuinely free item. Transport and
+  tours set it.
 - `lineTotal` is **derived** (`qty * unitPrice`) in the context. Do not bake
   quantity into a price or into a display label — earlier code did both and it was
   the source of persistent desync bugs.

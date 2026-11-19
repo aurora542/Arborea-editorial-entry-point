@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { TbPhoto, TbCirclePlus, TbCheck, TbTrash } from "react-icons/tb";
 import { useCart } from "@/app/context/CartContext";
 import { useI18n } from "@/app/context/I18nContext";
-import { skuOf, lineIdOf } from "@/lib/sku";
+import { skuOf, titleOf, lineIdOf } from "@/lib/sku";
 import { money } from "@/lib/format";
 import QtyStepper from "@/components/ui/QtyStepper";
 import DateField from "@/components/ui/DateField";
@@ -62,10 +62,16 @@ export default function ActivityCard({ activity, index }) {
       service: "tours",
       sku,
       title,
+      titleEn: titleOf("tours.activities", index, "title"),
+      kind: "activity",
       qty,
       unitPrice: priceValue ?? 0,
+      /* Most third-party activities are quoted by the operator rather than
+       * carrying a fixed price. */
+      byQuote: priceValue == null,
       date,
       options: {},
+      data: {},
     });
     openCart();
   };

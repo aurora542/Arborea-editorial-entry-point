@@ -7,7 +7,7 @@ import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/Footer";
 import { useDraft, useSeedDraftFromCart } from "@/hooks/useDraft";
 import { useCart } from "@/app/context/CartContext";
-import { skuOf, lineIdOf } from "@/lib/sku";
+import { skuOf, titleOf, enString, lineIdOf } from "@/lib/sku";
 import { money } from "@/lib/format";
 import QtyStepper from "@/components/ui/QtyStepper";
 import DateField from "@/components/ui/DateField";
@@ -399,44 +399,69 @@ export default function WellnessSpaPage() {
    */
   const buildLines = () => {
     const out = [];
-    const push = (id, sku, title, options = {}) => {
+    /* `kind` and `titleEn` are for the order record, not the UI: see normalizeLine
+     * in CartContext. `options` stays the display bag that feeds describeLine. */
+    const push = (id, sku, title, { kind, titleEn, options = {} } = {}) => {
       const entry = draft.get(id);
       if (!entry?.qty) return;
+      const duration = entry.duration || options.duration || "";
+      /* "90 min" is the same string in both locales, so a number can be read off
+       * it safely — but the sheet gets the number, not the label. */
+      const durationMin = parseInt(duration, 10);
       out.push({
         lineId: lineIdOf(SERVICE, sku, entry.duration),
         service: SERVICE,
         sku,
         title,
+        titleEn: titleEn || title,
+        kind,
         qty: entry.qty,
         unitPrice: entry.unitPrice ?? 0,
+        byQuote: false,
         date: entry.date ?? "",
         options: { ...options, ...(entry.duration ? { duration: entry.duration } : {}) },
+        data: Number.isFinite(durationMin) ? { durationMin } : {},
       });
     };
 
     if (Array.isArray(massageItems)) {
       massageItems.forEach((item, i) =>
-        push(`massage-${i}`, skuOf("wellnessSpa.massages.items", i, "name"), item.name)
+        push(`massage-${i}`, skuOf("wellnessSpa.massages.items", i, "name"), item.name, {
+          kind: "massage",
+          titleEn: titleOf("wellnessSpa.massages.items", i, "name"),
+        })
       );
     }
-    if (fourHands) push("four-hands", "four-hands-massage", fourHands.label);
+    if (fourHands) {
+      push("four-hands", "four-hands-massage", fourHands.label, {
+        kind: "massage",
+        titleEn: enString("wellnessSpa.massages.fourHands.label"),
+      });
+    }
 
     if (Array.isArray(facialItems)) {
       facialItems.forEach((item, i) =>
         push(`facial-${i}`, skuOf("wellnessSpa.facials.items", i, "name"), item.name, {
-          duration: item.duration,
+          kind: "facial",
+          titleEn: titleOf("wellnessSpa.facials.items", i, "name"),
+          options: { duration: item.duration },
         })
       );
     }
     if (Array.isArray(addonItems)) {
       addonItems.forEach((name, i) =>
-        push(`addon-${i}`, skuOf("wellnessSpa.facials.addons.items", i), name)
+        push(`addon-${i}`, skuOf("wellnessSpa.facials.addons.items", i), name, {
+          kind: "addon",
+          titleEn: titleOf("wellnessSpa.facials.addons.items", i),
+        })
       );
     }
     if (Array.isArray(packages)) {
       packages.forEach((pkg, i) =>
         push(`package-${i}`, skuOf("wellnessSpa.packages.items", i, "name"), pkg.name, {
-          duration: pkg.duration,
+          kind: "package",
+          titleEn: titleOf("wellnessSpa.packages.items", i, "name"),
+          options: { duration: pkg.duration },
         })
       );
     }

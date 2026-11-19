@@ -8,7 +8,8 @@ import {
 import { useCart } from "@/app/context/CartContext";
 import { useI18n } from "@/app/context/I18nContext";
 import { lineIdOf } from "@/lib/sku";
-import { money } from "@/lib/format";
+import { money, countLabel } from "@/lib/format";
+import { VEHICLE_DAILY_RATES } from "@/data/pricing";
 import QtyStepper from "@/components/ui/QtyStepper";
 import DateField from "@/components/ui/DateField";
 
@@ -34,7 +35,7 @@ const VEHICLES = [
     idealFor: "Couples or small groups who want to explore Arborea's trails, viewpoints, and jungle paths — without leaving the property.",
     badge: "Arborea exclusive",
     image: "/assets/transporte/sidebyside.avif",
-    dailyRate: 200,
+    dailyRate: VEHICLE_DAILY_RATES.sidebyside,
   },
   {
     id: "rav4",
@@ -105,11 +106,14 @@ function VehicleCard({ vehicle, days, date, cartLine, onDaysChange, onDateChange
   const isPriced = typeof vehicle.dailyRate === "number" && vehicle.dailyRate > 0;
   const total = isPriced ? days * vehicle.dailyRate : 0;
 
-  /* Days live in the cart line as the "N days" option string (not derived from
-   * price) — works for both priced and by-quote vehicles. Priced vehicles also
-   * re-check unitPrice so a day change on a priced vehicle still trips `dirty`. */
+  /* Days come off the line's typed `data` (not derived from price, so it works for
+   * by-quote vehicles too). The regex on the caption string is the fallback for a
+   * line left in sessionStorage by a build that predates `data`. Priced vehicles
+   * also re-check unitPrice so a day change still trips `dirty`. */
   const committedDays = cartLine
-    ? Number(String(cartLine.options?.days ?? "").match(/^(\d+)/)?.[1]) || 1
+    ? Number(cartLine.data?.days)
+        || Number(String(cartLine.options?.days ?? "").match(/^(\d+)/)?.[1])
+        || 1
     : null;
 
   const dirty = cartLine
@@ -333,6 +337,7 @@ function PartnershipBanner() {
 
 export default function MulaRentalSection() {
   const { getLine, setLine, removeLine, openCart, hydrated } = useCart();
+  const { t } = useI18n();
   const [configs, setConfigs] = useState(initConfigs);
 
   /*
@@ -350,8 +355,15 @@ export default function MulaRentalSection() {
       for (const vehicle of VEHICLES) {
         const line = getLine(lineIdOf("transport", vehicle.id));
         if (!line) continue;
+        /* `data.days` is the number. The regex on `options.days` is the fallback
+         * for a line a previous build left in sessionStorage, where the day count
+         * only existed inside the caption string. */
+        const fromData = Number(line.data?.days);
         const match = String(line.options?.days ?? "").match(/^(\d+)/);
-        const days = Math.max(1, Number(match?.[1]) || 1);
+        const days = Math.max(
+          1,
+          Number.isFinite(fromData) && fromData > 0 ? fromData : Number(match?.[1]) || 1
+        );
         if (next[vehicle.id].days !== days || next[vehicle.id].date !== line.date) {
           next[vehicle.id] = { days, date: line.date };
           changed = true;
@@ -386,10 +398,20 @@ export default function MulaRentalSection() {
       service: "transport",
       sku: vehicle.id,
       title: vehicle.name,
+      /* Vehicle names are makes and models — the same in both locales. */
+      titleEn: vehicle.name,
+      kind: "vehicle",
       qty: 1,
       unitPrice: isPriced ? days * vehicle.dailyRate : 0,
+      byQuote: !isPriced,
       date,
-      options: { days: `${days} ${days === 1 ? "day" : "days"}` },
+      options: { days: countLabel(t, days, "day") },
+      /* `unitPrice` here is the whole rental, not a daily rate, because the day
+       * count is folded into it. The sheet needs both parts to make sense of it. */
+      data: {
+        days,
+        ...(isPriced ? { dailyRate: vehicle.dailyRate } : {}),
+      },
     });
     openCart();
   };

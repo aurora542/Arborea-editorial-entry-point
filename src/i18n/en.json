@@ -240,7 +240,7 @@
     "title": "Mula Rental",
     "subtitle": "Explore the property and beyond on your own Yamaha Side-by-Side — ideal for beach runs, trail exploring, or just getting around in style.",
     "vehicle": "Yamaha Side-by-Side 700",
-    "priceTag": "$200 / day",
+    "priceTag": "{{p:mulaRental.dailyRate}} / day",
     "terms": "Rent by the day or for the full week.",
     "specs": [
       "Seats up to 5",
@@ -440,22 +440,6 @@
         {
           "title": "Farm-Style Huevos Rancheros",
           "description": "Heirloom corn tortillas, organic beans, free-range eggs, ranchera sauce, and farm mozzarella."
-        }
-      ],
-      "extrasHeading": "Breakfast Extras",
-      "extrasSubheading": "Add your favorite protein to any breakfast.",
-      "extras": [
-        {
-          "title": "Hacienda Arborea Bacon",
-          "description": "Pasture-raised pork bacon, cured and artisanally smoked."
-        },
-        {
-          "title": "Farm Beef Chorizo",
-          "description": "Seasoned with garden herbs from our partner producers."
-        },
-        {
-          "title": "Farm Smoked Brisket",
-          "description": "Slow-smoked over firewood — a little indulgence in the morning."
         }
       ]
     },
@@ -900,31 +884,23 @@
         "items": [
           {
             "label": "Breakfast",
-            "price": "From $230 for 2 · +$24 per extra person",
-            "basePrice": 230,
-            "baseGuests": 2,
-            "extraPersonPrice": 24
+            "price": "From {{p:privateChef.pricing.perService.items.0.basePrice}} for 2 · +{{p:privateChef.pricing.perService.items.0.extraPersonPrice}} per extra person",
+            "baseGuests": 2
           },
           {
             "label": "Lunch",
-            "price": "From $235 for 2 · +$28 per extra person",
-            "basePrice": 235,
-            "baseGuests": 2,
-            "extraPersonPrice": 28
+            "price": "From {{p:privateChef.pricing.perService.items.1.basePrice}} for 2 · +{{p:privateChef.pricing.perService.items.1.extraPersonPrice}} per extra person",
+            "baseGuests": 2
           },
           {
             "label": "Dinner",
-            "price": "From $245 for 2 · +$52 per extra person",
-            "basePrice": 245,
-            "baseGuests": 2,
-            "extraPersonPrice": 52
+            "price": "From {{p:privateChef.pricing.perService.items.2.basePrice}} for 2 · +{{p:privateChef.pricing.perService.items.2.extraPersonPrice}} per extra person",
+            "baseGuests": 2
           },
           {
             "label": "Full Day",
-            "price": "From $610 for 2 · +$80 per extra person",
-            "basePrice": 610,
-            "baseGuests": 2,
-            "extraPersonPrice": 80
+            "price": "From {{p:privateChef.pricing.perService.items.3.basePrice}} for 2 · +{{p:privateChef.pricing.perService.items.3.extraPersonPrice}} per extra person",
+            "baseGuests": 2
           }
         ]
       },
@@ -934,22 +910,19 @@
         "items": [
           {
             "label": "2–5 people",
-            "price": "$530 total",
-            "priceValue": 530,
+            "price": "{{p:privateChef.pricing.themedNights.items.0.priceValue}} total",
             "minGuests": 2,
             "maxGuests": 5
           },
           {
             "label": "6–10 people",
-            "price": "$835 total",
-            "priceValue": 835,
+            "price": "{{p:privateChef.pricing.themedNights.items.1.priceValue}} total",
             "minGuests": 6,
             "maxGuests": 10
           },
           {
             "label": "11–15 people",
-            "price": "$1,140 total",
-            "priceValue": 1140,
+            "price": "{{p:privateChef.pricing.themedNights.items.2.priceValue}} total",
             "minGuests": 11,
             "maxGuests": 15
           }
@@ -960,13 +933,11 @@
         "items": [
           {
             "label": "Sunset only (4–7 PM)",
-            "price": "$170",
-            "priceValue": 170
+            "price": "{{p:privateChef.pricing.bartender.items.0.priceValue}}"
           },
           {
             "label": "Sunset + Dinner (4–9 PM)",
-            "price": "$255",
-            "priceValue": 255
+            "price": "{{p:privateChef.pricing.bartender.items.1.priceValue}}"
           }
         ]
       }
@@ -1120,38 +1091,32 @@
         {
           "title": "Wine Package",
           "description": "Selection of 2 natural wines",
-          "price": "$45",
-          "priceValue": 45
+          "price": "{{p:fullFridge.beverages.items.0.priceValue}}"
         },
         {
           "title": "Premium Wine Package",
           "description": "Selection of 4 natural wines",
-          "price": "$85",
-          "priceValue": 85
+          "price": "{{p:fullFridge.beverages.items.1.priceValue}}"
         },
         {
           "title": "Craft Beer — Six-Pack",
           "description": "Costa Rican craft selection",
-          "price": "$18",
-          "priceValue": 18
+          "price": "{{p:fullFridge.beverages.items.2.priceValue}}"
         },
         {
           "title": "Craft Beer — 24 Units",
           "description": "Costa Rican craft selection",
-          "price": "$65",
-          "priceValue": 65
+          "price": "{{p:fullFridge.beverages.items.3.priceValue}}"
         },
         {
           "title": "Individual Spirit",
           "description": "Rum, guaro, or whisky",
-          "price": "From $30",
-          "priceValue": 30
+          "price": "From {{p:fullFridge.beverages.items.4.priceValue}}"
         },
         {
           "title": "Full Bar",
           "description": "Rum, guaro, whisky, vodka, and gin",
-          "price": "$150",
-          "priceValue": 150
+          "price": "{{p:fullFridge.beverages.items.5.priceValue}}"
         }
       ]
     },
@@ -1185,48 +1150,30 @@
           "label": "3 Days",
           "days": 3,
           "prices": [
-            "$299",
-            "$533",
-            "$728",
-            "$871"
-          ],
-          "priceValues": [
-            299,
-            533,
-            728,
-            871
+            "{{p:fullFridge.pricing.rows.0.priceValues.0}}",
+            "{{p:fullFridge.pricing.rows.0.priceValues.1}}",
+            "{{p:fullFridge.pricing.rows.0.priceValues.2}}",
+            "{{p:fullFridge.pricing.rows.0.priceValues.3}}"
           ]
         },
         {
           "label": "5 Days",
           "days": 5,
           "prices": [
-            "$494",
-            "$884",
-            "$1,209",
-            "$1,456"
-          ],
-          "priceValues": [
-            494,
-            884,
-            1209,
-            1456
+            "{{p:fullFridge.pricing.rows.1.priceValues.0}}",
+            "{{p:fullFridge.pricing.rows.1.priceValues.1}}",
+            "{{p:fullFridge.pricing.rows.1.priceValues.2}}",
+            "{{p:fullFridge.pricing.rows.1.priceValues.3}}"
           ]
         },
         {
           "label": "8 Days",
           "days": 8,
           "prices": [
-            "$793",
-            "$1,417",
-            "$1,937",
-            "$2,327"
-          ],
-          "priceValues": [
-            793,
-            1417,
-            1937,
-            2327
+            "{{p:fullFridge.pricing.rows.2.priceValues.0}}",
+            "{{p:fullFridge.pricing.rows.2.priceValues.1}}",
+            "{{p:fullFridge.pricing.rows.2.priceValues.2}}",
+            "{{p:fullFridge.pricing.rows.2.priceValues.3}}"
           ]
         }
       ]
@@ -1419,8 +1366,7 @@
     "activities": [
       {
         "title": "Tandem Paragliding — Zion",
-        "price": "$170 / person",
-        "priceValue": 170,
+        "price": "{{p:tours.activities.0.priceValue}} / person",
         "image": "/assets/ToursActivities/TandemParaglidingZion.avif",
         "description": "15–20 minute tandem flight with 15 years of operating experience. Licensed and fully insured pilots. Departs from Dominical.",
         "features": [
@@ -1450,8 +1396,7 @@
       },
       {
         "title": "Corcovado + Marine Experience",
-        "price": "From $110 / person",
-        "priceValue": 110,
+        "price": "From {{p:tours.activities.1.priceValue}} / person",
         "image": "/assets/ToursActivities/CorcovadoMarineExperience.avif",
         "description": "Premium Corcovado and marine operator with a unique whale tour led by a marine biologist using hydrophone listening. Includes Tapir Trail private reserve.",
         "features": [
@@ -1493,8 +1438,7 @@
       },
       {
         "title": "Nature & Wildlife Jungle Experiences",
-        "price": "From $65 / person",
-        "priceValue": 65,
+        "price": "From {{p:tours.activities.2.priceValue}} / person",
         "image": "/assets/ToursActivities/NatureWildlifeJungleExperiences.avif",
         "description": "Multi-category nature reserve with wildlife tours, birdwatching, night tours, and the premium Chilamate experience. 330-hectare private reserve.",
         "features": [
@@ -1524,8 +1468,7 @@
       },
       {
         "title": "Jungle ATV with Cultural Experience",
-        "price": "From $150",
-        "priceValue": 150,
+        "price": "From {{p:tours.activities.3.priceValue}}",
         "image": "/assets/ToursActivities/JungleATVCulturalExperience.avif",
         "description": "5-hour ATV or side-by-side experience combining jungle riding with a visit to a local Costa Rican family, coffee harvesting, snacks buffet, and bilingual guide.",
         "features": [
@@ -1560,8 +1503,7 @@
       },
       {
         "title": "Corcovado National Park — Sirena & San Pedrillo",
-        "price": "From $100 / person",
-        "priceValue": 100,
+        "price": "From {{p:tours.activities.4.priceValue}} / person",
         "image": "/assets/ToursActivities/CorcovadoNational ParkSirenaSanPedrillo.avif",
         "description": "Full-service nature operator with access to the top ranger stations in Corcovado. High wildlife probability: monkeys, sloths, tapirs, birds. Overnight expeditions available.",
         "features": [
@@ -1603,8 +1545,7 @@
       },
       {
         "title": "ATV & Side-by-Side Jungle Adventure",
-        "price": "From $150",
-        "priceValue": 150,
+        "price": "From {{p:tours.activities.5.priceValue}}",
         "image": "/assets/ToursActivities/ATVSidebySideJungleAdventure.avif",
         "description": "Private facility ATV experience through forests, rivers, and hills with a coffee farm visit. Best for experienced riders seeking a premium feel.",
         "features": [
@@ -1638,8 +1579,7 @@
       },
       {
         "title": "Tandem Paragliding — Dominical & Rivas",
-        "price": "$155 / person",
-        "priceValue": 155,
+        "price": "{{p:tours.activities.6.priceValue}} / person",
         "image": "/assets/ToursActivities/TandemParaglidingDominicalRivas.avif",
         "description": "20–30 minute tandem flight (longer than competitors) with certified instructor. Family-run, 14 years experience. English spoken. Payment collected after the activity.",
         "features": [
@@ -1669,8 +1609,7 @@
       },
       {
         "title": "Full-Day Waterfall Tour",
-        "price": "$130 / person",
-        "priceValue": 130,
+        "price": "{{p:tours.activities.7.priceValue}} / person",
         "image": "/assets/ToursActivities/FullDayWaterfallTour.avif",
         "description": "Full-day guided tour visiting 3 different waterfalls, beach stop, and lunch at a restaurant with ocean view. Transportation from office included.",
         "features": [
@@ -1691,8 +1630,7 @@
       },
       {
         "title": "Vuelo del Tucán Canopy",
-        "price": "$86 / person",
-        "priceValue": 86,
+        "price": "{{p:tours.activities.8.priceValue}} / person",
         "image": "/assets/ToursActivities/VueloTucanCanopy.avif",
         "description": "7 zip lines through a 330-hectare private nature reserve. Small groups of 2–8 people, with ecological walk and high wildlife spotting potential.",
         "features": [
@@ -1713,8 +1651,7 @@
       },
       {
         "title": "Canyoning & Waterfall Rappelling",
-        "price": "$150 / person",
-        "priceValue": 150,
+        "price": "{{p:tours.activities.9.priceValue}} / person",
         "image": "/assets/ToursActivities/CanyoningWatefallRappelling.avif",
         "description": "Multiple waterfall rappels with jungle hiking and natural pool interaction. A complete package for adventure-seekers — beginners welcome.",
         "features": [
@@ -1748,8 +1685,7 @@
       },
       {
         "title": "Osa Canopy Tour",
-        "price": "$91 / person",
-        "priceValue": 91,
+        "price": "{{p:tours.activities.10.priceValue}} / person",
         "image": "/assets/ToursActivities/OsaCanopyTour.avif",
         "description": "7 zip lines including a 1.1 km longest line, 2–3 rappels, and 2 hanging bridges. Small to medium groups, scenic mountain setting.",
         "features": [
@@ -1774,8 +1710,7 @@
       },
       {
         "title": "Zipline + Waterfalls Adventure Combo",
-        "price": "$90 / person",
-        "priceValue": 90,
+        "price": "{{p:tours.activities.11.priceValue}} / person",
         "image": "/assets/ToursActivities/ZiplineWaterfallsAdventureCombo.avif",
         "description": "Multi-activity adventure combining 5 zip lines, tree rappelling, monkey drop into water, natural pool, and waterfall slide. Local lunch included.",
         "features": [
@@ -2064,23 +1999,19 @@
         "description": "Two therapists working in perfect synchrony, doubling the sensation of relaxation. An immersive, deeply restorative experience unlike any other.",
         "durationPricing": [
           {
-            "label": "60 min",
-            "priceValue": 180
+            "label": "60 min"
           },
           {
-            "label": "90 min",
-            "priceValue": 220
+            "label": "90 min"
           }
         ]
       },
       "durationPricing": [
         {
-          "label": "60 min",
-          "priceValue": 95
+          "label": "60 min"
         },
         {
-          "label": "90 min",
-          "priceValue": 120
+          "label": "90 min"
         }
       ]
     },
@@ -2091,14 +2022,12 @@
         {
           "name": "Natural Facial",
           "description": "Treatment formulated with white tea as the base ingredient. Nourishes and protects the skin with natural antioxidants while revitalizing from within. Ideal for all skin types, especially sensitive or dehydrated skin.",
-          "duration": "60 min",
-          "priceValue": 80
+          "duration": "60 min"
         },
         {
           "name": "Deep Facial Cleansing",
           "description": "A complete 60-minute treatment including cleansing, exfoliation, steam, extraction, toner, ultrasonic peeling, and a specialized mask tailored to your skin type. The reset your face needs.",
           "duration": "60 min",
-          "priceValue": 80,
           "features": [
             "Cleansing · Exfoliation · Steam",
             "Extraction · Toner",
@@ -2108,10 +2037,9 @@
       ],
       "addons": {
         "heading": "Enhancements",
-        "tagline": "Add 20 minutes of extra treatment to any service and fully personalize your experience for just $40.",
+        "tagline": "Add 20 minutes of extra treatment to any service and fully personalize your experience for just {{p:wellnessSpa.facials.addons.priceValue}}.",
         "duration": "20 min",
-        "price": "$40 each",
-        "priceValue": 40,
+        "price": "{{p:wellnessSpa.facials.addons.priceValue}} each",
         "items": [
           "Mini Facial",
           "Back Exfoliation",
@@ -2130,7 +2058,6 @@
         {
           "name": "Couple Massage",
           "duration": "90 min",
-          "priceValue": 240,
           "description": "Two therapists, two tables, one shared moment of total peace. Ideal for couples, friends, or family members who want to unwind together in perfect harmony.",
           "includes": [
             "Two therapists working simultaneously",
@@ -2141,7 +2068,6 @@
         {
           "name": "Honeymoon Package",
           "duration": "90 min",
-          "priceValue": 235,
           "description": "The ultimate experience for a perfect honeymoon in Costa Rica's South Pacific.",
           "includes": [
             "Couples Relaxing Massage",
@@ -2152,8 +2078,7 @@
         {
           "name": "Romantic Escape",
           "duration": "80 min",
-          "price": "$230",
-          "priceValue": 230,
+          "price": "{{p:wellnessSpa.packages.items.2.priceValue}}",
           "includes": [
             "Couple Massage (Relaxing, Deep Tissue, or Aromatherapy)",
             "Aloe Vera Wrap",
@@ -2163,8 +2088,7 @@
         {
           "name": "Romance",
           "duration": "90 min",
-          "price": "$230",
-          "priceValue": 230,
+          "price": "{{p:wellnessSpa.packages.items.3.priceValue}}",
           "includes": [
             "Couples Massage with Chocolate Oil",
             "Chocolate Wrap",
@@ -2174,8 +2098,7 @@
         {
           "name": "Detox",
           "duration": "90 min",
-          "price": "$140",
-          "priceValue": 140,
+          "price": "{{p:wellnessSpa.packages.items.4.priceValue}}",
           "includes": [
             "Hot Stone Massage",
             "Chocolate Scrub",
@@ -2185,8 +2108,7 @@
         {
           "name": "Balance",
           "duration": "90 min",
-          "price": "$140",
-          "priceValue": 140,
+          "price": "{{p:wellnessSpa.packages.items.5.priceValue}}",
           "includes": [
             "Neck, Back & Shoulder Massage",
             "Reflexology",
@@ -2196,8 +2118,7 @@
         {
           "name": "Organic",
           "duration": "90 min",
-          "price": "$140",
-          "priceValue": 140,
+          "price": "{{p:wellnessSpa.packages.items.6.priceValue}}",
           "includes": [
             "Massage",
             "Chocolate Wrap",
@@ -2207,8 +2128,7 @@
         {
           "name": "Tropical",
           "duration": "80 min",
-          "price": "$135",
-          "priceValue": 135,
+          "price": "{{p:wellnessSpa.packages.items.7.priceValue}}",
           "includes": [
             "Deep Back Cleansing",
             "Relaxing Massage"
@@ -2217,8 +2137,7 @@
         {
           "name": "Calma",
           "duration": "80 min",
-          "price": "$140",
-          "priceValue": 140,
+          "price": "{{p:wellnessSpa.packages.items.8.priceValue}}",
           "includes": [
             "Back Massage",
             "Mini Facial",
@@ -2331,14 +2250,10 @@
           "departure": "Sierpe Town",
           "tiers": [
             {
-              "guests": 4,
-              "perPerson": 325,
-              "total": 1300
+              "guests": 4
             },
             {
-              "guests": 5,
-              "perPerson": 260,
-              "total": 1300
+              "guests": 5
             }
           ]
         },
@@ -2352,14 +2267,10 @@
           "departure": "Sierpe Town",
           "tiers": [
             {
-              "guests": 4,
-              "perPerson": 250,
-              "total": 1000
+              "guests": 4
             },
             {
-              "guests": 5,
-              "perPerson": 200,
-              "total": 1000
+              "guests": 5
             }
           ]
         },
@@ -2373,14 +2284,10 @@
           "departure": "Sierpe Town",
           "tiers": [
             {
-              "guests": 4,
-              "perPerson": 175,
-              "total": 700
+              "guests": 4
             },
             {
-              "guests": 5,
-              "perPerson": 140,
-              "total": 700
+              "guests": 5
             }
           ]
         },
@@ -2394,14 +2301,10 @@
           "departure": "Sierpe Town",
           "tiers": [
             {
-              "guests": 4,
-              "perPerson": 150,
-              "total": 600
+              "guests": 4
             },
             {
-              "guests": 5,
-              "perPerson": 120,
-              "total": 600
+              "guests": 5
             }
           ]
         }
@@ -2423,29 +2326,19 @@
           "capacityNote": "Maximum capacity: 8 guests.",
           "tiers": [
             {
-              "guests": 4,
-              "perPerson": 225,
-              "total": 900
+              "guests": 4
             },
             {
-              "guests": 5,
-              "perPerson": 180,
-              "total": 900
+              "guests": 5
             },
             {
-              "guests": 6,
-              "perPerson": 150,
-              "total": 900
+              "guests": 6
             },
             {
-              "guests": 7,
-              "perPerson": 128.5,
-              "total": 900
+              "guests": 7
             },
             {
-              "guests": 8,
-              "perPerson": 112.5,
-              "total": 900
+              "guests": 8
             }
           ]
         },
@@ -2460,24 +2353,16 @@
           "wildlifeNote": "This is a wild marine wildlife expedition and all encounters take place in the animals' natural environment. Dolphin sightings, close interactions, and opportunities to swim alongside them cannot be guaranteed — wildlife behavior and ocean conditions are naturally unpredictable.",
           "tiers": [
             {
-              "guests": 4,
-              "perPerson": 300,
-              "total": 1200
+              "guests": 4
             },
             {
-              "guests": 5,
-              "perPerson": 240,
-              "total": 1200
+              "guests": 5
             },
             {
-              "guests": 6,
-              "perPerson": 200,
-              "total": 1200
+              "guests": 6
             },
             {
-              "guests": 7,
-              "perPerson": 171.43,
-              "total": 1200
+              "guests": 7
             }
           ]
         },
@@ -2492,39 +2377,25 @@
           "wildlifeNote": "Wildlife sightings are not guaranteed — animals roam freely in their natural habitat. Early morning or late afternoon departures offer the best wildlife activity.",
           "tiers": [
             {
-              "guests": 2,
-              "perPerson": 150,
-              "total": 300
+              "guests": 2
             },
             {
-              "guests": 3,
-              "perPerson": 150,
-              "total": 450
+              "guests": 3
             },
             {
-              "guests": 4,
-              "perPerson": 150,
-              "total": 600
+              "guests": 4
             },
             {
-              "guests": 5,
-              "perPerson": 150,
-              "total": 750
+              "guests": 5
             },
             {
-              "guests": 6,
-              "perPerson": 125,
-              "total": 750
+              "guests": 6
             },
             {
-              "guests": 7,
-              "perPerson": 125,
-              "total": 875
+              "guests": 7
             },
             {
-              "guests": 8,
-              "perPerson": 125,
-              "total": 1000
+              "guests": 8
             }
           ]
         }
@@ -2579,6 +2450,24 @@
     }
   },
   "cart": {
+    "units": {
+      "day": {
+        "one": "day",
+        "other": "days"
+      },
+      "adult": {
+        "one": "adult",
+        "other": "adults"
+      },
+      "child": {
+        "one": "child",
+        "other": "children"
+      },
+      "guest": {
+        "one": "guest",
+        "other": "guests"
+      }
+    },
     "formLabels": {
       "adults": "Adults",
       "children": "Children",
