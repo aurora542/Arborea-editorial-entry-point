@@ -174,7 +174,7 @@ export default function CartDrawer() {
                       </h3>
                       <span className="font-sans text-sm font-medium text-[#222E2C]/50 shrink-0 tabular-nums">
                         {groupTotal > 0 ? money(groupTotal) : (
-                          <span className="uppercase tracking-wide text-xs font-semibold">By quote</span>
+                          <span className="uppercase tracking-wide text-xs font-semibold">{t("cart.byQuote")}</span>
                         )}
                       </span>
                     </div>
@@ -256,7 +256,7 @@ export default function CartDrawer() {
                 </span>
               ) : (
                 <span className="font-sans font-bold text-base text-[#213B2F] uppercase tracking-wide">
-                  By quote
+                  {t("cart.byQuote")}
                 </span>
               )}
             </div>
@@ -446,7 +446,7 @@ function LineRow({ line, locale, t, onQty, onRemove }) {
             </>
           ) : (
             <span className="font-sans text-xs font-semibold uppercase tracking-wide text-[#222E2C]/55">
-              By quote
+              {t("cart.byQuote")}
             </span>
           )}
         </div>

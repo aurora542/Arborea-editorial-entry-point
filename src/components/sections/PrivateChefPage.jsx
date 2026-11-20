@@ -59,27 +59,19 @@ const QTY_ADDON_KINDS = new Set(["beverage", "dessert", "bakery"]);
 const beverageSku = (i) => `beverage-${skuOf("fullFridge.beverages.items", i, "title")}`;
 
 /*
- * Reading a committed line back into page state.
+ * Reading a committed line back into page state on an Edit click.
  *
- * `data` is the typed source. The `options` fallbacks exist because the cart lives
- * in sessionStorage: a guest who was mid-session when a new build shipped still has
- * lines in the old shape, and an Edit click has to rehydrate them rather than reset
- * their day to 2 guests with no dishes. Drop the fallbacks once no old cart can
- * plausibly still be open.
+ * Both come straight off the line's typed `data` bag. The guest count used to be
+ * parsed out of the `"6 guests"` caption with parseInt and the dish picks out of a
+ * JSON string under `options._dishes`; neither string exists any more.
  */
 function guestsOf(line) {
-  const fromData = Number(line?.data?.guests);
-  if (Number.isFinite(fromData) && fromData > 0) return fromData;
-  return parseInt(line?.options?.guests, 10);
+  return Number(line?.data?.guests);
 }
 
 function dishesOf(line) {
-  const fromData = line?.data?.dishes;
-  if (fromData && typeof fromData === "object") return fromData;
-  if (typeof line?.options?._dishes === "string") {
-    try { return JSON.parse(line.options._dishes) || {}; } catch { return {}; }
-  }
-  return {};
+  const dishes = line?.data?.dishes;
+  return dishes && typeof dishes === "object" ? dishes : {};
 }
 
 export default function PrivateChefPage() {
@@ -295,8 +287,8 @@ export default function PrivateChefPage() {
     setMode("edit");
     const bySku = new Map(mine.map((l) => [l.sku, l]));
 
-    /* Per-day items — parse dishes back out of `options._dishes`. One
-     * serviceItem per committed line, preserving cart order. */
+    /* Per-day items — guest count and dish picks come off each line's typed
+     * `data`. One serviceItem per committed line, preserving cart order. */
     if (Array.isArray(pricingPS)) {
       const perServiceSkus = new Map();
       pricingPS.forEach((_, i) => {
@@ -389,9 +381,8 @@ export default function PrivateChefPage() {
       /* One cart line per booked occasion. `it.id` is the lineId variant so
        * same-service bookings (e.g. two Lunches) don't collide in the cart.
        *
-       * `_dishes` encodes this day's dish picks as JSON. The underscore prefix
-       * tells `describeLine` (format.js) to keep it out of the drawer caption;
-       * the seed effect parses it back on an Edit from the cart. */
+       * This day's dish picks ride in `data.dishes` as a real object, which is
+       * what the seed effect reads back on an Edit from the cart. */
       for (const it of serviceItems) {
         const item = pricingPS[it.serviceIdx];
         if (!item) continue;
@@ -408,10 +399,7 @@ export default function PrivateChefPage() {
           byQuote: false,
           date: it.date,
           options: { guests: countLabel(t, it.guests, "guest") },
-          /* The guest count and this day's dish picks as real values. They used to
-           * ride in `options` as prose and a JSON string under an `_dishes` key
-           * that describeLine had to hide; the seed effect then parsed both back
-           * out with parseInt and JSON.parse. */
+          /* Guest count and dish picks as real values, not prose. */
           data: {
             guests: it.guests,
             ...(Object.keys(it.dishes || {}).length ? { dishes: it.dishes } : {}),

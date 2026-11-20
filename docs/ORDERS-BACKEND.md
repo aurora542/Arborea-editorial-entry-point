@@ -1,140 +1,150 @@
-# Orders backend — plan e integración
+# Orders backend — plan de conexión
 
-**Read this before changing anything in the cart, checkout, or order-submission path.**
+**Léelo antes de tocar el carrito, el checkout o el envío del pedido.**
 
-Last updated: 2026-11-15 · Status: **planeado, sin implementar**
+Última actualización: 2026-11-19 · Estado: **front listo, backend por conectar**
 
-This file is the contract for the order flow. Sections 1–8 are the forward-looking
-plan agreed with the product owner on 2026-11-15. Section 9 is the historical
-progress log — append to it, don't rewrite it.
+Las secciones 1–8 son el plan vigente. La sección 9 es el log histórico — se le
+añade, no se reescribe.
 
 ---
 
-## 1. Current state (verificado 2026-11-15)
+## 1. Estado actual
 
-| Piece | Status |
+El sitio **todavía no está en uso.** Se vuelve usable el día que esto se conecte.
+Eso define el perfil de riesgo de todo el plan: no hay huéspedes, no hay pedidos
+que perder, no hay carritos en `sessionStorage` ajenos, y ningún bundle viejo
+cacheado puede postear nada. Los pasos de abajo se pueden ejecutar y rehacer sin
+coordinar ventanas de deploy.
+
+| Pieza | Estado |
 |---|---|
-| Shared UI primitives (`ui/QtyStepper`, `DateField`, `Chip`, `SelectableCard`) | ✅ done |
-| Service registry (`src/data/services.js` + `services.*` i18n keys) | ✅ done |
-| Global cart context (`CartContext` + `lib/sku.js`, mounted in `layout.tsx`) | ✅ done |
-| Cart drawer + cart button | ✅ done |
-| Home wired to cart (activities + vehicles) | ✅ done |
-| Spa, Chef, Full Fridge wired to cart | ✅ done |
-| **Fishing tours wired to cart** | ✅ done — *uncommitted* |
-| **Per-service notes on all four signature experiences** | ✅ done — *uncommitted* |
-| `/checkout/` review section | ✅ done |
-| `/checkout/` guest form + submit | ❌ not started |
-| Payload builder (`src/lib/orderPayload.js`) | ❌ not started |
-| Prices consolidated to a single source | ❌ not started |
-| Apps Script `doPost` for the new model | ❌ not started |
-| Drive folder + template + master index provisioned | ❌ not started |
-| Vercel migration | ❌ not started (decided: yes) |
+| Primitivas de UI, registro de servicios, contexto del carrito | ✅ |
+| Las 6 superficies conectadas al carrito | ✅ |
+| Notas por experiencia signature (chef, fridge, spa, fishing) | ✅ |
+| `/checkout/` — revisión del pedido | ✅ |
+| Forma de línea optimizada para el backend (`titleEn`, `kind`, `byQuote`, `data`) | ✅ |
+| Precios en fuente única (`src/data/pricing.js`) | ✅ |
+| `/checkout/` — formulario del huésped y envío | ✅ (contra stub local) |
+| `src/lib/orderPayload.js` | ✅ |
+| Migración a Vercel | ❌ **paso 3** |
+| Carpeta de Drive + proyecto de Apps Script | ❌ **paso 4 (cliente)** |
+| `Code.gs` para el modelo nuevo | ❌ **paso 5** |
 
-**There is no submit path in the app right now.** `OrderCheckoutForm.jsx` and
-`useOrderCart.js` are orphaned — nothing imports them — and `submitOrder` is only
-referenced from that dead file. A guest can fill the entire cart and has no way to
-send it.
+**El camino de envío existe y corre contra un stub local.** `/checkout/` recoge los
+siete campos del huésped más la nota general, `buildOrderPayload()` arma el payload
+del §4 y `submitOrder` lo resuelve localmente tras ~900 ms, volcando el JSON completo
+en la consola del navegador. Para conectarlo de verdad se pone `USE_STUB = false` en
+`orderApi.js`, que entonces postea a `/api/orders` — el route handler que llega con
+Vercel en el paso 3.
 
-**No backward compatibility is needed.** `NEXT_PUBLIC_ORDERS_BACKEND_URL` has never
-been set in any build, so every bundle ever published has `BACKEND_URL === ""` and
-returns `missing-backend-url` without ever posting. No legacy-schema traffic exists
-or can exist. The old flat payload (`{ service, name, casa, dateNeeded, items }`)
-can be deleted outright rather than supported for a release.
+El formulario viejo (`OrderCheckoutForm.jsx`, 275 líneas) y `useOrderCart.js` sí
+estaban todavía en disco a pesar de lo que decía este documento; se borraron en esta
+sesión.
 
-## 2. Decisions taken 2026-11-15
+## 2. Decisiones tomadas
 
-1. **One Google Sheet per reservation**, living in a folder on a Shared Drive in the
-   client's Google Workspace. The concierge opens a reservation's file and finds
-   everything that reservation ever ordered.
-2. **The reservation number is the identity.** It comes from Simple Booking, the
-   client's PMS, and is entered by the guest at checkout. Multiple checkouts across
-   different sessions accumulate into the same file.
-3. **The sheet is a reference document, not a billing surface.** Invoices are
-   produced in a separate system. Totals stay precomputed and static; there are no
-   live formulas and no editable price cells.
-4. **Hosting moves to Vercel.** This gives a server, which moves the shared secret
-   out of the client bundle and removes the `text/plain` CORS workaround. It is also
-   a precondition for ever taking payment on the site.
-5. **Prices consolidate to a single source** consumed by both locales.
-6. **Notes exist at two levels**: one free-form note per signature experience
-   (chef, fridge, spa, fishing) and one general note for the whole order.
+1. **Una Google Sheet por reserva, una pestaña por pedido**, en una carpeta del
+   Workspace del cliente. La concierge abre el archivo de una reserva y encuentra,
+   pestaña por pestaña, todo lo que esa reserva pidió. **Sin plantilla:** el script
+   crea y formatea todo, y se itera sobre el código hasta que el resultado guste.
+2. **El número de reserva es la identidad.** Viene de Simple Booking, el PMS del
+   cliente, y lo escribe el huésped en el checkout. Varios checkouts en sesiones
+   distintas se acumulan en el mismo archivo. Confirmado por el dueño de producto el
+   2026-11-19.
+3. **La estructura se crea una vez y después solo recibe información.** La carpeta
+   raíz, la subcarpeta `Pedidos` y el documento maestro no se vuelven a crear nunca:
+   un checkout agrega una fila al maestro y una pestaña al archivo de su reserva. Ver
+   el mecanismo en §5.
+4. **La hoja es un documento de referencia, no una superficie de cálculo.** Las
+   facturas se hacen en otro sistema. Totales precomputados y estáticos; sin
+   fórmulas vivas y sin celdas de precio editables.
+5. **El hosting se mueve a Vercel.** Da un servidor, lo que saca el secreto del
+   bundle y elimina el truco de `text/plain` para esquivar CORS. Es además
+   precondición para cobrar algún día en el sitio.
+6. **Las notas existen en dos niveles:** una por experiencia signature y una general
+   del pedido.
+7. **Los precios viven en `src/data/pricing.js`**, inyectados al locale activo. Ya
+   no pueden divergir entre idiomas.
 
-## 3. Target architecture
+## 3. Arquitectura destino
 
 ```
-Browser (Vercel-hosted Next.js)
-   │  POST /api/orders          ← JSON, same-origin, no CORS, no public secret
+Navegador (Next.js en Vercel)
+   │  POST /api/orders        ← JSON, mismo origen, sin CORS, sin secreto público
    ▼
-Next.js route handler            ← validates, holds ORDERS_SHARED_SECRET server-side
-   │  POST  (secret in body)
+Route handler de Next.js      ← valida; ORDERS_SHARED_SECRET vive en el servidor
+   │  POST (secreto en el body)
    ▼
-Apps Script Web App              ← owned by the CLIENT's Workspace account
-   ├─ master index Sheet         ← dedupe log + reservation→fileId map
-   ├─ reservation Sheet          ← found or created from the template
-   └─ notification email         ← to operations, with a link to the file
+Apps Script Web App           ← propiedad de la cuenta Workspace del CLIENTE
+   ├─ Registro de Checkouts   ← una fila por checkout + log de dedupe
+   ├─ Sheet de la reserva     ← se busca o se crea; pestaña nueva por pedido
+   └─ correo a operaciones    ← con el link al archivo
 ```
 
-The Apps Script layer is identical whether the browser posts to it directly or
-through the Vercel route. Going to Vercel first means `orderApi.js` is written once
-and the live round-trip is tested once.
+La capa de Apps Script es idéntica con o sin Vercel. Ir a Vercel primero significa
+escribir `orderApi.js` una sola vez y probar el round-trip en vivo una sola vez.
 
-### Why this replaces the old constraints
+### Restricciones retiradas
 
-`output: "export"` forced browser→Apps Script directly, which forced a
-`NEXT_PUBLIC_*` secret visible in the bundle and `Content-Type: text/plain` to dodge
-a CORS preflight Apps Script cannot answer. On Vercel none of that applies. Those
-two rules are **withdrawn**; see §7.
+`output: "export"` obligaba a postear del navegador directo a Apps Script, lo que
+obligaba a un secreto `NEXT_PUBLIC_*` visible en el bundle y a `Content-Type:
+text/plain`. En Vercel nada de eso aplica. Esas dos reglas quedan **retiradas**.
 
-## 4. Payload contract
+## 4. Contrato del payload
 
-Produced by `buildOrderPayload()` in `src/lib/orderPayload.js`. `schemaVersion` is
-there so the Apps Script can branch when this shape changes — this is a living
-system and it will.
+Lo produce `buildOrderPayload()` en `src/lib/orderPayload.js`. `schemaVersion` está
+para que el Apps Script pueda ramificar cuando esto cambie — es un sistema vivo y va
+a cambiar.
 
 ```jsonc
 {
   "schemaVersion": 2,
-  "submissionId": "9f2c…",        // uuid, generated ONCE per checkout attempt
-  "createdAt":    "2026-11-15T18:52:00.000Z",
-  "locale":       "en",           // "en" | "es"
+  "submissionId": "9f2c…",        // uuid, generado UNA vez por intento de checkout
+  "createdAt":    "2026-11-19T18:52:00.000Z",
+  "locale":       "en",           // "en" | "es" — en qué idioma pidió
   "currency":     "USD",
 
-  "guest": {                      // all seven REQUIRED, validated in the UI
-    "reservationNumber": "SB-10432",   // Simple Booking · THE grouping key
-    "firstName": "Ana",
-    "lastName":  "Rodríguez",
-    "email":     "ana@example.com",
-    "phone":     "+506 8888 8888",
-    "casa":      "casa-mango",         // slug from src/data/properties.js
-    "checkInDate": "2026-12-02"
+  "guest": {                      // 7 campos SIEMPRE presentes; 5 obligatorios
+    "reservationNumber": "SB-10432",   // req · Simple Booking · LA llave de agrupación
+    "firstName":   "Ana",              // req
+    "lastName":    "Rodríguez",        // req
+    "phone":       "+506 8888 8888",   // req
+    "casa":        "casa-mango",       // req · slug de src/data/properties.js
+    "email":       "ana@example.com",  // OPCIONAL — "" si el huésped lo omite
+    "checkInDate": "2026-12-02"        // OPCIONAL — "" si el huésped lo omite
   },
 
   "cart": [
     {
-      "lineId":    "wellness-spa:massage-deep-tissue:90-min",
-      "service":   "wellness-spa", // id from src/data/services.js
-      "sku":       "massage-deep-tissue",
-      "title":     "Deep Tissue Massage",
+      "lineId":    "wellness-spa:deep-tissue-massage:90-min",
+      "service":   "wellness-spa", // id de src/data/services.js
+      "sku":       "deep-tissue-massage",
+      "title":     "Masaje de Tejido Profundo",  // lo que VIO el huésped
+      "titleEn":   "Deep Tissue Massage",        // canónico, para la hoja
+      "kind":      "massage",      // vocabulario en §5
       "qty":       2,
-      "unitPrice": 130,            // 0 means BY QUOTE, never "free"
-      "lineTotal": 260,            // qty * unitPrice, precomputed
-      "date":      "2026-12-04",   // optional preferred date, "" if unset
-      "options":   { "duration": "90 min" }
+      "unitPrice": 130,
+      "lineTotal": 260,            // qty * unitPrice, precomputado
+      "byQuote":   false,          // true = "por cotizar", NO gratis
+      "date":      "2026-12-04",   // fecha preferida opcional, "" si no
+      "options":   { "duration": "90 min" },   // display, localizado
+      "data":      { "durationMin": 90 }       // tipado, sin idioma
     }
   ],
 
-  "serviceForms": {               // only services present in the cart appear
+  "serviceForms": {               // solo aparecen los servicios presentes
     "private-chef": {
-      "dishes":       { "breakfast": ["Gallo Pinto"], "dinner": ["Whole Fish"] },
+      "dishes":       { "Day 1 — Dinner": "Whole Fish · Casado" },
       "restrictions": { "Vegetarian": 2, "Gluten-Free": 1 },
-      "restrictionOther": "low sodium",
-      "allergies":    "severe peanut allergy",
-      "preferences":  "no cilantro",
-      "notes":        "the chef can arrive at 5pm"
+      "restrictionOther": "bajo en sodio",
+      "allergies":    "alergia severa al maní",
+      "preferences":  "sin cilantro",
+      "notes":        "el chef puede llegar a las 5pm"
     },
     "full-fridge": {
       "adults": 4, "children": 2, "days": 5,
-      "produce": ["dairy:milk", "fruits:mango"],   // FULL list — it is a shopping list
+      "produce": ["dairy:milk", "fruits:mango"],   // lista COMPLETA — es la compra
       "cooking": "…", "groceries": "…", "snacksFor": ["kids"],
       "preferredSnacks": "…", "notes": "…"
     },
@@ -143,176 +153,365 @@ system and it will.
   },
 
   "totals": {
-    "itemCount": 5,
-    "subtotal":  1240,            // sum of priced lines only
-    "quotePending": 1             // count of unitPrice === 0 lines
+    "itemCount":    5,
+    "subtotal":     1240,   // suma solo de líneas con precio
+    "quotePending": 1       // cuántas líneas byQuote
   },
-  "notes": "Arriving late on the 2nd."   // general, order-level
+  "notes": "Llegamos tarde el 2."   // general, del pedido
 }
 ```
 
-Rules that hold:
+Reglas que se mantienen:
 
-- **One submission per checkout.** Chef + spa + a car is one POST. Never
-  re-introduce per-service submissions.
-- **`submissionId` is generated once per checkout attempt and reused on retry.**
-  Generating it inside the submit handler means a retry after a network error gets a
-  new id, defeats the dedupe, and writes the order twice. The old
-  `OrderCheckoutForm` had exactly this bug.
-- **`unitPrice: 0` means "by quote", not free.** Transport and tours produce these.
-  They must never render or total as `$0`.
-- **Prices come from the single source (§6), not from `t()`.**
-- `serviceForms` is copied raw and complete. Do **not** build it through
-  `describeServiceForm()` from `src/lib/serviceForm.js` — that is a UI formatter and
-  it collapses `produce` to a count (`COUNT_ONLY`). The guest's 40-item grocery list
-  would be written to the sheet as "18 items selected".
-- Never copy a `tours.activities` object wholesale into a line. `commission`,
-  `contactName` and `whatsapp` are internal margin data that ship in the bundle.
-  `normalizeLine` whitelists for this reason.
+- **Un envío por checkout.** Chef + spa + un carro es un solo POST. No reintroducir
+  envíos por servicio.
+- **`submissionId` se genera una vez por intento y se reusa en el reintento.**
+  Generarlo dentro del handler hace que un reintento tras fallo de red saque un id
+  nuevo, derrote el dedupe y escriba el pedido dos veces. El viejo
+  `OrderCheckoutForm` tenía exactamente ese bug.
+- **`byQuote: true` significa "se cotiza", no gratis.** Transporte y tours lo
+  producen. Nunca deben renderizarse ni sumarse como `$0`.
+- **`titleEn` es la columna de la hoja; `title` es lo que vio el huésped.** 72 de
+  los 80 ítems tienen texto distinto en español, así que sin `titleEn` el archivo de
+  una reserva termina mitad en cada idioma.
+- **Los precios vienen de `src/data/pricing.js`**, no de `t()`.
+- **`email` y `checkInDate` son opcionales** y llegan como `""` cuando el huésped
+  los omite — nunca `null` ni ausentes, así que el script puede escribirlos sin
+  comprobar. El teléfono sí es obligatorio: es la vía de contacto garantizada, y por
+  eso operaciones siempre puede responder aunque no haya correo.
+- Los 5 obligatorios son **nº de reserva, nombre, apellido, teléfono y casa**.
+  Decisión del dueño de producto el 2026-11-19.
+- `serviceForms` se copia crudo y completo. **No** construirlo con
+  `describeServiceForm()` de `src/lib/serviceForm.js` — ese es un formateador de UI y
+  colapsa `produce` a un conteo (`COUNT_ONLY`). La lista de 40 ítems del supermercado
+  llegaría a la hoja como "18 ítems seleccionados".
+- Nunca copiar un objeto de `tours.activities` completo a una línea. `commission`,
+  `contactName` y `whatsapp` son datos internos de margen que viajan en el bundle.
+  `normalizeLine` hace whitelist precisamente por eso.
 
-## 5. The reservation Sheet
+## 5. Estructura en Drive
 
-One file per reservation number, created from a template on the first checkout,
-appended to on every later one.
+Todo el formato y toda la estructura los **genera el script**. No hay plantilla: se
+itera sobre `Code.gs` hasta que el resultado guste. El front no participa — no puede
+dar formato a una hoja, y pasarle "pistas de presentación" acoplaría el checkout al
+layout.
 
-**Name:** `SB-10432 — Rodríguez — Casa Mango`, reservation code first so the folder
-sorts and searches usefully.
+Lo único que se crea a mano es la carpeta raíz. Lo demás lo crea el script la primera
+vez que corre, buscando por nombre y creando si no existe.
 
-| Tab | Contents | Who writes it |
-|---|---|---|
-| `Consolidado` | Every item from every checkout in one flat list: service, item, qty, unit price, total, date, options. The "what did this reservation order, in total" view. | script |
-| `Pedidos` | One block per checkout, newest appended at the bottom: form header (guest, casa, check-in, reservation number, general notes, order date+time, status) then that checkout's item list with each service's notes. | script |
-| `Payload` (hidden) | The raw JSON of every checkout. The guarantee that nothing is lost even when no column exists for it. | script |
+```
+WelcomeOrders/                       ← creada a mano, una vez (paso 4)
+├── Registro de Checkouts            ← creado una vez; luego AGREGA una fila
+│     Documento único del negocio. Una fila por checkout.
+│     SIN el contenido del pedido.
+│
+└── Pedidos/                         ← creada una vez
+      ├── SB-10432 — Rodríguez — Casa Mango    ← una por reserva
+      │     ├── Pedido 1 · 2026-11-19   ← cabecera + detalle completo
+      │     ├── Pedido 2 · 2026-11-24   ← pestaña nueva, misma reserva
+      │     ├── Consolidado            ← se reescribe en cada checkout
+      │     └── Payload (oculta)       ← JSON crudo de cada pedido
+      └── SB-10988 — Pérez — Casa Ceiba
+            └── Pedido 1 · 2026-11-20
+```
 
-Two rules for `Pedidos`:
+**Un archivo por número de reserva, una pestaña por pedido.** Si la misma reserva
+vuelve a pedir, el script encuentra su archivo y agrega una pestaña. Esto reemplaza el
+diseño anterior de bloques apilados en una sola pestaña, y con ello desaparece la
+regla de "nunca ordenar esta hoja": cada pestaña es un pedido autocontenido y se puede
+ordenar o filtrar sin romper nada.
 
-- **Never sort or filter it.** Header rows and item rows are different shapes; a sort
-  destroys the structure irrecoverably. The per-block **status column** exists so the
-  concierge can track what she has arranged by typing, without reordering anything.
-- Block layout is for reading. Anything that needs filtering belongs in
-  `Consolidado`.
+### Nada se re-crea: todo es buscar-o-crear
 
-### Master index
+**La carpeta raíz, la subcarpeta `Pedidos` y el documento maestro se crean una sola
+vez y después solo reciben información.** Un checkout no crea estructura nueva salvo
+la primera vez que aparece su reserva. Esto es requisito explícito del dueño de
+producto y es también el modo de fallo más fácil de introducir: si la búsqueda por
+nombre falla silenciosamente, el script crea un maestro nuevo en cada envío y quedan
+veinte documentos con una fila cada uno.
 
-Technically required, not a nice-to-have: with one file per reservation there is
-nowhere else for the dedupe log to live.
+Lo que lo garantiza, y que el paso 5 debe implementar así:
 
-| Column | Why |
+1. **`PropertiesService` como caché de ids.** Tras descubrir o crear el maestro y la
+   subcarpeta, sus ids quedan guardados. Los checkouts siguientes van directo al id
+   sin buscar por nombre.
+2. **Validar el id cacheado antes de confiar en él.** Si el archivo fue borrado,
+   movido a la papelera o el id ya no abre, se vuelve a buscar por nombre y solo se
+   crea si de verdad no existe. Un id cacheado que apunta a la papelera no debe
+   producir un archivo nuevo en silencio.
+3. **Todo dentro del `LockService`.** Dos checkouts simultáneos podrían encontrar los
+   dos que no hay maestro y crear cada uno el suyo. El lock serializa el buscar-o-crear
+   completo, no solo la escritura.
+4. **Lo mismo aplica al archivo de la reserva.** Se busca por su número de reserva
+   normalizado; existe → se le agrega una pestaña; no existe → se crea. Nunca se
+   sobrescribe una pestaña ya escrita.
+
+Un solo `FOLDER_ID` en `CONFIG` es toda la configuración manual.
+
+### `Registro de Checkouts` — el documento maestro
+
+Una fila por checkout. **Deliberadamente sin el contenido del pedido**: es el registro
+de que un checkout ocurrió y de quién lo hizo, no qué pidió. Para el detalle está su
+archivo, enlazado en la última columna.
+
+| Columna | Origen |
 |---|---|
-| `reservationNumber` → `fileId` | Finding the file by name is fragile; this is the lookup. |
-| `submissionId`, processed-at | Dedupe. A retry must not write twice. |
-| guest, casa, check-in, checkout count, total, link | The client's overview, and the safety net below. |
+| Fecha | hora del servidor, zona Costa Rica |
+| Hora | idem |
+| Nº de reserva | `guest.reservationNumber` |
+| Nombre / Apellido | `guest.firstName` / `guest.lastName` |
+| Email / Teléfono | `guest.email` (puede venir vacío) / `guest.phone` |
+| Casa | `guest.casa` |
+| Fecha de ingreso | `guest.checkInDate` — puede venir vacía |
+| Idioma | `locale` — en qué idioma pidió |
+| Pedido # | cuántos checkouts lleva esa reserva |
+| ID de envío | `submissionId`, para el dedupe |
+| Archivo | link a la hoja de la reserva |
 
-**Typo safety net.** The reservation number is typed by a guest and is now the file
-key, so a typo creates a *second file* for an existing reservation and the concierge
-may miss half the order. Mitigations: normalise hard (uppercase, strip spaces and
-dashes) before using it as a key; show it back for confirmation before submitting;
-keep `lastName` as a secondary reconciliation key; and sort the index so near-identical
-codes land next to each other and can be spotted. The real fix is validating against
-the Simple Booking API — worth checking whether the client has access.
+Si más adelante se quiere total o número de ítems aquí, es una columna más — pero por
+ahora queda fuera a propósito.
 
-## 6. Prices: single source
+### La pestaña de cada pedido
 
-Measured 2026-11-15. The same price is currently written in up to three places.
+Nombre: `Pedido N · YYYY-MM-DD`. Contenido, de arriba abajo:
 
-| Where | Count | Notes |
-|---|---|---|
-| Structured numeric values in i18n | **50 per locale** | `priceValue`, `basePrice`, `extraPersonPrice`, `priceValues[]`. These feed the cart. Sections: `wellnessSpa` 16, `privateChef` 13, `tours` 12, `fullFridge` 9. |
-| Prices written inside translated prose | **102 per locale** | `"$200 / day"`, `"From $230 for 2 · +$24 per extra person"`, `"$1,140 total"`. |
-| Hardcoded in a component | 1 | `dailyRate: 200` in `MulaRentalSection.jsx:37`, duplicating `mulaRental.priceTag`. |
+1. **Cabecera** con los mismos datos identificatorios que la fila del maestro, más la
+   fecha y hora del pedido y una celda de **Estado** (desplegable: Pendiente /
+   Confirmado / Entregado / Cancelado) para que la concierge marque su avance.
+2. **Notas generales** del pedido, si las hay.
+3. **Un bloque por servicio**, agrupado por `kind`: los ítems con cantidad, precio
+   unitario y total, y debajo las **notas y preferencias de ese servicio** —
+   completas, incluida la lista de productos del Full Fridge, que es literalmente la
+   lista de compras.
+4. **Totales**: subtotal e ítems por cotizar.
 
-**Verified: the 50 numeric values are currently identical across `en` and `es` — 0
-missing, 0 divergent.** This is latent risk, not a live bug.
+El objetivo del formato es **legibilidad y completitud**: la concierge tiene que poder
+leerlo como una boleta y no puede faltar nada.
 
-Target: `src/data/pricing.js` keyed by the `sku` that `src/lib/sku.js` already
-produces. i18n keeps copy; display strings get **templated** (`"From {base} for 2 ·
-+{extra} per extra person"`) so a number is injected from the source and never
-retyped in either language.
+### `Consolidado` y `Payload`
 
-**The safety net is what makes this safe to do.** Before the migration, a script
-dumps every `(sku → price)` pair from both locales; after, it dumps them again and
-diffs. If the output is not byte-identical, it does not merge. Without that diff this
-is precisely the change that breaks live prices with nobody noticing until a
-mis-quoted order arrives.
+- **`Consolidado`** — todos los ítems de todas las pestañas de pedido en una lista
+  plana, reescrita en cada checkout. Es la vista "qué pidió esta reserva en total",
+  útil cuando hay tres pedidos repartidos en tres pestañas. Viene del pedido explícito
+  del dueño de producto; si al verla no aporta, se quita sin tocar nada más.
+- **`Payload`** (oculta) — el JSON crudo de cada checkout. La garantía de que no se
+  pierde nada aunque no exista columna para algo.
 
-## 7. Do not change — and what was withdrawn
+### Iterar sobre el formato
 
-Still binding:
+`Code.gs` incluirá una función **`generarPedidoDePrueba()`** que fabrica un pedido
+completo (varios servicios, notas en los dos niveles, una línea por cotizar, acentos)
+y lo escribe como si viniera del sitio. Sin ella, cada ajuste de formato exigiría
+hacer un checkout completo en el navegador. Con ella el ciclo es: ajustar el script →
+nueva implementación → correr la función → mirar el resultado.
 
-1. **The seam is `orderApi.js` + `orderPayload.js`.** If you are editing something
-   under `src/components/sections/` to make the backend work, something has gone
-   wrong.
-2. **Don't re-introduce per-service submissions** or per-page submit buttons. Pages
-   add to the cart; only `/checkout/` submits.
-3. **Don't add payment logic yet.** Vercel makes it possible; it is not in scope.
-4. **Don't change cart persistence to `localStorage`.** Session-only is a product
-   decision.
-5. **Don't put `commission` / `contactName` / `whatsapp` into the payload.**
-6. **Generate `submissionId` once per checkout attempt.**
-7. **Don't build the sheet from `describeServiceForm()`** (§4).
-8. **Apps Script Web Apps need a new deployment version** for code edits to take
-   effect. Saving the script is not enough. This is the most common way to lose half
-   an hour debugging the wrong layer.
+### Vocabulario de `kind`
 
-Withdrawn on 2026-11-15, with reasons, because the old text said the opposite:
+La hoja agrupa por este campo. Catorce valores, fijados por el código:
 
-- *"Don't switch `Content-Type` to `application/json`"* — only applied to posting
-  straight from the browser to Apps Script. On Vercel the request is same-origin.
-- *"Accept the old flat shape for one release"* — unnecessary; no bundle has ever had
-  a working endpoint (§1).
-- *"Don't move prices out of the i18n files"* — now explicitly in scope (§6).
-- *"`lineTotal` and `totals` are precomputed so the Sheet doesn't need formulas"* —
-  briefly reversed while the sheet was thought to be the invoicing surface, then
-  restored. It is a reference document; static values are correct.
+| Servicio | `kind` |
+|---|---|
+| `tours` | `activity` |
+| `transport` | `vehicle` |
+| `wellness-spa` | `massage`, `facial`, `addon`, `package` |
+| `fishing-tours` | `charter` |
+| `full-fridge` | `stocking-package`, `beverage` |
+| `private-chef` | `chef-service`, `themed-night`, `beverage`, `bartender`, `dessert`, `bakery` |
 
-## 8. Plan, with code / not-code split and sizing
+### Dedupe y la llave del archivo
 
-Sizing is relative (S/M/L/XL) with the measured driver, not clock hours.
+El log de dedupe por `submissionId` vive en el documento maestro (la columna existe en
+cada fila), así que no hace falta una hoja índice aparte. Un reintento tras fallo de
+red trae el mismo `submissionId` y el script debe reconocerlo y no escribir dos veces.
 
-| Fase | Qué | Dónde | Tamaño | Riesgo |
-|---|---|---|---|---|
-| **0** | Revisar y commitear lo pendiente; borrar `OrderCheckoutForm.jsx` + `useOrderCart.js` | código | **M** — 20 archivos, +3,130/−642 líneas sin revisar; 314 líneas a borrar | **Alto** — es trabajo no revisado sobre producción |
-| **1** | Auditoría del modelo de datos → esquema de la plantilla, contrato del payload, inventario de precios | documento | **M** | Bajo |
-| **2** | Precios a fuente única + templating de los strings | código | **XL** — 50 valores + 204 strings + 1 constante; 4 secciones de i18n, ambos locales | **Alto** — mitigado por el diff de §6 |
-| **3** | Formulario final, `buildOrderPayload()`, `orderApi.js`, ~15 llaves i18n ×2 | código | **L** — 1 archivo nuevo, `CheckoutPage.jsx` +~250 líneas | Medio |
-| **4** | `Code.gs`: índice, buscar-o-crear, 3 pestañas, dedupe, correo | código | **L** — 171 líneas actuales → reescritura completa | Medio |
-| **5** | Vercel: quitar `output: "export"`, route handler, variables | código | **S** en código | Medio — `output: export` es restricción dura en `CLAUDE.md` |
-| **6** | Pruebas en vivo | ambos | **M** | — |
+**Red de seguridad para el typo.** El número de reserva lo escribe el huésped y es la
+llave del archivo, así que un dedazo crea un **archivo nuevo** para una reserva que ya
+existe, y la concierge puede ver solo la mitad del pedido. Mitigaciones: normalizar
+duro (mayúsculas, sin espacios ni guiones) antes de usarlo como llave; mostrarlo de
+vuelta para que lo confirme antes de enviar; guardar `lastName` como llave secundaria
+de reconciliación; y el maestro ordenado por reserva deja dos códigos casi idénticos
+adyacentes, donde se detectan a ojo. El arreglo de fondo es validar contra la API de
+Simple Booking.
 
-### Fuera de código — el cliente o Marce, en Google / Vercel / Hostinger
+**`service` + `sku` es la llave del producto, nunca `sku` solo.** El chef vende la
+lista de bebidas del Full Fridge, así que un mismo producto aparece bajo dos
+servicios. El sku del chef quedó namespaceado (`beverage-red-wine`), pero la regla se
+mantiene por si vuelve a pasar.
 
-Estas no las puedo hacer yo y varias tienen tiempo de espera externo:
+## 6. No cambiar
 
-1. Crear la **unidad compartida** y la carpeta de pedidos en el Workspace del cliente.
-   Unidad compartida y no Drive personal: los archivos sobreviven si esa cuenta se cierra.
-2. Crear y **estilizar el Sheet plantilla** (logo, colores, formatos de moneda, anchos).
-   El formato *es* el producto aquí, y así se reestiliza sin tocar código.
-3. Crear el **Sheet índice maestro**.
-4. Crear el proyecto de **Apps Script en la cuenta del cliente**, pegar el código y
-   rellenar `CONFIG` (ids de carpeta, plantilla e índice; secreto; correos).
-5. **Desplegar el Web App** ("Execute as: me", "Who has access: Anyone") — y
-   re-desplegar en cada cambio de código.
-6. **Autorizar los scopes OAuth** la primera vez (Drive + Sheets + Gmail), en la
-   pantalla de permisos de Google.
-7. Confirmar el **formato del número de Simple Booking**, y averiguar si el cliente
-   tiene acceso a su **API**.
-8. Decidir los **correos de notificación** de operaciones.
-9. Crear el proyecto en **Vercel**, conectar el repo, configurar las variables de
-   entorno (en el entorno de *build*, no en `.env.local`).
-10. **Migrar el DNS** de Hostinger a Vercel y elegir la ventana de cambio.
-11. **Validar con la concierge** que la hoja le sirve de verdad, con un pedido real
-    delante.
+1. **La costura es `orderApi.js` + `orderPayload.js`.** Si hay que editar algo bajo
+   `src/components/sections/` para que el backend funcione, algo salió mal.
+2. **No reintroducir envíos por servicio** ni botones de envío por página. Las
+   páginas agregan al carrito; solo `/checkout/` envía.
+3. **No añadir lógica de pago todavía.** Vercel lo habilita; no está en alcance.
+4. **No cambiar la persistencia del carrito a `localStorage`.** Es decisión de
+   producto que sea de sesión.
+5. **No meter `commission` / `contactName` / `whatsapp` en el payload.**
+6. **Generar `submissionId` una vez por intento de checkout.**
+7. **No construir la hoja con `describeServiceForm()`** (§4).
+8. **Añadir un campo a una línea de carrito significa añadirlo a `normalizeLine`.**
+   Es un whitelist: un campo que un builder escribe y esa función no copia desaparece
+   en silencio al commitear y al rehidratar, y parece que el builder no corrió.
+9. **Un Apps Script Web App necesita un deployment nuevo** para que un cambio de
+   código surta efecto. Guardar el script no basta. Es la forma más común de perder
+   media hora depurando la capa equivocada.
 
-Workspace es de pago, así que la cuota de `MailApp` es 1,500 destinatarios/día y no
-es un factor. El almacenamiento tampoco: cada archivo de reserva pesa pocos KB.
+## 7. Riesgos conocidos
 
-### Orden y dependencias
+**El secreto compartido.** En Vercel vive en el servidor y el navegador nunca lo ve.
+Esto deja de ser un riesgo al completarse el paso 3; hasta entonces no hay envío, así
+que tampoco hay exposición.
 
-- **1 y 2 no dependen de Vercel ni de los accesos de Google** — se pueden arrancar ya.
-- **5 (Vercel) va antes de 3**, para escribir `orderApi.js` una sola vez.
-- **4 depende de las tareas externas 1–4** — es la ruta con espera externa, conviene
-  arrancarla en paralelo desde el principio.
-- **6 depende de todo.**
+**Márgenes internos en el bundle público.** `tours.activities[].commission` (9
+entradas: `"$20 per person"`, `"Flexible — negotiable by volume"`, `"Net rates —
+monthly invoice"`) y `tours.activities[].pricing[]` (~38 strings, con
+`"~$11–12 profit / adult"` y `"Net rate — you mark up"`) viajan en el bundle de JS.
+`pricing[]` **no se renderiza en ningún componente** — son datos muertos que
+cualquiera puede leer con devtools. El whitelist del carrito protege el payload, no el
+bundle. **Pendiente de decisión del cliente:** borrarlos, o moverlos a un archivo
+solo-servidor si se van a usar en una vista interna.
+
+**La sección de transporte no está traducida.** El array `VEHICLES` es prosa inglesa
+fija (`type`, `idealFor`, `badge`) y las etiquetas de especificaciones dicen
+`"5 seats"` / `"2 bags"` con plurales ingleses a mano. Un huésped en español ve toda
+esa tarjeta en inglés. Tarea aparte.
+
+**No hay linter.** `npx eslint` no corre: ESLint 9 pide `eslint.config.js` y el
+proyecto tiene `.eslintrc.json`, y `next lint` desapareció en Next 16. Preexistente.
+
+**No hay suite de pruebas comiteada.** Las verificaciones de las sesiones de
+noviembre (678 aserciones) se corrieron ad-hoc desde un scratchpad. Si se va a cobrar
+por aquí, vale convertir al menos las de precio en algo versionado.
+
+## 8. Plan paso a paso
+
+Dos carriles. El mío es código; el del cliente son accesos y activos de Google, y es
+el único con espera externa — **conviene arrancarlo el día uno** o se vuelve el cuello
+de botella al final.
+
+### Paso 1 — Contrato y esquema congelados ✅
+Este documento. Sin código. **Listo cuando:** §4 y §5 están acordados.
+
+### Paso 2 — Checkout: formulario, payload y envío ✅
+Todo en código, **sin depender de ningún activo de Google**.
+- Los 7 campos del huésped + notas generales, con `react-hook-form` (ya instalado;
+  sin resolver, porque `@hookform/resolvers` se eliminó y no hay zod/yup — usar las
+  reglas nativas).
+- `src/lib/orderPayload.js` con `buildOrderPayload()` según §4.
+- `submissionId` en un ref, generado una vez por intento.
+- `orderApi.js` apuntando a un stub local, para que el flujo completo sea demostrable.
+- ~15 llaves i18n en EN y ES, manteniendo las estructuras idénticas.
+- Traducir el `By quote` que está hardcodeado en inglés en `CheckoutPage.jsx`.
+
+**Listo cuando:** se arma un pedido real en el navegador y el JSON del payload se
+puede inspeccionar completo, con varios servicios, notas en los dos niveles y una
+línea `byQuote`.
+
+### Paso 3 — Vercel
+- **Código:** quitar `output: "export"` de `next.config.ts`, añadir
+  `app/api/orders/route.ts` que valide y reenvíe con el secreto del servidor, y
+  apuntar `orderApi.js` a `/api/orders`.
+- **Cliente:** crear el proyecto en Vercel, conectar el repo, poner las variables en
+  el entorno de **build**, migrar el DNS desde Hostinger.
+
+**Listo cuando:** el sitio desplegado postea a su propio route handler y recibe
+respuesta.
+
+### Paso 4 — Activos de Google · **carril del cliente, arrancar ya**
+
+> Las instrucciones detalladas para este paso están en
+> [STEP-4-GOOGLE-SETUP.md](STEP-4-GOOGLE-SETUP.md), escritas para delegarse a alguien
+> sin acceso al repo. Incluyen los nombres exactos de pestañas y el orden de columnas
+> contra los que escribe el paso 5 — si cambian ahí, hay que cambiarlos aquí.
+Mínimo a propósito: **solo dos cosas se crean a mano.** El documento maestro y la
+subcarpeta `Pedidos` los crea el script la primera vez y los reutiliza siempre
+después — ver "Nada se re-crea" en §5.
+
+1. Carpeta **`WelcomeOrders`** en la raíz del Drive. **Hecho:** vive en *Mi unidad* de
+   `concierge@arboreaexperiences.com`, ID `18K4EYRvXwBcvR9QEMsoQphYG1SnJFJLc`. No hay
+   unidades compartidas en ese Workspace, así que los archivos pertenecen a la cuenta
+   de concierge y se irían con ella si algún día se cierra; mientras siga abierta,
+   funciona igual. Se puede compartir con otras cuentas si operaciones lo necesita.
+2. Proyecto de **Apps Script en la cuenta del cliente**, con un stub que autoriza los
+   scopes (Drive + Sheets + Gmail) y verifica los accesos. **Hecho:** proyecto
+   `Arborea — Orders Backend`, cuenta efectiva `concierge@arboreaexperiences.com`,
+   zona horaria `America/Costa_Rica`, cuota de correo 1500/día (Workspace de pago).
+3. **Desplegar el Web App** ("Execute as: me", "Who has access: Anyone").
+4. Confirmar el **formato del número de Simple Booking**, y si hay **API**.
+
+**Destino de las notificaciones:** `concierge@arboreaexperiences.com`. No es
+`operations@` — el `Code.gs` viejo (commit `2bdc081`) usaba esa dirección y está
+obsoleta; este proyecto no pasa por operaciones.
+
+**Listo cuando:** tengo el ID de la carpeta y la URL del Web App.
+
+#### Estado: COMPLETO (2026-11-19)
+
+| Dato | Valor |
+|---|---|
+| Carpeta | `WelcomeOrders`, Mi unidad de concierge |
+| ID de carpeta | `18K4EYRvXwBcvR9QEMsoQphYG1SnJFJLc` |
+| Proyecto | `Arborea — Orders Backend` |
+| Cuenta efectiva | `concierge@arboreaexperiences.com` |
+| Tipo de cuenta | Workspace de pago (cuota de correo 1500/día) |
+| Zona horaria | `America/Costa_Rica`, verificada en ejecución |
+| Web App | `Execute as: me` · `Who has access: Anyone` |
+| URL `/exec` | `…/macros/s/AKfycbxgPZiV7YBu3v3rL-wl1OtIIknpqcxbtk6gefQA0oNh_MYQy9XvFhzpJBqeqjsHs8jf2A/exec` |
+| Notificaciones a | `concierge@arboreaexperiences.com` |
+
+La URL `/exec` se mantiene estable al publicar versiones nuevas **del mismo
+despliegue**. Crear un despliegue nuevo en vez de una versión nueva genera otra URL y
+deja el sitio apuntando a código viejo — ver la advertencia de §Errores.
+
+En Vercel va como variable de entorno (`APPS_SCRIPT_URL`), leída solo desde el route
+handler. Nunca en código de cliente ni en un `NEXT_PUBLIC_*`: el navegador no debe
+conocer ni la URL ni el secreto.
+
+#### Número de reserva — resuelto (2026-11-19)
+
+**No hay API de Simple Booking.** Cerrado, no es un "más adelante": el número que
+escribe el huésped es la única llave de agrupación que va a existir y nada puede
+corregirlo después.
+
+**El formato no está definido todavía** y se decide después de las pruebas. Durante
+pruebas no se valida; el riesgo lo absorbe quien prueba.
+
+Consecuencia para el paso 5 — **no asumir un formato, pero sí normalizar.** Son dos
+campos distintos y mezclarlos es el error a evitar:
+
+- `reservationNumber` — tal como lo escribió el huésped. Es lo que se muestra en el
+  nombre del archivo, en el maestro y en el correo.
+- una **llave normalizada** derivada de él — mayúsculas, sin espacios ni guiones ni
+  puntuación (`SB-10432`, `sb 10432` y `SB10432` → `SB10432`). Es contra esta llave
+  que se busca el archivo existente de la reserva.
+
+Sin API esto es lo único que separa "dos pedidos de la misma reserva" de "dos
+archivos con medio pedido cada uno". Cuando el formato se defina, se agrega la
+validación encima sin tocar nada de lo anterior.
+
+### Paso 5 — `Code.gs`
+Crear la subcarpeta y el documento maestro si no existen; añadir la fila del
+checkout al maestro; buscar o crear el archivo de la reserva; escribir la pestaña
+`Pedido N` con su formato; reescribir `Consolidado`; guardar el JSON en `Payload`;
+dedupe por `submissionId`; correo a operaciones con el link. Se conserva del script
+actual el helper `json()` y el `LockService`. Incluye
+**`generarPedidoDePrueba()`** para iterar el formato sin hacer un checkout completo.
+
+**Listo cuando:** un POST del route handler crea o amplía el archivo correcto, y el
+formato generado nos gusta.
+
+### Paso 6 — Prueba en vivo
+Chef + fridge + spa + un tour sin precio en un solo checkout; dos checkouts sobre la
+misma reserva (debe reusar el archivo); reintento con el mismo `submissionId` (no debe
+duplicar); acentos y ñ en las notas; y validación con la concierge sobre la hoja real.
+
+### Dependencias
+- El paso 2 no depende de nada externo — es por donde se arranca.
+- El paso 3 va antes de terminar el 2 si se quiere evitar escribir `orderApi.js` dos
+  veces; el stub local hace que el orden exacto no bloquee.
+- El paso 5 depende del paso 4.
+- El paso 6 depende de todo.
 
 ## 9. Progress log
 
@@ -628,3 +827,147 @@ knows what to unlearn.
 - **Prices measured**: 50 structured values per locale (0 divergences today), 102
   prose strings per locale carrying prices, 1 hardcoded `dailyRate: 200`. The old
   doc's "~65-entry migration" understated it by about 4×.
+
+### 2026-11-19 — el front queda listo para conectar
+
+Tres sesiones de trabajo sobre las líneas del carrito y los precios, más la
+reescritura de este plan. Sin backend todavía.
+
+- **Forma de línea optimizada para el backend**, aditiva: `titleEn` (canónico, vía
+  `titleOf()` / `enString()` nuevos en `lib/sku.js`), `kind` (14 valores, §5),
+  `byQuote` (explícito en vez de inferir de `unitPrice === 0`) y `data` (los mismos
+  hechos tipados y sin idioma que `options` lleva como prosa localizada).
+  `normalizeLine` los whitelistea. Verificado: los 15 paths i18n resuelven sin un
+  solo vacío, y los captions de `describeLine` quedaron byte-idénticos en ambos
+  idiomas. **72 de los 80 ítems tienen título distinto en español** — esa es la
+  magnitud de lo que `titleEn` evita.
+- Dos simplificaciones que los campos nuevos habilitaron: `isQtyAddOn` pasó de
+  comparar prefijos de sku y reconstruir un array en cada llamada a un `Set.has(kind)`,
+  y el seed del chef dejó de hacer `parseInt` sobre `"6 guests"` y `JSON.parse` sobre
+  `options._dishes` — ese blob JSON dentro de `options` ya no existe.
+- **Precios a fuente única.** Resultaron ser **98 valores por locale, no 50**: la
+  lista de llaves del handoff viejo omitía `perPerson` y `total` (los tiers de pesca),
+  subestimándolo 2×. Viven en `src/data/pricing.js`, inyectados al locale activo por
+  `applyPrices()` en `I18nContext`; **ningún componente cambió**. Además 49 strings de
+  prosa quedaron con tokens `{{p:path}}` y las constantes `DISH_PRICE` y `dailyRate`
+  salieron de los componentes.
+  - El emparejamiento por valor se descartó por inseguro: "$200 / day" de transporte
+    se resolvía a un tier de pesca que también vale 200. Se usó criterio estructural
+    (hermandad en el mismo objeto).
+  - 44 strings se dejaron literales a propósito: `tours.activities[].pricing[]` es una
+    tarjeta de tarifas interna con números que no existen en otra parte, y
+    `wellnessSpa.pricing.*` son filas de display sin contraparte numérica.
+  - Red de seguridad: línea base de los 98 precios y los 102 strings capturada antes
+    de tocar nada; condición de merge que todos resolvieran byte-idénticos después. Se
+    cumplió en ambos idiomas. Prueba de fuego: cambiar `basePrice` a 999 en un lugar
+    actualiza la copia inglesa, la española y el valor del carrito a la vez.
+- **Extras del desayuno eliminados** del private chef a petición del dueño de
+  producto (eran seleccionables, no decorativos). Como solo el desayuno los tenía, se
+  quitó también toda la función de extras de `MenuSection` en vez de dejarla huérfana.
+  `extrasSubheading` ya era i18n muerto.
+- **Unidades contables a i18n.** Nuevo `countLabel()` en `lib/format.js` con
+  `cart.units.{day,adult,child,guest}` como `{one, other}` en ambos locales. Elimina
+  los plurales ingleses escritos a mano en fridge, transporte y chef, y unifica chef
+  con fishing. Se eligió `persona/personas` en español para que el caption de fishing
+  no cambiara.
+- **El sitio sigue sin usarse**, lo que retira del plan toda la cautela de
+  "producción": no hay carritos ajenos ni bundles cacheados. Los fallbacks de
+  retrocompatibilidad escritos para proteger a un huésped a mitad de sesión se
+  eliminaron por ser código muerto.
+- Verificación total de la jornada: **678 aserciones, 0 fallos**, en cuatro suites
+  ad-hoc. No están comiteadas — ver §7.
+
+### 2026-11-19 — estructura en Drive redefinida (sin plantilla)
+
+El dueño de producto descartó la plantilla hecha a mano. El formato lo genera el
+script y se itera sobre el código hasta que el resultado guste. Cambios respecto al
+diseño anterior:
+
+- **Un archivo por reserva, una pestaña por pedido**, en vez de bloques apilados en
+  una sola pestaña. Con eso desaparece la regla de "nunca ordenar esta hoja": cada
+  pestaña es un pedido autocontenido.
+- **El documento maestro es solo un registro de checkouts** — fecha, hora, datos
+  identificatorios del huésped y link a su archivo, explícitamente **sin el contenido
+  del pedido**. Reemplaza el "índice maestro" que además llevaba totales.
+- **El log de dedupe vive en el maestro** (una columna por fila), así que la hoja
+  índice aparte desaparece.
+- **El script crea la subcarpeta `Pedidos` y el documento maestro**, buscándolos por
+  nombre y guardando sus ids en `PropertiesService`. El paso 4 se reduce a crear una
+  carpeta y el proyecto de Apps Script: un solo `FOLDER_ID` en `CONFIG`.
+- `Code.gs` incluirá **`generarPedidoDePrueba()`**, porque iterar el formato haciendo
+  un checkout completo en el navegador cada vez no es viable.
+- Las instrucciones delegables del paso 4 están en `STEP-4-GOOGLE-SETUP.md`.
+- **Aclarado por el dueño de producto:** la carpeta raíz y el documento maestro **no
+  se re-crean** — se crean una vez y después solo reciben filas. Documentado en §5
+  como buscar-o-crear idempotente, con caché de ids en `PropertiesService`,
+  validación del id cacheado contra la papelera, y el `LockService` abarcando el
+  buscar-o-crear completo y no solo la escritura (dos checkouts simultáneos podrían
+  crear cada uno su propio maestro).
+- Confirmado que **"identificador" = número de reserva**, que es lo que nombra el
+  archivo.
+
+### 2026-11-19 — paso 2: el checkout envía
+
+- **`src/lib/orderPayload.js`** — `buildOrderPayload()` produce el §4 exacto. Copia
+  explícitamente los 13 campos de cada línea en vez de reenviar el objeto, así un
+  campo añadido al carrito mañana no empieza a transmitirse en silencio; recalcula
+  `lineTotal` en vez de confiar en el que traiga; ordena el carrito por
+  `SERVICE_ORDER` para que el payload sea determinista; y descarta de `serviceForms`
+  los servicios vacíos o ausentes del carrito. `normalizeReservationNumber()`
+  normaliza **conservadoramente** — mayúsculas y espacios sí, guiones no: "SB-10432"
+  se lee mejor que "SB10432" en un nombre de archivo, y sin conocer el formato de
+  Simple Booking, quitar separadores podría colisionar dos números distintos.
+- **`src/components/sections/GuestDetailsForm.jsx`** — los 7 campos requeridos más la
+  nota, con las reglas nativas de `react-hook-form` (sin resolver: no hay zod/yup).
+  El número de reserva va primero y a ancho completo porque es la llave bajo la que
+  se archiva todo. `DateField` va con `min={null}` a propósito: el huésped puede
+  estar a mitad de estadía cuando pide, así que su fecha de ingreso está en el pasado.
+  Como `DateField` es un popover y no un `<input>`, se conecta por `setValue` y se
+  valida a través de un campo oculto registrado.
+- **`CheckoutPage`** — `submissionId` en un `useRef`, generado una vez por intento y
+  **reusado mientras el intento no se resuelva**, de modo que un reintento tras fallo
+  de red lleve el mismo id y el backend deduplique; se limpia solo al tener éxito.
+  `newSubmissionId()` cae a un id propio si `crypto.randomUUID` no existe (contexto no
+  seguro) — ese id es lo que evita pedidos duplicados y no puede ser lo que rompa el
+  envío.
+  - **El panel de éxito cortocircuita ANTES del chequeo de carrito vacío**, porque el
+    carrito se limpia al enviar y `count` ya es 0 cuando se renderiza.
+  - El estado de error muestra el código técnico en pequeño: es para nosotros, pero
+    convierte "no funcionó" en algo diagnosticable.
+- **`orderApi.js`** reescrito: stub local con volcado del payload a consola, y al lado
+  el camino real a `/api/orders` ya escrito. Desapareció el secreto `NEXT_PUBLIC_*` y
+  el `Content-Type: text/plain`, que solo existían para postear del navegador directo
+  a Apps Script.
+- **`By quote` traducido** — estaba hardcodeado en inglés 7 veces en 3 componentes.
+  Ahora es `cart.byQuote` ("A cotizar" en español). 18 llaves nuevas de
+  `checkout.form.*` en ambos locales, estructuras idénticas.
+- **Borrados** `OrderCheckoutForm.jsx` y `useOrderCart.js` (311 líneas), que seguían
+  en disco. El comentario obsoleto en `useDraft.js` que decía que fishing no estaba
+  migrado también se corrigió.
+- Verificado: **36 aserciones** sobre el builder (orden determinista, los 13 campos
+  exactos, `commission` excluido, `lineTotal` recalculado sobre un valor stale,
+  `produce` sin colapsar, totales excluyendo `byQuote`, carrito vacío sin explotar,
+  round-trip JSON). Más: las 46 llaves `t()` del checkout resuelven a string en los
+  dos locales, los nombres de campo del formulario coinciden exactamente con lo que
+  lee el builder, `tsc` y build limpios, y el dev server sirve `/checkout/` con 200
+  sin errores. **El click-through no está verificado por máquina** — no hay
+  automatización de navegador en esta sesión.
+
+### 2026-11-19 — campos obligatorios reducidos a cinco
+
+Decisión del dueño de producto: obligatorios **nº de reserva, nombre, apellido,
+teléfono y casa**. `email` y `checkInDate` pasan a opcionales; llegan como `""`.
+
+Dos cosas que esto destapó:
+
+- **En react-hook-form un `pattern` se evalúa también contra el string vacío.** Quitar
+  `required` del email dejando su `pattern` habría rechazado dejarlo en blanco. Se
+  cambió por `validate: (v) => !v.trim() || EMAIL_RE.test(v) || msg` — la guarda del
+  vacío es el punto. Verificado con 11 casos (vacíos, `null`, basura, válidos).
+- **`DateField` renderiza su propia etiqueta** cuando recibe `label`, así que
+  envolverlo en el `<Field>` del formulario la dibujaba dos veces. Se le pasa
+  `label={null}` y la etiqueta la gobierna el wrapper, que es quien también marca
+  "(opcional)" y muestra errores.
+
+Los campos opcionales se marcan en la UI en vez de marcar los obligatorios: son menos
+y hace menos ruido. Nueva llave `checkout.form.optional` en ambos locales.

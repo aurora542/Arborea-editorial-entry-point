@@ -2522,7 +2522,8 @@
     "clearConfirmBody": "This will remove every experience, service and vehicle you've added. This can't be undone.",
     "clearConfirmAction": "Yes, empty order",
     "clearCancel": "Keep it",
-    "viewOrder": "View order"
+    "viewOrder": "View order",
+    "byQuote": "By quote"
   },
   "checkout": {
     "eyebrow": "Checkout",
@@ -2531,6 +2532,59 @@
     "yourOrder": "Your order",
     "empty": "There is nothing in your order yet",
     "emptyCta": "Browse experiences",
-    "detailsHeading": "Your details"
+    "detailsHeading": "Your details",
+    "form": {
+      "heading": "Your details",
+      "description": "We need these to confirm your order and match it to your stay. Nothing is charged here.",
+      "reservationNumber": {
+        "label": "Reservation number",
+        "placeholder": "e.g. SB-10432",
+        "hint": "From your booking confirmation. It links everything you order during your stay."
+      },
+      "firstName": {
+        "label": "First name",
+        "placeholder": "Ana"
+      },
+      "lastName": {
+        "label": "Last name",
+        "placeholder": "Rodríguez"
+      },
+      "email": {
+        "label": "Email",
+        "placeholder": "you@example.com"
+      },
+      "phone": {
+        "label": "Phone / WhatsApp",
+        "placeholder": "+506 8888 8888"
+      },
+      "casa": {
+        "label": "Your casa",
+        "placeholder": "Select your casa"
+      },
+      "checkInDate": {
+        "label": "Check-in date"
+      },
+      "notes": {
+        "label": "Anything else for us?",
+        "placeholder": "Arrival time, a special occasion, anything we should know."
+      },
+      "required": "This field is required",
+      "invalidEmail": "Please enter a valid email address",
+      "invalidPhone": "Please enter a valid phone number",
+      "submit": "Send my order",
+      "submitting": "Sending…",
+      "disclaimer": "Prices are estimates. We confirm availability and the final quote before your stay — nothing is charged on this site.",
+      "success": {
+        "heading": "Order received",
+        "body": "We'll confirm availability and the final quote by WhatsApp or email shortly. We've filed it under reservation {reservation}.",
+        "cta": "Back to home"
+      },
+      "error": {
+        "heading": "We couldn't send your order",
+        "body": "Something went wrong on our side. Your order is still here — please try again, or reach us on WhatsApp.",
+        "retry": "Try again"
+      },
+      "optional": "(optional)"
+    }
   }
 }

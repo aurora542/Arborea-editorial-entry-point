@@ -2522,7 +2522,8 @@
     "clearConfirmBody": "Se eliminarán todas las experiencias, servicios y vehículos que agregaste. Esta acción no se puede deshacer.",
     "clearConfirmAction": "Sí, vaciar pedido",
     "clearCancel": "Mantenerlo",
-    "viewOrder": "Ver pedido"
+    "viewOrder": "Ver pedido",
+    "byQuote": "A cotizar"
   },
   "checkout": {
     "eyebrow": "Checkout",
@@ -2531,6 +2532,59 @@
     "yourOrder": "Tu pedido",
     "empty": "Todavía no hay nada en tu pedido",
     "emptyCta": "Explorar experiencias",
-    "detailsHeading": "Tus datos"
+    "detailsHeading": "Tus datos",
+    "form": {
+      "heading": "Tus datos",
+      "description": "Los necesitamos para confirmar tu pedido y asociarlo a tu estadía. Aquí no se cobra nada.",
+      "reservationNumber": {
+        "label": "Número de reserva",
+        "placeholder": "ej. SB-10432",
+        "hint": "El de tu confirmación de reserva. Vincula todo lo que pidas durante tu estadía."
+      },
+      "firstName": {
+        "label": "Nombre",
+        "placeholder": "Ana"
+      },
+      "lastName": {
+        "label": "Apellido",
+        "placeholder": "Rodríguez"
+      },
+      "email": {
+        "label": "Correo",
+        "placeholder": "tu@ejemplo.com"
+      },
+      "phone": {
+        "label": "Teléfono / WhatsApp",
+        "placeholder": "+506 8888 8888"
+      },
+      "casa": {
+        "label": "Tu casa",
+        "placeholder": "Selecciona tu casa"
+      },
+      "checkInDate": {
+        "label": "Fecha de ingreso"
+      },
+      "notes": {
+        "label": "¿Algo más que debamos saber?",
+        "placeholder": "Hora de llegada, una ocasión especial, cualquier detalle."
+      },
+      "required": "Este campo es obligatorio",
+      "invalidEmail": "Ingresa un correo válido",
+      "invalidPhone": "Ingresa un teléfono válido",
+      "submit": "Enviar mi pedido",
+      "submitting": "Enviando…",
+      "disclaimer": "Los precios son estimados. Confirmamos disponibilidad y la cotización final antes de tu estadía — en este sitio no se cobra nada.",
+      "success": {
+        "heading": "Pedido recibido",
+        "body": "Confirmaremos disponibilidad y la cotización final por WhatsApp o correo en breve. Lo registramos bajo la reserva {reservation}.",
+        "cta": "Volver al inicio"
+      },
+      "error": {
+        "heading": "No pudimos enviar tu pedido",
+        "body": "Algo falló de nuestro lado. Tu pedido sigue aquí — intenta de nuevo o escríbenos por WhatsApp.",
+        "retry": "Intentar de nuevo"
+      },
+      "optional": "(opcional)"
+    }
   }
 }

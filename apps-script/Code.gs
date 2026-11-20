@@ -1,170 +1,125 @@
+/* ============================================================================
+ * PASO 4 — Stub temporal de verificación de accesos.
+ *
+ * Este NO es el backend. Existe para dos cosas:
+ *   1. Disparar la pantalla de permisos de Google y dejarlos autorizados.
+ *   2. Comprobar, antes de que llegue el código real, que la cuenta puede hacer
+ *      todo lo que el backend necesitará: leer la carpeta, crear subcarpetas,
+ *      crear y mover hojas, y enviar correo.
+ *
+ * El backend real llega en el paso 5 y reemplaza todo este archivo.
+ * (La implementación anterior de este archivo — un solo SHEET_ID con pestañas
+ * Orders/Log — quedó obsoleta al cambiar al modelo de un archivo por reserva.
+ * Está en git, commit 2bdc081, si hace falta consultarla.)
+ *
+ * Instrucciones:
+ *   - Pegar como único contenido de `Código.gs` en el proyecto de Apps Script.
+ *   - Ejecutar `verificarAccesos` una vez a mano desde el editor.
+ *   - Copiar el registro de ejecución completo y devolverlo.
+ *
+ * FOLDER_ID apunta a la carpeta `WelcomeOrders` en Mi unidad de
+ * concierge@arboreaexperiences.com, creada a mano en el paso 4.
+ * ========================================================================== */
+
 const CONFIG = {
-  SHARED_SECRET: 'REPLACE_WITH_A_LONG_RANDOM_SECRET',
-  SHEET_ID: 'REPLACE_WITH_YOUR_GOOGLE_SHEET_ID',
-  TIMEZONE: 'America/Costa_Rica',
-  ORDERS_TAB: 'Orders',
-  LOG_TAB: 'Log',
-  NOTIFY_EMAILS: ['operations@arboreaexperiences.com'],
+  FOLDER_ID: '18K4EYRvXwBcvR9QEMsoQphYG1SnJFJLc',
+  TIMEZONE:  'America/Costa_Rica',
 };
 
 function doGet() {
-  return json({ ok: true, service: 'arborea-orders', ts: new Date().toISOString() });
+  return ContentService
+    .createTextOutput(JSON.stringify({ ok: true, service: 'arborea-orders' }))
+    .setMimeType(ContentService.MimeType.JSON);
 }
 
-function doPost(e) {
+/* Ejecutar ESTA función una vez a mano, desde el editor.
+ * Crea un par de archivos de prueba y los borra al terminar: deja la carpeta
+ * exactamente como estaba. */
+function verificarAccesos() {
+  let subcarpeta = null;
+  let hoja = null;
+
   try {
-    const payload = JSON.parse(e.postData.contents);
-
-    if (payload.secret !== CONFIG.SHARED_SECRET) {
-      return json({ ok: false, error: 'Unauthorized' });
+    /* --- 1. Zona horaria -------------------------------------------------
+     * Se verifica primero porque es el error más fácil de cometer (olvidar el
+     * paso 3 de la guía) y el más difícil de notar después: el script corre
+     * perfecto y las fechas de los pedidos salen con el día corrido. */
+    const tz = Session.getScriptTimeZone();
+    Logger.log('Zona horaria del proyecto: ' + tz);
+    if (tz !== CONFIG.TIMEZONE) {
+      Logger.log('*** ATENCION: la zona horaria deberia ser ' + CONFIG.TIMEZONE + '.');
+      Logger.log('*** Corregir en Configuracion del proyecto antes de seguir.');
+    } else {
+      Logger.log('Zona horaria: OK');
     }
-    if (!payload.submissionId || !payload.service || !payload.name || !payload.casa || !payload.dateNeeded) {
-      return json({ ok: false, error: 'Missing required fields' });
+    Logger.log('Fecha/hora de ejemplo con esa zona: ' +
+      Utilities.formatDate(new Date(), tz, 'yyyy-MM-dd HH:mm:ss'));
+
+    /* --- 2. Identidad de la cuenta --------------------------------------
+     * Los archivos que cree el script quedarán a nombre de esta cuenta. Tiene
+     * que ser la del cliente, no una personal ni de desarrollo. */
+    const correo = Session.getEffectiveUser().getEmail();
+    Logger.log('Cuenta efectiva: ' + correo);
+
+    /* --- 3. Lectura de la carpeta --------------------------------------- */
+    const carpeta = DriveApp.getFolderById(CONFIG.FOLDER_ID);
+    Logger.log('Carpeta: ' + carpeta.getName());
+    Logger.log('URL de la carpeta: ' + carpeta.getUrl());
+
+    /* Dónde vive la carpeta. Una carpeta en la raíz de una unidad compartida no
+     * reporta padres; una en el Drive personal reporta "Mi unidad" o la carpeta
+     * que la contiene. Sirve para contestar la pregunta de la entrega sin tener
+     * que adivinar. */
+    const padres = carpeta.getParents();
+    if (padres.hasNext()) {
+      Logger.log('Carpeta contenedora: ' + padres.next().getName());
+    } else {
+      Logger.log('Carpeta contenedora: ninguna (raiz de Mi unidad o de una unidad compartida)');
     }
 
-    const lock = LockService.getScriptLock();
-    lock.waitLock(30000);
-    try {
-      const existingRow = findLogRow_(payload.submissionId);
-      if (existingRow) {
-        return json({ ok: true, submissionId: payload.submissionId, dedup: true });
-      }
-
-      const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
-      const sheet = ensureOrdersSheet_(ss);
-
-      const now = new Date();
-      const stamp = Utilities.formatDate(now, CONFIG.TIMEZONE, 'yyyy-MM-dd HH:mm:ss');
-      const items = Array.isArray(payload.items) ? payload.items : [];
-
-      sheet.appendRow([
-        stamp,
-        payload.submissionId,
-        payload.service || '',
-        payload.name || '',
-        payload.casa || '',
-        payload.dateNeeded || '',
-        items.map(function (it) { return it.price ? (it.label + ' ($' + it.price + ')') : it.label; }).join('\n'),
-        payload.total || 0,
-        payload.notes || '',
-      ]);
-
-      markProcessed_(payload.submissionId, stamp);
-
-      try { sendNotification_(payload, stamp); } catch (err) {}
-
-      return json({ ok: true, submissionId: payload.submissionId });
-    } finally {
-      lock.releaseLock();
+    /* Debería estar vacía en este punto. Si ya tiene contenido, alguien creó
+     * cosas a mano — justo lo que la guía pide no hacer, porque el script
+     * encuentra `Pedidos` y el maestro POR NOMBRE. */
+    if (carpeta.getFiles().hasNext() || carpeta.getFolders().hasNext()) {
+      Logger.log('*** ATENCION: la carpeta no esta vacia.');
+      Logger.log('*** El script busca "Pedidos" y "Registro de Checkouts" por nombre.');
+      Logger.log('*** Revisar que no haya nada creado a mano con nombres parecidos.');
+    } else {
+      Logger.log('Carpeta vacia, como debe estar: OK');
     }
+
+    /* --- 4. Crear subcarpetas ------------------------------------------- */
+    subcarpeta = carpeta.createFolder('__prueba__');
+    Logger.log('Puede crear subcarpetas: OK');
+
+    /* --- 5. Crear, mover y escribir hojas -------------------------------
+     * SpreadsheetApp.create() siempre nace en la raíz del Drive; el backend
+     * tendrá que moverla, igual que aquí. Este es el paso que falla si la
+     * carpeta vive en una unidad compartida con permisos restringidos. */
+    hoja = SpreadsheetApp.create('__prueba__');
+    DriveApp.getFileById(hoja.getId()).moveTo(subcarpeta);
+    hoja.getSheets()[0].getRange('A1').setValue('prueba');
+    Logger.log('Puede crear, mover y escribir hojas: OK');
+
+    /* --- 6. Correo -------------------------------------------------------
+     * No envía nada: solo confirma que el permiso está concedido y que queda
+     * cuota. Workspace de pago da 1500/dia; Gmail gratuito, 100. */
+    Logger.log('Cuota de correo restante hoy: ' + MailApp.getRemainingDailyQuota());
+
   } catch (err) {
-    return json({ ok: false, error: String(err) });
+    Logger.log('*** FALLO: ' + err.message);
+    Logger.log('*** El mensaje de arriba dice exactamente que permiso o acceso falta.');
+    throw err;
+
+  } finally {
+    /* Limpieza en `finally` para que los archivos de prueba no queden tirados
+     * si algo falla a mitad de camino. */
+    if (hoja) {
+      try { DriveApp.getFileById(hoja.getId()).setTrashed(true); } catch (e) {}
+    }
+    if (subcarpeta) {
+      try { subcarpeta.setTrashed(true); } catch (e) {}
+    }
+    Logger.log('Limpieza: OK — todo listo.');
   }
-}
-
-function json(obj) {
-  return ContentService.createTextOutput(JSON.stringify(obj)).setMimeType(ContentService.MimeType.JSON);
-}
-
-function ensureOrdersSheet_(ss) {
-  let sheet = ss.getSheetByName(CONFIG.ORDERS_TAB);
-  if (!sheet) sheet = ss.insertSheet(CONFIG.ORDERS_TAB);
-  if (sheet.getLastRow() === 0) {
-    const headers = ['Fecha y Hora', 'ID de Pedido', 'Servicio', 'Nombre', 'Casa', 'Fecha Requerida', 'Productos', 'Total (USD)', 'Notas'];
-    sheet.getRange(1, 1, 1, headers.length).setValues([headers]).setFontWeight('bold');
-    sheet.setFrozenRows(1);
-    sheet.setColumnWidth(1, 150);
-    sheet.setColumnWidth(2, 240);
-    sheet.setColumnWidth(7, 320);
-    sheet.setColumnWidth(9, 260);
-  }
-  return sheet;
-}
-
-function ensureLogSheet_(ss) {
-  let sheet = ss.getSheetByName(CONFIG.LOG_TAB);
-  if (!sheet) {
-    sheet = ss.insertSheet(CONFIG.LOG_TAB);
-    sheet.getRange(1, 1, 1, 2).setValues([['ID de Pedido', 'Procesado el']]).setFontWeight('bold');
-    sheet.setFrozenRows(1);
-  }
-  return sheet;
-}
-
-function findLogRow_(submissionId) {
-  const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
-  const sheet = ensureLogSheet_(ss);
-  if (sheet.getLastRow() < 2) return null;
-  const finder = sheet.getRange('A2:A' + sheet.getLastRow()).createTextFinder(submissionId).matchEntireCell(true);
-  return finder.findNext();
-}
-
-function markProcessed_(submissionId, stamp) {
-  const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
-  const sheet = ensureLogSheet_(ss);
-  sheet.appendRow([submissionId, stamp]);
-}
-
-function sendNotification_(payload, stamp) {
-  const items = Array.isArray(payload.items) ? payload.items : [];
-
-  let rows = '';
-  items.forEach(function (it) {
-    rows += '<tr>'
-      + '<td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:13px">' + escapeHtml_(it.label) + '</td>'
-      + '<td style="padding:6px 10px;border-bottom:1px solid #eee;font-size:13px;text-align:right">' + (it.price ? ('$' + it.price) : '—') + '</td>'
-      + '</tr>';
-  });
-
-  const html = ''
-    + '<div style="font-family:Arial,Helvetica,sans-serif;color:#222E2C;max-width:640px">'
-    + '<p style="color:#7D8584;font-size:12px;letter-spacing:.08em;text-transform:uppercase;margin:0 0 4px">Arbórea · New order</p>'
-    + '<h2 style="margin:0 0 16px;font-size:20px">' + escapeHtml_(payload.service || '') + '</h2>'
-    + '<p style="margin:0 0 4px"><strong>Name:</strong> ' + escapeHtml_(payload.name || '') + '</p>'
-    + '<p style="margin:0 0 4px"><strong>Casa:</strong> ' + escapeHtml_(payload.casa || '') + '</p>'
-    + '<p style="margin:0 0 4px"><strong>Date needed:</strong> ' + escapeHtml_(payload.dateNeeded || '') + '</p>'
-    + '<p style="margin:0 0 20px;color:#7D8584"><strong>Submitted:</strong> ' + escapeHtml_(stamp) + ' (CR)</p>'
-    + '<table style="width:100%;border-collapse:collapse">' + rows + '</table>'
-    + '<p style="margin:16px 0 0;font-size:15px"><strong>Total: $' + (payload.total || 0) + '</strong></p>'
-    + (payload.notes ? '<p style="margin:16px 0 0;font-size:13px"><strong>Notes:</strong><br>' + escapeHtml_(payload.notes).replace(/\n/g, '<br>') + '</p>' : '')
-    + '</div>';
-
-  MailApp.sendEmail({
-    to: CONFIG.NOTIFY_EMAILS.join(','),
-    subject: 'New order — ' + (payload.service || '') + ' (' + (payload.name || '') + ')',
-    htmlBody: html,
-  });
-}
-
-function escapeHtml_(s) {
-  return String(s)
-    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
-}
-
-function initSheet() {
-  const ss = SpreadsheetApp.openById(CONFIG.SHEET_ID);
-  ensureOrdersSheet_(ss);
-  ensureLogSheet_(ss);
-  Logger.log('Orders + Log tabs ready.');
-}
-
-function testDoPost() {
-  const fakeEvent = {
-    postData: {
-      contents: JSON.stringify({
-        secret: CONFIG.SHARED_SECRET,
-        submissionId: 'test-' + Utilities.getUuid(),
-        service: 'Full Fridge',
-        name: 'Test Guest',
-        casa: 'casa-mango',
-        dateNeeded: Utilities.formatDate(new Date(), CONFIG.TIMEZONE, 'yyyy-MM-dd'),
-        items: [{ label: '3 Days · Family of 4', price: 410 }, { label: 'Wine Package', price: 45 }],
-        total: 455,
-        notes: 'Test order from testDoPost().',
-      }),
-    },
-  };
-  const result = doPost(fakeEvent);
-  Logger.log(result.getContent());
 }

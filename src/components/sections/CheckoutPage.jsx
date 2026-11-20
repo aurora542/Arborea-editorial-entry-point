@@ -1,7 +1,11 @@
 "use client";
 
+import { useRef, useState } from "react";
 import Link from "next/link";
-import { TbArrowLeft, TbShoppingBag, TbArrowRight, TbPencil, TbTrash } from "react-icons/tb";
+import {
+  TbArrowLeft, TbShoppingBag, TbArrowRight, TbPencil, TbTrash,
+  TbCircleCheck, TbAlertTriangle,
+} from "react-icons/tb";
 import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/Footer";
 import { useCart } from "@/app/context/CartContext";
@@ -9,15 +13,82 @@ import { useI18n } from "@/app/context/I18nContext";
 import { money, describeLine } from "@/lib/format";
 import { describeServiceForm } from "@/lib/serviceForm";
 import QtyStepper from "@/components/ui/QtyStepper";
+import GuestDetailsForm from "@/components/sections/GuestDetailsForm";
+import { buildOrderPayload } from "@/lib/orderPayload";
+import { submitOrder } from "@/lib/orderApi";
 
 /*
- * Order review. The guest-details form and the single submit land here in the
- * next phase — see docs/ORDERS-BACKEND.md for the payload this page will build.
+ * Order review + the guest-details form + the one and only submit.
+ *
+ * This is the only place in the product that sends an order. Service pages add to
+ * the cart; nothing else posts. See docs/ORDERS-BACKEND.md §6.
  */
 
+/* `crypto.randomUUID` is unavailable outside a secure context (plain http on a LAN
+ * IP, for instance). This id is what stops a retry from creating a duplicate order,
+ * so it must never be the thing that breaks submitting. */
+function newSubmissionId() {
+  try {
+    if (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function") {
+      return crypto.randomUUID();
+    }
+  } catch {
+    /* fall through */
+  }
+  return `sub-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
 export default function CheckoutPage() {
-  const { linesByService, subtotal, count, setQty, removeLine, serviceForms, hydrated } = useCart();
+  const {
+    linesByService, lines, subtotal, count,
+    setQty, removeLine, serviceForms, hydrated, clear,
+  } = useCart();
   const { t, locale } = useI18n();
+
+  const [status, setStatus] = useState("idle"); /* idle | submitting | success | error */
+  const [errorCode, setErrorCode] = useState("");
+  const [sentReservation, setSentReservation] = useState("");
+
+  /*
+   * Generated once per checkout ATTEMPT and deliberately reused while that attempt is
+   * unresolved, so a retry after a network error carries the same id and the backend
+   * dedupes instead of writing the order twice. Cleared only on success, so a guest
+   * who orders again later starts a genuinely new order.
+   */
+  const submissionIdRef = useRef(null);
+
+  const handleSubmit = async (values) => {
+    if (!lines.length) return;
+
+    if (!submissionIdRef.current) submissionIdRef.current = newSubmissionId();
+
+    setStatus("submitting");
+    setErrorCode("");
+
+    const payload = buildOrderPayload({
+      submissionId: submissionIdRef.current,
+      lines,
+      serviceForms,
+      guest: values,
+      notes: values.notes,
+      locale,
+    });
+
+    const result = await submitOrder(payload);
+
+    if (result?.ok) {
+      setSentReservation(payload.guest.reservationNumber);
+      submissionIdRef.current = null;
+      setStatus("success");
+      /* The order is committed server-side; the cart has done its job. Cleared after
+       * `status` is set, because the success panel short-circuits the empty state. */
+      clear();
+      return;
+    }
+
+    setErrorCode(result?.error || "unknown");
+    setStatus("error");
+  };
 
   return (
     <>
@@ -50,6 +121,10 @@ export default function CheckoutPage() {
               before sessionStorage has been read. */}
           {!hydrated ? (
             <div className="h-64" />
+          ) : status === "success" ? (
+            /* Must come BEFORE the empty-state check: the cart is cleared on a
+               successful submit, so `count` is 0 by the time this renders. */
+            <SuccessPanel t={t} reservation={sentReservation} />
           ) : count === 0 ? (
             <EmptyState t={t} />
           ) : (
@@ -88,7 +163,7 @@ export default function CheckoutPage() {
                         </Link>
                         <span className="font-sans font-semibold text-sm text-[#222E2C] shrink-0 ml-1 tabular-nums">
                           {groupTotal > 0 ? money(groupTotal) : (
-                            <span className="uppercase tracking-wide text-xs">By quote</span>
+                            <span className="uppercase tracking-wide text-xs">{t("cart.byQuote")}</span>
                           )}
                         </span>
                       </div>
@@ -130,7 +205,7 @@ export default function CheckoutPage() {
                                   </>
                                 ) : (
                                   <span className="font-sans text-[11px] font-semibold uppercase tracking-wide text-[#222E2C]/55 text-right">
-                                    By quote
+                                    {t("cart.byQuote")}
                                   </span>
                                 )}
                               </div>
@@ -170,6 +245,35 @@ export default function CheckoutPage() {
                     </section>
                   );
                 })}
+
+                {status === "error" && (
+                  <div
+                    role="alert"
+                    className="rounded-2xl border-2 border-red-700/30 bg-red-700/5 px-5 py-4 flex items-start gap-3"
+                  >
+                    <TbAlertTriangle size={18} className="text-red-700 shrink-0 mt-0.5" />
+                    <div className="min-w-0">
+                      <p className="font-sans font-semibold text-sm text-[#222E2C]">
+                        {t("checkout.form.error.heading")}
+                      </p>
+                      <p className="font-sans text-sm text-[#222E2C]/65 mt-1 leading-relaxed">
+                        {t("checkout.form.error.body")}
+                      </p>
+                      {/* The code is for us, not the guest — but having it on screen
+                          turns "it didn't work" into something diagnosable. */}
+                      {errorCode && (
+                        <p className="font-sans text-xs text-[#222E2C]/40 mt-2 break-all">
+                          {errorCode}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                <GuestDetailsForm
+                  onSubmit={handleSubmit}
+                  submitting={status === "submitting"}
+                />
               </div>
 
               {/* Totals */}
@@ -184,7 +288,7 @@ export default function CheckoutPage() {
                     </span>
                   ) : (
                     <span className="font-sans font-bold text-lg text-[#EDE5D8] uppercase tracking-wide">
-                      By quote
+                      {t("cart.byQuote")}
                     </span>
                   )}
                 </div>
@@ -202,6 +306,32 @@ export default function CheckoutPage() {
       </main>
       <Footer />
     </>
+  );
+}
+
+function SuccessPanel({ t, reservation }) {
+  const body = t("checkout.form.success.body").replace("{reservation}", reservation || "—");
+
+  return (
+    <div className="flex flex-col items-center text-center gap-4 py-24 max-w-xl mx-auto">
+      <span className="size-16 rounded-full bg-[#213B2F]/10 flex items-center justify-center">
+        <TbCircleCheck size={30} className="text-[#213B2F]" />
+      </span>
+      <h2
+        className="text-3xl md:text-4xl text-[#213B2F] tracking-tight"
+        style={{ fontFamily: "var(--font-alpina)" }}
+      >
+        {t("checkout.form.success.heading")}
+      </h2>
+      <p className="font-sans text-sm text-[#222E2C]/65 leading-relaxed">{body}</p>
+      <Link
+        href="/"
+        className="mt-2 inline-flex items-center gap-1.5 px-5 py-3 rounded-full bg-[#213B2F] font-sans text-sm font-medium text-[#D8DDB8] hover:bg-[#213B2F]/90 transition-colors"
+      >
+        {t("checkout.form.success.cta")}
+        <TbArrowRight size={15} />
+      </Link>
+    </div>
   );
 }
 

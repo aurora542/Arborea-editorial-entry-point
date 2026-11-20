@@ -106,15 +106,10 @@ function VehicleCard({ vehicle, days, date, cartLine, onDaysChange, onDateChange
   const isPriced = typeof vehicle.dailyRate === "number" && vehicle.dailyRate > 0;
   const total = isPriced ? days * vehicle.dailyRate : 0;
 
-  /* Days come off the line's typed `data` (not derived from price, so it works for
-   * by-quote vehicles too). The regex on the caption string is the fallback for a
-   * line left in sessionStorage by a build that predates `data`. Priced vehicles
-   * also re-check unitPrice so a day change still trips `dirty`. */
-  const committedDays = cartLine
-    ? Number(cartLine.data?.days)
-        || Number(String(cartLine.options?.days ?? "").match(/^(\d+)/)?.[1])
-        || 1
-    : null;
+  /* Days come off the line's typed `data`, not derived from price, so it works for
+   * by-quote vehicles too. Priced vehicles also re-check unitPrice so a day change
+   * still trips `dirty`. */
+  const committedDays = cartLine ? Number(cartLine.data?.days) || 1 : null;
 
   const dirty = cartLine
     ? committedDays !== days
@@ -243,7 +238,7 @@ function VehicleCard({ vehicle, days, date, cartLine, onDaysChange, onDateChange
             <span className="inline-flex items-center gap-1.5 bg-[#E0D4C4]/15 border border-[#E0D4C4]/30 rounded-full px-3 py-1.5">
               <TbMessageCircle size={13} className="text-[#E0D4C4] shrink-0" />
               <span className="font-sans text-xs font-bold text-[#E0D4C4] uppercase tracking-wide">
-                By quote
+                {t("cart.byQuote")}
               </span>
             </span>
           )}
@@ -343,9 +338,9 @@ export default function MulaRentalSection() {
   /*
    * Restore each card's day count and pickup date from the cart once hydration
    * finishes, so coming back to the home page doesn't show "1 day" for a vehicle
-   * already booked for five. Day count is parsed from `options.days` — works
-   * identically for priced and by-quote lines (we no longer back-derive from
-   * unitPrice / dailyRate, which would break for quote-only vehicles).
+   * already booked for five. The day count is read from the line's typed `data`,
+   * so it works identically for priced and by-quote lines — back-deriving it from
+   * unitPrice / dailyRate would break for quote-only vehicles.
    */
   useEffect(() => {
     if (!hydrated) return;
@@ -355,15 +350,7 @@ export default function MulaRentalSection() {
       for (const vehicle of VEHICLES) {
         const line = getLine(lineIdOf("transport", vehicle.id));
         if (!line) continue;
-        /* `data.days` is the number. The regex on `options.days` is the fallback
-         * for a line a previous build left in sessionStorage, where the day count
-         * only existed inside the caption string. */
-        const fromData = Number(line.data?.days);
-        const match = String(line.options?.days ?? "").match(/^(\d+)/);
-        const days = Math.max(
-          1,
-          Number.isFinite(fromData) && fromData > 0 ? fromData : Number(match?.[1]) || 1
-        );
+        const days = Math.max(1, Number(line.data?.days) || 1);
         if (next[vehicle.id].days !== days || next[vehicle.id].date !== line.date) {
           next[vehicle.id] = { days, date: line.date };
           changed = true;

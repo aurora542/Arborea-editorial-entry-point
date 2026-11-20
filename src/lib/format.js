@@ -57,11 +57,11 @@ export function countLabel(t, n, unit) {
  * Values are rendered as-is; keys are never shown, so option values should
  * read as labels on their own ("90 min", not "90").
  *
- * Keys starting with `_` are skipped as internal metadata. Nothing writes one any
- * more — the private-chef page used to stash per-day dish picks as a JSON string
- * under `options._dishes`, and now puts them in the line's typed `data` bag — but
- * the filter stays so a line persisted in sessionStorage by an older build can't
- * dump a JSON blob into the caption.
+ * Keys starting with `_` are skipped as internal metadata. Nothing writes one today
+ * — the private-chef page used to stash per-day dish picks as a JSON string under
+ * `options._dishes` and now puts them in the line's typed `data` bag — but the
+ * filter stays as the escape hatch for anything that ever needs to ride in
+ * `options` without being shown.
  */
 export function describeLine(line, locale = "en") {
   const parts = Object.entries(line?.options ?? {})

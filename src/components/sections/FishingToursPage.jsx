@@ -463,10 +463,9 @@ export default function FishingToursPage() {
         const [group, idxStr] = id.split("-");
         const items = group === "angler" ? anglerItems : familyItems;
         const item = items[Number(idxStr)];
-        const match = typeof line.options?.guests === "string"
-          ? line.options.guests.match(/^(\d+)/)
-          : null;
-        const guestCount = match ? Number(match[1]) : null;
+        /* The guest count comes off the line's typed `data`. It used to be scraped
+         * out of the localised `"4 personas"` caption with a regex. */
+        const guestCount = Number(line.data?.guests);
         const tier = item?.tiers?.find((t) => Number(t.guests) === guestCount);
         if (!tier) continue;
         next[id] = {

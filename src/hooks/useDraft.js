@@ -14,8 +14,8 @@ import { useState, useCallback, useMemo, useEffect, useRef } from "react";
  * Unlike the old `useOrderCart` this deliberately does NOT track labels or fold
  * quantity into a price — the commit builds those from the i18n data.
  *
- * `useOrderCart` still exists for FishingToursPage, which is intentionally not
- * wired to the cart yet.
+ * `useOrderCart` is gone — every surface, fishing included, now uses this hook and
+ * commits to the single cart.
  */
 
 export function useDraft(initial = {}) {
