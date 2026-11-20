@@ -2556,7 +2556,8 @@
       },
       "phone": {
         "label": "Phone / WhatsApp",
-        "placeholder": "+506 8888 8888"
+        "placeholder": "8888 8888",
+        "countryLabel": "Country code"
       },
       "casa": {
         "label": "Your casa",

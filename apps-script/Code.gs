@@ -50,7 +50,40 @@ const CONFIG = {
   TAB_PAYLOAD: 'Payload',
 
   ESTADOS: ['Pendiente', 'Confirmado', 'Entregado', 'Cancelado'],
+
+  /* El logo de los correos. Tiene que ser PNG y estar en una URL pública: los
+   * clientes de correo no renderizan SVG, y el navbar del sitio usa SVG.
+   * Se sirve desde el sitio; cuando se conecte el dominio, esta es la única
+   * línea que cambia. */
+  LOGO_URL: 'https://arborea-welcome.vercel.app/assets/logos/LogoEmail.png',
+  SITIO_URL: 'https://arborea-welcome.vercel.app',
 };
+
+/* Cómo se nombra cada superficie en las hojas y los correos. */
+function origen_(p) {
+  return p.source === 'kiosk' ? 'Kiosko (tablet)' : 'Welcome Website';
+}
+
+/*
+ * Google Sheets interpreta una celda que empieza con `+` como fórmula, así que
+ * `+506 8888 8888` salía como error en el Registro de Checkouts. El formulario ya
+ * manda `(506)88888888`, pero el endpoint es público y el kiosko podría mandar otra
+ * cosa: esto normaliza cualquier `+` que llegue y, por si acaso, las columnas de
+ * teléfono se marcan como texto plano al crear las hojas.
+ */
+function telefono_(valor) {
+  const s = String(valor === null || valor === undefined ? '' : valor).trim();
+  if (!s) return '';
+  if (s.charAt(0) !== '+') return s;
+  /* `+506 8888 8888` -> `(506)88888888`. Sin saber dónde termina el código de país
+   * se asume el primer grupo de dígitos antes del primer espacio. */
+  const limpio = s.slice(1).trim();
+  const corte = limpio.indexOf(' ');
+  if (corte === -1) return limpio.replace(/\D/g, '');
+  const codigo = limpio.slice(0, corte).replace(/\D/g, '');
+  const resto = limpio.slice(corte).replace(/\D/g, '');
+  return codigo ? '(' + codigo + ')' + resto : resto;
+}
 
 /* Paleta del sitio, para que hojas y correos se vean de la casa. */
 const C = {
@@ -210,9 +243,14 @@ function maestro_() {
       'Fecha', 'Hora', 'Nº de reserva', 'Nombre', 'Apellido', 'Email', 'Teléfono',
       'Casa', 'Fecha de ingreso', 'Idioma', 'Origen', 'Pedido #', 'ID de envío', 'Archivo',
     ]);
-    encabezado_(ss.insertSheet(CONFIG.TAB_SOLICITUDES), [
+    const sol = ss.insertSheet(CONFIG.TAB_SOLICITUDES);
+    encabezado_(sol, [
       'Fecha', 'Hora', 'Casa', 'Nombre', 'Teléfono', 'Categoría', 'Mensaje', 'ID de envío',
     ]);
+    /* Texto plano: ninguna forma de escribir un teléfono debe poder convertirse en
+     * fórmula ni en número. */
+    primera.getRange('G:G').setNumberFormat('@');
+    sol.getRange('E:E').setNumberFormat('@');
     return ss.getId();
   }, false);
   return SpreadsheetApp.openById(id);
@@ -263,9 +301,9 @@ function procesarPedido_(p) {
   const url = ss.getUrl();
   maestro_().getSheetByName(CONFIG.TAB_CHECKOUTS).appendRow([
     fecha_(ahora), hora_(ahora), g.reservationNumber,
-    g.firstName, g.lastName, g.email || '', g.phone, casaLegible_(g.casa),
+    g.firstName, g.lastName, g.email || '', telefono_(g.phone), casaLegible_(g.casa),
     g.checkInDate || '', p.locale === 'es' ? 'Español' : 'Inglés',
-    p.source === 'kiosk' ? 'Kiosko' : 'Sitio web',
+    origen_(p),
     numeroPedido, p.submissionId, url,
   ]);
 
@@ -333,11 +371,11 @@ function escribirPestanaPedido_(ss, p, numero, ahora) {
   fila('DATOS DEL HUÉSPED', '', '', '', '', 'seccion');
   fila('Nº de reserva', g.reservationNumber, '', '', '', 'dato');
   fila('Huésped', g.firstName + ' ' + g.lastName, '', '', '', 'dato');
-  fila('Teléfono', g.phone, '', '', '', 'dato');
+  fila('Teléfono', telefono_(g.phone), '', '', '', 'dato');
   fila('Email', g.email || '—', '', '', '', 'dato');
   fila('Casa', casaLegible_(g.casa), '', '', '', 'dato');
   fila('Fecha de ingreso', g.checkInDate || '—', '', '', '', 'dato');
-  fila('Origen', p.source === 'kiosk' ? 'Kiosko (tablet)' : 'Sitio web', '', '', '', 'dato');
+  fila('Origen', origen_(p), '', '', '', 'dato');
   fila('Idioma del huésped', p.locale === 'es' ? 'Español' : 'Inglés', '', '', '', 'dato');
   if (p.notes) fila('Notas generales', p.notes, '', '', '', 'dato');
   fila('');
@@ -456,7 +494,7 @@ function procesarSolicitud_(p) {
   const ahora = new Date();
   const g = p.guest;
   maestro_().getSheetByName(CONFIG.TAB_SOLICITUDES).appendRow([
-    fecha_(ahora), hora_(ahora), casaLegible_(g.casa), g.name, g.phone || '',
+    fecha_(ahora), hora_(ahora), casaLegible_(g.casa), g.name, telefono_(g.phone) || '',
     CATEGORIAS[p.request.category] || p.request.category,
     p.request.message || '', p.submissionId,
   ]);
@@ -474,17 +512,17 @@ function mailConcierge_(p, numero, url) {
   const g = p.guest;
   let cuerpo = dato_('Nº de reserva', g.reservationNumber)
     + dato_('Huésped', g.firstName + ' ' + g.lastName)
-    + dato_('Teléfono', g.phone);
+    + dato_('Teléfono', telefono_(g.phone));
   if (g.email) cuerpo += dato_('Email', g.email);
   cuerpo += dato_('Casa', casaLegible_(g.casa));
   if (g.checkInDate) cuerpo += dato_('Fecha de ingreso', g.checkInDate);
-  cuerpo += dato_('Origen', p.source === 'kiosk' ? 'Kiosko (tablet)' : 'Sitio web');
+  cuerpo += dato_('Origen', origen_(p));
   if (p.notes) cuerpo += bloque_('Notas generales', p.notes);
 
   const porServicio = agrupar_(p.cart);
   for (const sid in porServicio) {
-    cuerpo += '<h3 style="margin:22px 0 8px;font-size:15px;color:' + C.VERDE + '">'
-      + esc_(etiquetaServicio_(sid)) + '</h3><table style="width:100%;border-collapse:collapse">';
+    cuerpo += tituloServicio_(etiquetaServicio_(sid))
+      + '<table role="presentation" style="width:100%;border-collapse:collapse">';
     porServicio[sid].forEach(function (l) {
       const det = detalle_(l);
       cuerpo += '<tr><td style="padding:7px 0;border-bottom:1px solid #eee;font-size:13px">'
@@ -570,7 +608,7 @@ function mailSolicitud_(p, ahora) {
   const cat = CATEGORIAS[p.request.category] || p.request.category;
   let cuerpo = dato_('Casa', casaLegible_(g.casa))
     + dato_('Huésped', g.name)
-    + dato_('Teléfono', g.phone || '—')
+    + dato_('Teléfono', telefono_(g.phone) || '—')
     + dato_('Categoría', cat);
   if (p.request.message) cuerpo += bloque_('Mensaje', p.request.message);
   cuerpo += '<p style="margin:18px 0 0;font-size:12px;color:' + C.GRIS
@@ -583,24 +621,100 @@ function mailSolicitud_(p, ahora) {
   });
 }
 
+/*
+ * El marco de todos los correos. Replica el lenguaje visual del Welcome: fondo
+ * hueso, tarjeta blanca, verde bosque para los títulos y el detalle en oro.
+ *
+ * Restricciones de correo que explican por qué está escrito así:
+ *   - Todo en estilos inline. Gmail descarta <style> en el <head>.
+ *   - Maquetado con <table>, no flex ni grid. Outlook usa el motor de Word.
+ *   - El logo es PNG en una URL pública; los clientes no renderizan SVG, que es lo
+ *     que usa el navbar del sitio.
+ *   - Serif con pila de respaldo: GT Alpina no existe en el correo, pero Georgia
+ *     conserva el aire editorial del sitio.
+ */
 function shell_(eyebrow, titulo, inner) {
-  return '<div style="font-family:Arial,Helvetica,sans-serif;color:' + C.TINTA + ';max-width:640px">'
-    + '<p style="color:' + C.GRIS + ';font-size:11px;letter-spacing:.09em;text-transform:uppercase;margin:0 0 4px">'
-    + esc_(eyebrow) + '</p>'
-    + '<h2 style="margin:0 0 18px;font-size:21px;color:' + C.VERDE + '">' + esc_(titulo) + '</h2>'
-    + inner + '</div>';
+  const serif = "Georgia,'Times New Roman',serif";
+  const sans = "'Helvetica Neue',Helvetica,Arial,sans-serif";
+
+  return ''
+    + '<div style="margin:0;padding:0;background:' + C.HUESO + '">'
+    + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" '
+    +   'style="background:' + C.HUESO + ';padding:28px 12px">'
+    + '<tr><td align="center">'
+
+    /* Tarjeta */
+    + '<table role="presentation" width="600" cellpadding="0" cellspacing="0" '
+    +   'style="width:600px;max-width:100%;background:#FFFFFF;border-radius:16px;overflow:hidden">'
+
+    /* Logo */
+    + '<tr><td align="center" style="padding:30px 32px 22px">'
+    +   '<img src="' + CONFIG.LOGO_URL + '" width="190" alt="Arbórea Experiences" '
+    +     'style="display:block;width:190px;max-width:60%;height:auto;border:0">'
+    + '</td></tr>'
+
+    /* Filete dorado */
+    + '<tr><td style="padding:0 32px">'
+    +   '<div style="height:1px;background:' + C.ORO + ';opacity:.45"></div>'
+    + '</td></tr>'
+
+    /* Encabezado */
+    + '<tr><td style="padding:24px 32px 0">'
+    +   '<p style="margin:0 0 6px;font-family:' + sans + ';font-size:11px;'
+    +     'letter-spacing:.14em;text-transform:uppercase;color:' + C.GRIS + '">'
+    +     esc_(eyebrow) + '</p>'
+    +   '<h1 style="margin:0;font-family:' + serif + ';font-size:26px;line-height:1.25;'
+    +     'font-weight:normal;color:' + C.VERDE + '">' + esc_(titulo) + '</h1>'
+    + '</td></tr>'
+
+    /* Cuerpo */
+    + '<tr><td style="padding:20px 32px 30px;font-family:' + sans + ';color:' + C.TINTA + '">'
+    +   inner
+    + '</td></tr>'
+
+    /* Pie */
+    + '<tr><td style="padding:20px 32px 26px;background:' + C.VERDE + '">'
+    +   '<p style="margin:0 0 4px;font-family:' + serif + ';font-size:15px;color:' + C.SAGE + '">'
+    +     'Arbórea Experiences</p>'
+    +   '<p style="margin:0;font-family:' + sans + ';font-size:12px;line-height:1.6;'
+    +     'color:' + C.SAGE + ';opacity:.72">'
+    +     'Península de Osa, Costa Rica<br>'
+    +     '<a href="mailto:' + CONFIG.CONCIERGE_EMAILS[0] + '" style="color:' + C.SAGE + '">'
+    +     CONFIG.CONCIERGE_EMAILS[0] + '</a></p>'
+    + '</td></tr>'
+
+    + '</table></td></tr></table></div>';
 }
 
+/* Una fila etiqueta/valor. Tabla y no flex: Outlook. */
 function dato_(label, valor) {
-  return '<p style="margin:0 0 5px;font-size:13px"><span style="color:' + C.GRIS + '">'
-    + esc_(label) + ':</span> <strong>' + esc_(valor) + '</strong></p>';
+  return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0">'
+    + '<tr>'
+    + '<td width="150" style="padding:5px 0;font-size:12px;color:' + C.GRIS + ';'
+    +   'vertical-align:top;letter-spacing:.02em">' + esc_(label) + '</td>'
+    + '<td style="padding:5px 0;font-size:14px;color:' + C.TINTA + ';font-weight:bold">'
+    +   esc_(valor) + '</td>'
+    + '</tr></table>';
 }
 
+/* Un bloque de texto largo — notas, mensajes. */
 function bloque_(label, texto) {
-  return '<div style="margin:14px 0 0;padding:11px 13px;background:#F6F5F0;border-radius:8px">'
-    + '<p style="margin:0 0 4px;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:'
-    + C.GRIS + '">' + esc_(label) + '</p><p style="margin:0;font-size:13px;line-height:1.55">'
-    + esc_(texto).replace(/\n/g, '<br>') + '</p></div>';
+  return '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" '
+    +   'style="margin:16px 0 0">'
+    + '<tr><td style="padding:13px 15px;background:#F7F5F0;border-left:3px solid ' + C.ORO + ';'
+    +   'border-radius:0 8px 8px 0">'
+    + '<p style="margin:0 0 5px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;'
+    +   'color:' + C.GRIS + '">' + esc_(label) + '</p>'
+    + '<p style="margin:0;font-size:14px;line-height:1.6;color:' + C.TINTA + '">'
+    +   esc_(texto).replace(/\n/g, '<br>') + '</p>'
+    + '</td></tr></table>';
+}
+
+/* Encabezado de un servicio dentro del resumen. */
+function tituloServicio_(texto) {
+  return '<p style="margin:26px 0 6px;font-family:Georgia,serif;font-size:17px;'
+    + 'color:' + C.VERDE + '">' + esc_(texto) + '</p>'
+    + '<div style="height:1px;background:' + C.VERDE + ';opacity:.14;margin:0 0 4px"></div>';
 }
 
 /* ───────────────── Formateo de datos ───────────────── */

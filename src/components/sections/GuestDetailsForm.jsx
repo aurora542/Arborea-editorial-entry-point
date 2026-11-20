@@ -6,6 +6,7 @@ import { TbAlertCircle, TbSend, TbLoader2 } from "react-icons/tb";
 import { useI18n } from "@/app/context/I18nContext";
 import { properties } from "@/data/properties";
 import { RESERVATION_RE } from "@/lib/orderPayload";
+import { COUNTRY_CODES, DEFAULT_COUNTRY_CODE, composePhone } from "@/data/countryCodes";
 import DateField from "@/components/ui/DateField";
 
 /*
@@ -25,9 +26,10 @@ import DateField from "@/components/ui/DateField";
  * anyway, which is the real test. */
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 
-/* Digits, spaces, dashes, parens and an optional leading +, at least 8 digits. Loose
- * on purpose: guests arrive with numbers from a dozen countries. */
-const PHONE_RE = /^\+?[\d\s().-]{8,}$/;
+/* Solo la parte local: el código de país va en su propio select. Entre 6 y 15
+ * dígitos cubre desde un número tico de 8 hasta los más largos del mundo. Se
+ * permiten espacios y guiones al escribir; se limpian al componer. */
+const PHONE_RE = /^[\d\s().-]{6,20}$/;
 
 export default function GuestDetailsForm({ onSubmit, submitting }) {
   const { t } = useI18n();
@@ -54,7 +56,8 @@ export default function GuestDetailsForm({ onSubmit, submitting }) {
       firstName: "",
       lastName: "",
       email: "",
-      phone: "",
+      phoneCountry: DEFAULT_COUNTRY_CODE,
+      phoneNumber: "",
       casa: "",
       checkInDate: "",
       notes: "",
@@ -67,9 +70,17 @@ export default function GuestDetailsForm({ onSubmit, submitting }) {
 
   const required = { required: t("checkout.form.required") };
 
+  /* El formulario entrega `phone` ya compuesto: el resto de la app (y el contrato
+   * del payload) sigue viendo un solo campo de teléfono. El select de país es
+   * detalle de esta UI, no del contrato. */
+  const submit = (values) => {
+    const { phoneCountry, phoneNumber, ...resto } = values;
+    onSubmit({ ...resto, phone: composePhone(phoneCountry, phoneNumber) });
+  };
+
   return (
     <form
-      onSubmit={handleSubmit(onSubmit)}
+      onSubmit={handleSubmit(submit)}
       noValidate
       className="rounded-2xl bg-white/60 border border-[#222E2C]/8 px-5 py-5 flex flex-col gap-5"
     >
@@ -150,17 +161,31 @@ export default function GuestDetailsForm({ onSubmit, submitting }) {
           />
         </Field>
 
-        <Field label={t("checkout.form.phone.label")} error={errors.phone?.message}>
-          <input
-            type="tel"
-            autoComplete="tel"
-            placeholder={t("checkout.form.phone.placeholder")}
-            className={inputClass(errors.phone)}
-            {...register("phone", {
-              ...required,
-              pattern: { value: PHONE_RE, message: t("checkout.form.invalidPhone") },
-            })}
-          />
+        <Field label={t("checkout.form.phone.label")} error={errors.phoneNumber?.message}>
+          <div className="flex gap-2">
+            <select
+              aria-label={t("checkout.form.phone.countryLabel")}
+              className={`${inputClass(null)} w-28 shrink-0 px-2`}
+              {...register("phoneCountry")}
+            >
+              {COUNTRY_CODES.map((c) => (
+                <option key={c.code} value={c.code}>
+                  {c.flag} +{c.code}
+                </option>
+              ))}
+            </select>
+            <input
+              type="tel"
+              autoComplete="tel-national"
+              inputMode="numeric"
+              placeholder={t("checkout.form.phone.placeholder")}
+              className={inputClass(errors.phoneNumber)}
+              {...register("phoneNumber", {
+                ...required,
+                pattern: { value: PHONE_RE, message: t("checkout.form.invalidPhone") },
+              })}
+            />
+          </div>
         </Field>
 
         <Field label={t("checkout.form.casa.label")} error={errors.casa?.message}>
