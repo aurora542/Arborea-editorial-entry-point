@@ -8,7 +8,7 @@
  *   WelcomeOrders/                     ← creada a mano, es el FOLDER_ID
  *   ├── Registro de Checkouts          ← una fila por checkout, solicitudes y dedupe
  *   └── Pedidos/
- *         └── SB-10432 — Rodríguez — Casa Mango
+ *         └── 23546 — Rodríguez — Casa Mango
  *               ├── Pedido 1 · 2026-11-20   ← cabecera + detalle completo
  *               ├── Pedido 2 · 2026-11-24   ← pestaña nueva, misma reserva
  *               ├── Consolidado             ← se reescribe en cada pedido
@@ -122,11 +122,19 @@ function doPost(e) {
   }
 }
 
+/* Simple Booking: exactamente cinco dígitos ("23546"), confirmado 2026-11-20.
+ * El formulario ya valida esto; aquí se vuelve a validar porque el endpoint es
+ * público y el kiosko podría llegar por otro camino. */
+const RESERVA_RE = /^[0-9]{5}$/;
+
 function validarPedido_(p) {
   const g = p.guest || {};
   /* Los cinco obligatorios del formulario. `email` y `checkInDate` son opcionales
    * por decisión de producto, así que NO se validan. */
   if (!g.reservationNumber) return 'guest.reservationNumber';
+  if (!RESERVA_RE.test(String(g.reservationNumber))) {
+    return 'guest.reservationNumber con formato inválido (esperado: 5 dígitos)';
+  }
   if (!g.firstName) return 'guest.firstName';
   if (!g.lastName) return 'guest.lastName';
   if (!g.phone) return 'guest.phone';
@@ -281,7 +289,9 @@ function archivoDeReserva_(p) {
   const nombre = g.reservationNumber + ' — ' + g.lastName + ' — ' + casaLegible_(g.casa);
   const carpeta = carpetaPedidos_();
 
-  /* La clave de caché lleva el número de reserva: una entrada por reserva. */
+  /* La clave de caché lleva el número de reserva. Son cinco dígitos y ya vienen
+   * canonicalizados desde el payload, así que el número ES la llave: no hace falta
+   * una llave normalizada aparte. */
   const id = buscarOCrear_('RESERVA_' + g.reservationNumber, carpeta, nombre, function () {
     const ss = SpreadsheetApp.create(nombre);
     DriveApp.getFileById(ss.getId()).moveTo(carpeta);
@@ -694,7 +704,7 @@ function generarPedidoDePrueba() {
     createdAt: new Date().toISOString(),
     locale: 'es', source: 'web', currency: 'USD',
     guest: {
-      reservationNumber: 'SB-PRUEBA-1',
+      reservationNumber: '99001',  /* 5 dígitos, como los reales */
       firstName: 'Ana', lastName: 'Rodríguez',
       email: '', phone: '+506 8888 8888',
       casa: 'casa-mango', checkInDate: '2026-12-02',

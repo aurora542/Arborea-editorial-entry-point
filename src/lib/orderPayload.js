@@ -13,19 +13,27 @@ import { SERVICE_ORDER } from "@/data/services";
 export const SCHEMA_VERSION = 2;
 export const CURRENCY = "USD";
 
+/* Simple Booking reservation numbers are exactly five digits ("23546"), confirmed
+ * 2026-11-20. The form validates against this and the Apps Script checks it again. */
+export const RESERVATION_RE = /^\d{5}$/;
+
 /*
  * The reservation number is the key the backend groups by: it names the guest's
  * spreadsheet and decides whether a second checkout joins the first one or starts a
- * new file. Because the guest types it, it has to be normalised — but only
- * conservatively.
+ * new file. Because the guest types it, it is canonicalised to digits only.
  *
- * Case and stray whitespace are noise and get removed. Dashes and slashes are NOT:
- * "SB-10432" reads better than "SB10432" in a filename and in the concierge's index,
- * and we do not yet know Simple Booking's format, so stripping separators could
- * collide two genuinely different numbers.
+ * While the format was unknown the plan called for two fields — the raw string for
+ * display plus an aggressively-stripped key for lookup — because "SB-10432" and
+ * "SB10432" had to resolve to the same file. A five-digit format collapses that: the
+ * canonical value IS the key, so one field does both jobs and there is no second
+ * thing to keep in sync.
+ *
+ * Stripping non-digits is defence, not interpretation. The form already rejects
+ * anything that is not five digits; this catches a pasted " 23546 " and anything
+ * arriving from a surface that skips the form.
  */
 export function normalizeReservationNumber(raw) {
-  return String(raw ?? "").trim().replace(/\s+/g, " ").toUpperCase();
+  return String(raw ?? "").replace(/\D/g, "");
 }
 
 const serviceRank = (id) => {

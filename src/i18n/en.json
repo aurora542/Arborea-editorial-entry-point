@@ -1745,7 +1745,7 @@
     "baths": "Baths",
     "addService": "Add service",
     "added": "Added",
-    "email": "info@arboreaexperiences.com",
+    "email": "concierge@arboreaexperiences.com",
     "website": "arboreaexperiences.com"
   },
   "orderForm": {
@@ -2538,8 +2538,9 @@
       "description": "We need these to confirm your order and match it to your stay. Nothing is charged here.",
       "reservationNumber": {
         "label": "Reservation number",
-        "placeholder": "e.g. SB-10432",
-        "hint": "From your booking confirmation. It links everything you order during your stay."
+        "placeholder": "23546",
+        "hint": "The 5-digit number from your booking confirmation. It links everything you order during your stay.",
+        "invalid": "The reservation number is 5 digits"
       },
       "firstName": {
         "label": "First name",

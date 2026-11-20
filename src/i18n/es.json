@@ -1817,7 +1817,7 @@
     "baths": "Baños",
     "addService": "Agregar servicio",
     "added": "Agregado",
-    "email": "info@arboreaexperiences.com",
+    "email": "concierge@arboreaexperiences.com",
     "website": "arboreaexperiences.com"
   },
   "orderForm": {
@@ -2538,8 +2538,9 @@
       "description": "Los necesitamos para confirmar tu pedido y asociarlo a tu estadía. Aquí no se cobra nada.",
       "reservationNumber": {
         "label": "Número de reserva",
-        "placeholder": "ej. SB-10432",
-        "hint": "El de tu confirmación de reserva. Vincula todo lo que pidas durante tu estadía."
+        "placeholder": "23546",
+        "hint": "El número de 5 dígitos de tu confirmación de reserva. Vincula todo lo que pidas durante tu estadía.",
+        "invalid": "El número de reserva son 5 dígitos"
       },
       "firstName": {
         "label": "Nombre",

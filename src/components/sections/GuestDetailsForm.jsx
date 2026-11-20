@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { TbAlertCircle, TbSend, TbLoader2 } from "react-icons/tb";
 import { useI18n } from "@/app/context/I18nContext";
 import { properties } from "@/data/properties";
+import { RESERVATION_RE } from "@/lib/orderPayload";
 import DateField from "@/components/ui/DateField";
 
 /*
@@ -16,10 +17,9 @@ import DateField from "@/components/ui/DateField";
  * from the project (no zod/yup installed), so do not reach for a resolver here.
  */
 
-/* Deliberately permissive. Simple Booking's reservation-number format is not
- * confirmed yet, so anything non-empty passes and the real pattern lands later as a
- * one-line change. Over-validating now would reject valid numbers. */
-const RESERVATION_MIN = 3;
+/* Simple Booking reservation numbers are exactly five digits ("23546"), confirmed
+ * with the client on 2026-11-20. Imported rather than redeclared so the form and the
+ * payload builder cannot drift apart on what a valid number is. */
 
 /* Good enough to catch typos, not an RFC validator — the backend emails the guest
  * anyway, which is the real test. */
@@ -93,12 +93,22 @@ export default function GuestDetailsForm({ onSubmit, submitting }) {
           type="text"
           autoComplete="off"
           spellCheck={false}
+          /* Numeric keypad on phones, where most guests will be typing this. Not
+           * type="number": that brings spinners, allows "e" and strips leading
+           * zeros, and a reservation number is a label, not a quantity. */
+          inputMode="numeric"
+          maxLength={5}
           placeholder={t("checkout.form.reservationNumber.placeholder")}
           className={inputClass(errors.reservationNumber)}
           {...register("reservationNumber", {
             ...required,
-            minLength: { value: RESERVATION_MIN, message: t("checkout.form.required") },
-            setValueAs: (v) => String(v ?? "").trim(),
+            pattern: {
+              value: RESERVATION_RE,
+              message: t("checkout.form.reservationNumber.invalid"),
+            },
+            /* Digits only before validating, so a pasted " 23546 " passes instead of
+             * failing on whitespace the guest cannot see. */
+            setValueAs: (v) => String(v ?? "").replace(/\D/g, ""),
           })}
         />
       </Field>

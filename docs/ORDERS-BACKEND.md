@@ -106,7 +106,7 @@ a cambiar.
   "currency":     "USD",
 
   "guest": {                      // 7 campos SIEMPRE presentes; 5 obligatorios
-    "reservationNumber": "SB-10432",   // req · Simple Booking · LA llave de agrupación
+    "reservationNumber": "23546",      // req · Simple Booking · 5 dígitos · LA llave
     "firstName":   "Ana",              // req
     "lastName":    "Rodríguez",        // req
     "phone":       "+506 8888 8888",   // req
@@ -206,12 +206,12 @@ WelcomeOrders/                       ← creada a mano, una vez (paso 4)
 │     SIN el contenido del pedido.
 │
 └── Pedidos/                         ← creada una vez
-      ├── SB-10432 — Rodríguez — Casa Mango    ← una por reserva
+      ├── 23546 — Rodríguez — Casa Mango    ← una por reserva
       │     ├── Pedido 1 · 2026-11-19   ← cabecera + detalle completo
       │     ├── Pedido 2 · 2026-11-24   ← pestaña nueva, misma reserva
       │     ├── Consolidado            ← se reescribe en cada checkout
       │     └── Payload (oculta)       ← JSON crudo de cada pedido
-      └── SB-10988 — Pérez — Casa Ceiba
+      └── 23701 — Pérez — Casa Ceiba
             └── Pedido 1 · 2026-11-20
 ```
 
@@ -464,9 +464,13 @@ La URL `/exec` se mantiene estable al publicar versiones nuevas **del mismo
 despliegue**. Crear un despliegue nuevo en vez de una versión nueva genera otra URL y
 deja el sitio apuntando a código viejo — ver la advertencia de §Errores.
 
-En Vercel va como variable de entorno (`APPS_SCRIPT_URL`), leída solo desde el route
-handler. Nunca en código de cliente ni en un `NEXT_PUBLIC_*`: el navegador no debe
-conocer ni la URL ni el secreto.
+En Vercel va como variable de entorno **`ORDERS_BACKEND_URL`**, leída solo desde el
+route handler. Nunca en código de cliente ni en un `NEXT_PUBLIC_*`: el navegador no
+debe conocer ni la URL ni el secreto.
+
+> Este documento la llamó `APPS_SCRIPT_URL` cuando se planeó el paso 4. El nombre
+> implementado es `ORDERS_BACKEND_URL`, que hace par con `ORDERS_SHARED_SECRET`.
+> Son dos variables de un mismo mecanismo y conviene que se llamen igual.
 
 #### Número de reserva — resuelto (2026-11-19)
 
@@ -483,7 +487,7 @@ campos distintos y mezclarlos es el error a evitar:
 - `reservationNumber` — tal como lo escribió el huésped. Es lo que se muestra en el
   nombre del archivo, en el maestro y en el correo.
 - una **llave normalizada** derivada de él — mayúsculas, sin espacios ni guiones ni
-  puntuación (`SB-10432`, `sb 10432` y `SB10432` → `SB10432`). Es contra esta llave
+  puntuación (`23546`, `sb 10432` y `SB10432` → `SB10432`). Es contra esta llave
   que se busca el archivo existente de la reserva.
 
 Sin API esto es lo único que separa "dos pedidos de la misma reserva" de "dos
@@ -1051,3 +1055,28 @@ Las APIs usadas caen todas dentro de los scopes que el stub del paso 4 ya autori
 
 **Pendiente:** pegar el código en el proyecto de Apps Script, poner el
 `SHARED_SECRET`, hacer **implementación nueva**, y las dos variables en Vercel.
+
+### 2026-11-20 — formato del número de reserva y correo de cara al huésped
+
+- **El número de reserva son 5 dígitos** (`23546`), confirmado con el cliente. Cierra
+  la pregunta que quedó abierta en el paso 4.
+  - `RESERVATION_RE = /^\d{5}$/` se exporta desde `orderPayload.js` y la importa el
+    formulario, para que las dos capas no puedan discrepar sobre qué es válido.
+  - El campo usa `inputMode="numeric"` (teclado numérico en móvil, que es donde se
+    va a escribir) y `maxLength={5}`. **No** `type="number"`: trae flechas, acepta
+    "e" y come ceros a la izquierda — un número de reserva es una etiqueta, no una
+    cantidad.
+  - `Code.gs` lo valida otra vez: el endpoint es público.
+- **La llave normalizada aparte desaparece.** El plan del paso 4 pedía dos campos —
+  el número tal como se escribió más una llave agresivamente despojada— porque el
+  formato era desconocido y `SB-10432` y `SB10432` tenían que resolver al mismo
+  archivo. Con cinco dígitos el valor canónico **es** la llave: un solo campo hace
+  los dos trabajos y no hay un segundo valor que mantener sincronizado.
+  `normalizeReservationNumber` ahora solo deja dígitos, como defensa ante un
+  `" 23546 "` pegado.
+- **`common.email` pasa de `info@` a `concierge@`** en ambos locales. Es el contacto
+  de cara al huésped que muestra el footer, y en este proyecto la cara visible es
+  concierge.
+- Verificado contra el Web App real: el route handler alcanza Apps Script, y con el
+  stub todavía desplegado responde `upstream-not-json-200` — que es el camino de
+  error funcionando, no un fallo de plomería.
