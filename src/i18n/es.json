@@ -2647,17 +2647,8 @@
     }
   },
   "guestForm": {
-    "firstName": "Nombre",
-    "lastName": "Apellido",
     "name": "Nombre",
-    "email": "Correo",
-    "phone": "Teléfono",
     "whatsappOptional": "WhatsApp (opcional)",
-    "whatsappHint": "Para responderte en tu teléfono.",
-    "casa": "Casa",
-    "casaPlaceholder": "Elegí tu casa",
-    "notes": "Notas",
-    "required": "Obligatorio",
-    "emailInvalid": "Ingresá un correo válido"
+    "required": "Obligatorio"
   }
 }
