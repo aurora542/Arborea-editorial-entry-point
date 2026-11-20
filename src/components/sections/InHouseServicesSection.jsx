@@ -20,7 +20,7 @@ function ServiceCard({ category, title, description, image, href, cta, palette }
     <div className="rounded-2xl overflow-hidden flex flex-col h-full transition-opacity duration-200 hover:opacity-95" style={{ backgroundColor: palette.bg }}>
       <div className="h-72 flex items-center justify-center shrink-0 overflow-hidden" style={{ backgroundColor: "rgba(0,0,0,0.08)" }}>
         {image ? (
-          <img src={image} alt={title} className="w-full h-full object-cover" />
+          <img src={image} alt={title} className="w-full h-full object-cover" loading="lazy" decoding="async" />
         ) : (
           <TbPhoto size={26} style={{ color: fgMuted }} />
         )}

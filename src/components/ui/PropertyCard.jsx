@@ -53,6 +53,11 @@ export default function PropertyCard({
             key={i}
             src={src}
             alt={`${name} ${i + 1}`}
+            // First image of each card is in the Hero carousel (above the fold);
+            // the rest only show on cycle/hover, so lazy-load them.
+            {...(i === 0
+              ? { decoding: "async", fetchPriority: "high" }
+              : { loading: "lazy", decoding: "async" })}
             className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-700 rounded-xl ${
               i === current ? "opacity-100" : "opacity-0"
             }`}

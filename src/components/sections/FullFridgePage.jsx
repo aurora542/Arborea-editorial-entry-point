@@ -412,7 +412,7 @@ export default function FullFridgePage() {
               </p>
             </div>
             <div className="h-56 lg:h-full order-1 lg:order-2 overflow-hidden">
-              <img src="/assets/InHouseServices/fullfridge.avif" alt={t("fullFridge.concept.heading")} className="w-full h-full object-cover" />
+              <img src="/assets/InHouseServices/FullFridge.avif" alt={t("fullFridge.concept.heading")} className="w-full h-full object-cover" loading="lazy" decoding="async" />
             </div>
           </div>
 
@@ -556,6 +556,8 @@ export default function FullFridgePage() {
                         src={CATEGORY_IMAGES[i]}
                         alt={cat.title}
                         className="w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent" />
                       <div className="absolute bottom-0 left-0 right-0 px-4 py-3 flex items-end justify-between gap-2">
@@ -787,7 +789,7 @@ export default function FullFridgePage() {
           <div className="flex flex-col items-center text-center gap-5 py-8" data-aos="fade-up">
             <div className="w-10 h-px bg-[#222E2C]/25" />
             <blockquote className="text-2xl md:text-3xl text-[#213B2F]/80 leading-relaxed max-w-2xl italic" style={{ fontFamily: "var(--font-alpina)" }}>
-              "Eating is an agricultural act."
+              &quot;Eating is an agricultural act.&quot;
             </blockquote>
             <p className="font-sans text-sm text-[#222E2C]/45">— Wendell Berry</p>
             <div className="w-10 h-px bg-[#222E2C]/25" />

@@ -85,6 +85,10 @@ export function buildOrderPayload({
   guest = {},
   notes = "",
   locale = "en",
+  /* "web" | "kiosk" — which surface the order came from. A tablet fixed in a house
+   * and a guest on their phone produce the same payload otherwise, but operations
+   * wants to tell them apart in the sheet. Came from the kiosk branch. */
+  source = "web",
   now = new Date(),
 }) {
   const cart = [...lines]
@@ -104,6 +108,7 @@ export function buildOrderPayload({
     submissionId,
     createdAt: now.toISOString(),
     locale,
+    source,
     currency: CURRENCY,
 
     guest: {
@@ -120,5 +125,43 @@ export function buildOrderPayload({
     serviceForms: cleanServiceForms(serviceForms, servicesInCart),
     totals: { itemCount, subtotal, quotePending },
     notes: String(notes ?? "").trim(),
+  };
+}
+
+/*
+ * Quick guest request — kiosk only, from `/solicitudes/`.
+ *
+ * A different thing from an order: no cart, no prices, no reservation number. The
+ * guest taps a category (cleaning, amenities, electricity…) and optionally types a
+ * message. The backend tells it apart from an order by `type`.
+ *
+ * `guest` here is `{ name, phone, casa }` — the tablet knows which house it is in,
+ * and asking someone standing in a hallway for their reservation number to report a
+ * broken light would be absurd. Kept from the kiosk branch as-is.
+ */
+export function buildRequestPayload({
+  submissionId,
+  category,
+  message = "",
+  guest = {},
+  locale = "en",
+  now = new Date(),
+}) {
+  return {
+    schemaVersion: SCHEMA_VERSION,
+    type: "request",
+    source: "kiosk",
+    submissionId,
+    createdAt: now.toISOString(),
+    locale,
+    guest: {
+      name:  String(guest.name ?? "").trim(),
+      phone: String(guest.phone ?? "").trim(),
+      casa:  String(guest.casa ?? "").trim(),
+    },
+    request: {
+      category: String(category ?? "").trim(),
+      message: String(message ?? "").trim(),
+    },
   };
 }

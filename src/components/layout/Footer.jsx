@@ -92,7 +92,7 @@ export default function Footer() {
           <p className="text-white/60 uppercase text-[10px] text-center p-1 hover:text-white/80 transition-colors">
             Made by Aurigital
           </p>
-          <img src="/assets/isotipo.avif" alt="Aurigital" className="h-[18px] w-[18px] ml-1" />
+          <img src="/assets/isotipo.avif" alt="Aurigital" className="h-[18px] w-[18px] ml-1" loading="lazy" decoding="async" />
         </a>
       </div>
     </footer>
