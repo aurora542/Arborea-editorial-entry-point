@@ -6,7 +6,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ```bash
 npm run dev      # dev server
-npm run build    # static export -> out/
+npm run build    # next build (Vercel; ya NO es static export)
 npm run lint     # eslint . (flat config; Next 16 removed `next lint`)
 npm run check:assets    # every /assets/... path in src exists with exact casing (Hostinger is case-sensitive)
 npm run images:optimize # cap public/assets at 2000px long edge, same names/paths
@@ -28,16 +28,22 @@ Next.js 16 App Router, React 19, Tailwind 3, JS/JSX for everything except
 
 ## Hard constraints
 
-**`output: "export"` in `next.config.ts` — this is a static site.** No API routes,
-no server actions, no middleware, no `revalidate`, no runtime env vars. Every page
-is prerendered HTML. Anything that needs a backend must be a `fetch` from the
-browser to an external endpoint. `NEXT_PUBLIC_*` values are inlined at build time,
-so they must be set in the build environment, not just locally.
+**Hosted on Vercel with a server.** `output: "export"` was removed on 2026-11-20;
+the site is no longer a static export. One thing changed and one thing did not:
 
-`trailingSlash: true` — routes resolve as `/checkout/`, not `/checkout`.
+- **There is now exactly one server surface:** `app/api/orders/route.ts`. Secrets can
+  live in runtime env vars (`ORDERS_BACKEND_URL`, `ORDERS_SHARED_SECRET`) and never
+  reach the browser. Do not add `NEXT_PUBLIC_` to a secret ever again.
+- **Every page is still a client component** and still prerendered. Nothing is
+  server-rendered that was not before, so the hydration rule below still applies in
+  full. Don't take the server's existence as licence to start fetching in pages.
 
-Because HTML is prerendered, **never read `sessionStorage`/`localStorage` or
-`window` during render** — hydrate in `useEffect` or the prerendered markup and the
+`trailingSlash: true` — routes resolve as `/checkout/`, not `/checkout`. **This hits
+the API route too:** post to `/api/orders/`, or Next answers a 308 to the slashed URL
+and every order pays a wasted round trip.
+
+Because pages are still prerendered, **never read `sessionStorage`/`localStorage`
+or `window` during render** — hydrate in `useEffect` or the prerendered markup and the
 first client render disagree.
 
 ## Architecture
@@ -202,37 +208,43 @@ one-off date inputs, and re-introducing a bespoke one re-opens that inconsistenc
 
 ## Orders backend
 
-**Currently running against a local stub.** `USE_STUB = true` in
-[src/lib/orderApi.js](src/lib/orderApi.js) resolves submits locally after ~900 ms and
-logs the full payload to the console, so the whole flow is demoable before any
-backend exists. Flip it to `false` to post to `/api/orders`.
+**Live path:** browser → `/api/orders/` (route handler) → Apps Script Web App.
+[src/lib/orderApi.js](src/lib/orderApi.js) posts same-origin JSON;
+[src/app/api/orders/route.ts](src/app/api/orders/route.ts) adds the shared secret
+server-side and forwards. The secret never reaches the browser.
 
-Two payload kinds share one transport:
+Two payload kinds share the pipe, both built in
+[src/lib/orderPayload.js](src/lib/orderPayload.js):
 
-- **orders** — `buildOrderPayload()`, the cart checkout, `source: "web" | "kiosk"`
-- **requests** — `buildRequestPayload()`, quick guest requests, kiosk only
-  (`/solicitudes/`), `type: "request"`
+- **orders** — `buildOrderPayload()`, cart checkout, `source: "web" | "kiosk"`
+- **requests** — `buildRequestPayload()`, kiosk quick requests (`/solicitudes/`),
+  `type: "request"`
 
-Both live in [src/lib/orderPayload.js](src/lib/orderPayload.js), which re-applies the
-line whitelist (second gate after `normalizeLine`) and computes `totals`.
+Things about the route handler that are deliberate:
 
-The target architecture is **browser → `/api/orders` route handler → Apps Script**,
-with the shared secret held server-side. That route arrives with the Vercel
-migration; there is no server under `output: "export"` to put a secret in. The
-previous design posted straight to Apps Script with a `NEXT_PUBLIC_*` secret inlined
-in the client bundle and `Content-Type: text/plain` to dodge a CORS preflight — both
-stop being necessary once the request is same-origin, and both are **withdrawn**.
+- `maxDuration = 60`. Apps Script takes ten-plus seconds on a reservation's first
+  order (find-or-create folder, copy spreadsheet, write tabs, send mail). Vercel's
+  default timeout is shorter, which would fail orders intermittently and only for new
+  reservations.
+- `runtime = "nodejs"`. Apps Script answers a POST with a 302 to
+  `script.googleusercontent.com`; following that and reading the body is better-trodden
+  on Node than on Edge.
+- It does **not** re-validate the business shape. Apps Script is the authority and
+  validates again; two copies of the rules means two places to forget.
+- With `ORDERS_BACKEND_URL` unset it mocks in development and returns a loud 503 in
+  production. A silent success would swallow a real order invisibly.
+- Flip `USE_STUB` in `orderApi.js` to work on the checkout UI with no backend at all.
 
-`apps-script/Code.gs` is a **verification stub, not the backend.** The real one is
-step 5 and does not exist yet. Note that `apps-script/_legacy/` holds two superseded
-implementations — v1 (one file per service, pre-cart) and the kiosk branch's v2 (one
-spreadsheet with Orders/Items tabs). Both were written against data models that were
-later replaced by one-file-per-reservation; their email templates, validation and
-dedupe are worth reusing, their Drive model is not.
+`apps-script/Code.gs` is still a **verification stub, not the backend** — the real one
+is step 5. `apps-script/_legacy/` holds two superseded implementations (v1: one file
+per service, pre-cart; v2 from the kiosk branch: one spreadsheet with Orders/Items
+tabs). Both were built against data models later replaced by one-file-per-reservation;
+their email templates, validation and dedupe are worth reusing, their Drive model is
+not.
 
 Read [docs/ORDERS-BACKEND.md](docs/ORDERS-BACKEND.md) before touching anything in the
-order/checkout path — it holds the payload contract, the Drive structure, the
-step-by-step plan, and an explicit list of what not to change.
+order/checkout path — payload contract, Drive structure, the step-by-step plan, and
+an explicit list of what not to change.
 
 ## Kiosk mode (Casa Ceiba tablet)
 
@@ -262,3 +274,13 @@ resetKiosk }`.
   pointer-events lock eats taps after a swipe).
 - `resetKiosk()` clears the cart, resets to the default locale, wipes `arborea.*`
   session keys (keeping the `localStorage` kiosk flag), and navigates home.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

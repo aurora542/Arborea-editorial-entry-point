@@ -7,15 +7,14 @@
  *   - requests — quick guest requests, kiosk only (`/solicitudes/`)
  * The backend tells them apart by shape, so one transport serves both.
  *
- * STATE: running against a local stub (step 2 of docs/ORDERS-BACKEND.md). No Google
- * asset is wired yet, so submits resolve locally after a short delay and log the
- * exact payload. That makes the whole flow demoable and reviewable before any
- * backend exists.
+ * STATE: live against the app's own `/api/orders/` route handler, which holds the
+ * shared secret server-side and forwards to the Apps Script Web App. Flip `USE_STUB`
+ * back to true to work on the UI without a backend — it resolves locally and logs
+ * the exact payload to the console.
  *
- * TO GO LIVE (step 3): set `USE_STUB` to false. The real path posts to this app's own
- * `/api/orders` route handler, which holds the shared secret server-side and forwards
- * to the Apps Script Web App. That route arrives with the Vercel migration, because a
- * static export has no server to put a secret in.
+ * Note the route handler ALSO mocks when `ORDERS_BACKEND_URL` is unset in
+ * development, so `npm run dev` works with no configuration at all. In production an
+ * unset URL is a loud 503, never a silent success — a swallowed order is invisible.
  *
  * Note there is deliberately no `NEXT_PUBLIC_*` secret here any more. The previous
  * version posted straight to Apps Script with the secret inlined in the client bundle
@@ -23,9 +22,12 @@
  * necessary once the request is same-origin.
  */
 
-const USE_STUB = true;
+const USE_STUB = false;
 
-const ENDPOINT = "/api/orders";
+/* Trailing slash on purpose: `trailingSlash: true` in next.config.ts makes Next
+ * answer `/api/orders` with a 308 to `/api/orders/`. A POST survives a 308 with its
+ * body intact, but it pays an extra round trip on every single order. */
+const ENDPOINT = "/api/orders/";
 
 const STUB_DELAY_MS = 900;
 

@@ -27,7 +27,7 @@ coordinar ventanas de deploy.
 | Precios en fuente única (`src/data/pricing.js`) | ✅ |
 | `/checkout/` — formulario del huésped y envío | ✅ (contra stub local) |
 | `src/lib/orderPayload.js` | ✅ |
-| Migración a Vercel | ❌ **paso 3** |
+| Migración a Vercel | ✅ |
 | Carpeta de Drive + proyecto de Apps Script | ❌ **paso 4 (cliente)** |
 | `Code.gs` para el modelo nuevo | ❌ **paso 5** |
 
@@ -408,7 +408,7 @@ Todo en código, **sin depender de ningún activo de Google**.
 puede inspeccionar completo, con varios servicios, notas en los dos niveles y una
 línea `byQuote`.
 
-### Paso 3 — Vercel
+### Paso 3 — Vercel ✅
 - **Código:** quitar `output: "export"` de `next.config.ts`, añadir
   `app/api/orders/route.ts` que valide y reenvíe con el secreto del servidor, y
   apuntar `orderApi.js` a `/api/orders`.
@@ -971,3 +971,47 @@ Dos cosas que esto destapó:
 
 Los campos opcionales se marcan en la UI en vez de marcar los obligatorios: son menos
 y hace menos ruido. Nueva llave `checkout.form.optional` en ambos locales.
+
+### 2026-11-20 — paso 3: Vercel, y el repo cambia de dueño
+
+Infraestructura (hecha por el dueño de producto): repo transferido de la cuenta
+personal de Byron a la organización **aurora542**, y desplegado en el Vercel Pro de
+Aurora — https://arborea-welcome.vercel.app. Sin dominio todavía, así que "producción"
+es de hecho un staging y el trabajo se hizo directo sobre `main`.
+
+Hosting en cuenta de la agencia es decisión de negocio consciente: el cliente paga por
+ello y en el offboarding se mueve todo a cuentas suyas.
+
+Código:
+
+- **`output: "export"` eliminado** de `next.config.ts`. Era lo que hacía imposible
+  guardar un secreto. Todas las páginas siguen siendo client components y siguen
+  prerenderizadas: la única superficie de servidor nueva es la ruta de API. El build
+  lo confirma — `ƒ /api/orders` dinámica, las otras 13 rutas estáticas o SSG.
+- **`src/app/api/orders/route.ts`** — recibe el payload, le agrega el secreto desde
+  env y lo reenvía a Apps Script. Decisiones que no son obvias:
+  - `maxDuration = 60`. Apps Script tarda diez segundos o más en el primer pedido de
+    una reserva (buscar-o-crear carpeta, copiar hoja, escribir pestañas, enviar
+    correo). El timeout por defecto de Vercel es menor, lo que haría fallar pedidos
+    de forma intermitente **y solo para reservas nuevas** — el peor tipo de bug.
+  - `runtime = "nodejs"`. Apps Script responde un POST con un 302 a
+    `script.googleusercontent.com`; seguirlo y leer el cuerpo es terreno más conocido
+    en Node que en Edge.
+  - No revalida la forma de negocio: Apps Script es la autoridad y valida otra vez.
+    Dos copias de las reglas son dos lugares donde olvidarse.
+  - Sin `ORDERS_BACKEND_URL` mockea en desarrollo y devuelve un 503 ruidoso en
+    producción. Un éxito silencioso se tragaría un pedido real sin dejar rastro.
+  - Un `GET` devuelve si el entorno está cableado, sin revelar el secreto.
+- **`orderApi.js`**: `USE_STUB = false` y endpoint `/api/orders/` **con barra final**.
+  `trailingSlash: true` también aplica a las rutas de API: sin la barra, Next responde
+  un 308 y cada pedido paga un viaje extra. Verificado contra el deploy antes de
+  escribirlo.
+- Desaparece el último `NEXT_PUBLIC_*` del camino de pedidos.
+
+Verificado en local: `GET` devuelve el diagnóstico, un POST válido devuelve el mock de
+desarrollo, uno sin `submissionId` devuelve 400, y JSON inválido devuelve 400. `tsc` y
+lint limpios, build con 14 rutas.
+
+**Pendiente para que deje de ser un mock:** las dos variables en Vercel
+(`ORDERS_BACKEND_URL` con la URL `/exec` del Apps Script, `ORDERS_SHARED_SECRET`), y
+el mismo secreto pegado en el `CONFIG` del script.
