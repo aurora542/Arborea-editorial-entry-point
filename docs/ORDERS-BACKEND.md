@@ -29,7 +29,7 @@ coordinar ventanas de deploy.
 | `src/lib/orderPayload.js` | ✅ |
 | Migración a Vercel | ✅ |
 | Carpeta de Drive + proyecto de Apps Script | ❌ **paso 4 (cliente)** |
-| `Code.gs` para el modelo nuevo | ❌ **paso 5** |
+| `Code.gs` para el modelo nuevo | ✅ escrito · falta desplegar |
 
 **El camino de envío existe y corre contra un stub local.** `/checkout/` recoge los
 siete campos del huésped más la nota general, `buildOrderPayload()` arma el payload
@@ -490,7 +490,7 @@ Sin API esto es lo único que separa "dos pedidos de la misma reserva" de "dos
 archivos con medio pedido cada uno". Cuando el formato se defina, se agrega la
 validación encima sin tocar nada de lo anterior.
 
-### Paso 5 — `Code.gs`
+### Paso 5 — `Code.gs` ✅ escrito
 Crear la subcarpeta y el documento maestro si no existen; añadir la fila del
 checkout al maestro; buscar o crear el archivo de la reserva; escribir la pestaña
 `Pedido N` con su formato; reescribir `Consolidado`; guardar el JSON en `Payload`;
@@ -1015,3 +1015,39 @@ lint limpios, build con 14 rutas.
 **Pendiente para que deje de ser un mock:** las dos variables en Vercel
 (`ORDERS_BACKEND_URL` con la URL `/exec` del Apps Script, `ORDERS_SHARED_SECRET`), y
 el mismo secreto pegado en el `CONFIG` del script.
+
+### 2026-11-20 — paso 5: el backend real
+
+`apps-script/Code.gs` reescrito, 760 líneas. Reemplaza el stub de verificación.
+
+- **Buscar-o-crear idempotente** (`buscarOCrear_`): id en `PropertiesService`,
+  **validado contra la papelera** antes de confiar en él, búsqueda por nombre como
+  respaldo, y creación solo si de verdad no existe. Todo dentro del `LockService`,
+  que abarca el buscar-o-crear completo y no solo la escritura.
+- **Dedupe** por `submissionId` sobre las dos pestañas del maestro. Un reintento
+  responde `ok` con `dedup: true` sin escribir nada.
+- **Pestaña por pedido** con formato de boleta: cabecera del huésped, un bloque por
+  servicio con sus ítems y preferencias completas, totales al final, y una celda de
+  **Estado** con desplegable.
+- **`Consolidado`** se reescribe entero en cada pedido, derivado de la pestaña
+  `Payload`. Si se corrompe, se regenera solo al siguiente checkout.
+- **Dos correos por pedido**, como pidió el dueño de producto: resumen completo a
+  concierge (con `replyTo` al huésped cuando dejó correo) y un acuse corto al
+  huésped, en su idioma. El del huésped **no lleva totales** a propósito: los
+  precios son estimados y la cotización final la da operaciones.
+  - El correo del huésped se omite si no dejó email — es opcional desde el cambio
+    de campos obligatorios.
+  - Un fallo de correo **no tumba un pedido ya escrito**: se anota en la respuesta
+    y el pedido queda guardado.
+- **Solicitudes del kiosko** van a la pestaña `Solicitudes` del maestro, con su
+  propio correo a concierge. No crean archivo de reserva: no tienen número de
+  reserva ni carrito.
+- `generarPedidoDePrueba()` y `generarSolicitudDePrueba()` para iterar el formato
+  sin hacer un checkout real. `estado()` diagnostica qué ve el script.
+  `limpiarCache()` para cuando se mueva algo a mano.
+
+Las APIs usadas caen todas dentro de los scopes que el stub del paso 4 ya autorizó
+(Drive + Sheets + Gmail): desplegar no vuelve a pedir permisos.
+
+**Pendiente:** pegar el código en el proyecto de Apps Script, poner el
+`SHARED_SECRET`, hacer **implementación nueva**, y las dos variables en Vercel.
