@@ -7,7 +7,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```bash
 npm run dev      # dev server
 npm run build    # static export -> out/
-npm run lint     # next lint
+npm run lint     # eslint . (flat config; Next 16 removed `next lint`)
+npm run check:assets    # every /assets/... path in src exists with exact casing (Hostinger is case-sensitive)
+npm run images:optimize # cap public/assets at 2000px long edge, same names/paths
 npx tsc --noEmit # typecheck (passes clean; keep it that way)
 ```
 
@@ -77,12 +79,18 @@ Consequences that bite:
 
 ### Cart
 
-> **Partly built.** The context, sku helper, shared primitives, service registry,
-> drawer, floating button and the `/checkout/` review section exist. The six
-> service pages are **not** wired yet — they still use their own local state — and
-> `/checkout/` has no guest form or submit. See the status table in
-> [docs/ORDERS-BACKEND.md](docs/ORDERS-BACKEND.md) before assuming a section below
-> is live.
+> **One cart, for every surface.** `useCart()` from
+> [src/app/context/CartContext.jsx](src/app/context/CartContext.jsx) is the only
+> order state. All six services commit to it — `PrivateChefPage`, `FullFridgePage`,
+> `WellnessSpaPage`, `FishingToursPage`, `MulaRentalSection` and `ActivityCard` —
+> and `/checkout/` is the only place it is reviewed or submitted.
+>
+> The old second system (`useOrderCart` + `OrderCheckoutForm`, a page-local map that
+> never reached `/checkout/`) is **deleted**. If you find a reference to it, it is
+> stale documentation.
+>
+> See the status table in [docs/ORDERS-BACKEND.md](docs/ORDERS-BACKEND.md) for the
+> authoritative per-section state before assuming a flow is fully live.
 
 `LenisProvider` reads `isOpen` from the cart to stop smooth scrolling while the
 drawer is open, and to clear the `pointer-events: none` Lenis puts on `<body>`
@@ -194,8 +202,63 @@ one-off date inputs, and re-introducing a bespoke one re-opens that inconsistenc
 
 ## Orders backend
 
-The order submission path is **built but not connected**. `src/lib/orderApi.js`
-runs against a mock. Read
-[docs/ORDERS-BACKEND.md](docs/ORDERS-BACKEND.md) before touching anything in the
-order/checkout path — it holds the payload contract, the integration steps, and an
-explicit list of what not to change.
+**Currently running against a local stub.** `USE_STUB = true` in
+[src/lib/orderApi.js](src/lib/orderApi.js) resolves submits locally after ~900 ms and
+logs the full payload to the console, so the whole flow is demoable before any
+backend exists. Flip it to `false` to post to `/api/orders`.
+
+Two payload kinds share one transport:
+
+- **orders** — `buildOrderPayload()`, the cart checkout, `source: "web" | "kiosk"`
+- **requests** — `buildRequestPayload()`, quick guest requests, kiosk only
+  (`/solicitudes/`), `type: "request"`
+
+Both live in [src/lib/orderPayload.js](src/lib/orderPayload.js), which re-applies the
+line whitelist (second gate after `normalizeLine`) and computes `totals`.
+
+The target architecture is **browser → `/api/orders` route handler → Apps Script**,
+with the shared secret held server-side. That route arrives with the Vercel
+migration; there is no server under `output: "export"` to put a secret in. The
+previous design posted straight to Apps Script with a `NEXT_PUBLIC_*` secret inlined
+in the client bundle and `Content-Type: text/plain` to dodge a CORS preflight — both
+stop being necessary once the request is same-origin, and both are **withdrawn**.
+
+`apps-script/Code.gs` is a **verification stub, not the backend.** The real one is
+step 5 and does not exist yet. Note that `apps-script/_legacy/` holds two superseded
+implementations — v1 (one file per service, pre-cart) and the kiosk branch's v2 (one
+spreadsheet with Orders/Items tabs). Both were written against data models that were
+later replaced by one-file-per-reservation; their email templates, validation and
+dedupe are worth reusing, their Drive model is not.
+
+Read [docs/ORDERS-BACKEND.md](docs/ORDERS-BACKEND.md) before touching anything in the
+order/checkout path — it holds the payload contract, the Drive structure, the
+step-by-step plan, and an explicit list of what not to change.
+
+## Kiosk mode (Casa Ceiba tablet)
+
+A guest-facing kiosk mode runs **inside the same static build**, for a tablet fixed in
+a house running Fully Kiosk Browser. Activated by URL
+(`/?kiosk=1&casa=<slug>`), persisted in `localStorage` (`arborea.kiosk.v1`), turned
+off by `?kiosk=0`. [src/app/context/KioskContext.jsx](src/app/context/KioskContext.jsx)
+owns it; `useKiosk()` exposes `{ isKiosk, casa, casaSlug, ready, pause, resume,
+resetKiosk }`.
+
+- **`isKiosk` gates everything.** Every kiosk surface is off when false, so without
+  `?kiosk` the public site is byte-for-byte what it was. When adding kiosk behaviour,
+  condition it on `isKiosk`; never change a shared component's default path.
+- **Config is centralized** in [src/lib/kioskConfig.js](src/lib/kioskConfig.js)
+  (`KIOSK_CONFIG`): idle/warning seconds, default locale, front-desk WhatsApp, office
+  hours, request categories. Values still to confirm are marked `// POR CONFIRMAR`.
+  Request category ids must stay aligned with `REQUEST_LABELS` in `Code.gs`.
+- **Reading activation**: parse `window.location.search` in an effect — **not**
+  `useSearchParams` (it needs a Suspense boundary under static export).
+- **Pieces**, all under `src/components/kiosk/`: `KioskBar` (fixed bottom nav),
+  `IdleReset` (180s → clean reset, 15s warning overlay; respects `pause`/`resume` so a
+  send isn't wiped mid-flight), `KioskLinkGuard` + `ExternalLinkModal` (catches
+  `wa.me`/`tel:`/`mailto:`/foreign-origin links and shows a QR instead — this is why
+  the ~8 components holding those links are never edited), `OfflineBanner`,
+  `RequestsPage` (`/solicitudes/`). `SuccessScreen` and `GuestDetailsForm` live under
+  `src/components/checkout/`. `LenisProvider` early-returns in kiosk (its 150ms
+  pointer-events lock eats taps after a swipe).
+- `resetKiosk()` clears the cart, resets to the default locale, wipes `arborea.*`
+  session keys (keeping the `localStorage` kiosk flag), and navigates home.

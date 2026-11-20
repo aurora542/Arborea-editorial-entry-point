@@ -3,9 +3,14 @@ import "./globals.css";
 import { Inter } from "next/font/google";
 import { I18nProvider } from "./context/I18nContext";
 import { CartProvider } from "./context/CartContext";
+import { KioskProvider } from "./context/KioskContext";
 import LenisProvider from "@/components/LenisProvider";
 import CartButton from "@/components/cart/CartButton";
 import CartDrawer from "@/components/cart/CartDrawer";
+import IdleReset from "@/components/kiosk/IdleReset";
+import KioskBar from "@/components/kiosk/KioskBar";
+import KioskLinkGuard from "@/components/kiosk/KioskLinkGuard";
+import OfflineBanner from "@/components/kiosk/OfflineBanner";
 import { GoogleTagManager } from '@next/third-parties/google';
 
 const inter = Inter({
@@ -81,10 +86,16 @@ export default function RootLayout({
         <GoogleTagManager gtmId="GTM-W7KC623M" />
         <I18nProvider>
           <CartProvider>
-            <LenisProvider />
-            {children}
-            <CartButton />
-            <CartDrawer />
+            <KioskProvider>
+              <LenisProvider />
+              {children}
+              <CartButton />
+              <CartDrawer />
+              <KioskBar />
+              <IdleReset />
+              <KioskLinkGuard />
+              <OfflineBanner />
+            </KioskProvider>
           </CartProvider>
         </I18nProvider>
       </body>

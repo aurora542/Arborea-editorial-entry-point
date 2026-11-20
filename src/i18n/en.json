@@ -2585,6 +2585,70 @@
         "retry": "Try again"
       },
       "optional": "(optional)"
+    },
+    "kioskSubtitle": "Check everything over below. Nothing is charged here — we confirm availability and the final quote with you during your stay.",
+    "submit": "Send order",
+    "sending": "Sending…",
+    "retry": "Try again",
+    "error": "Something went wrong. Please try again.",
+    "offline": "No connection — reconnect to send."
+  },
+  "kiosk": {
+    "bar": {
+      "back": "Back",
+      "home": "Home",
+      "requests": "Request",
+      "yourHome": "Your house"
+    },
+    "idle": {
+      "title": "Still there?",
+      "subtitle": "Returning to the start in {seconds} seconds.",
+      "stay": "Stay here"
+    },
+    "externalModal": {
+      "title": "Open this on your phone",
+      "whatsappTitle": "Open this chat on your phone",
+      "telTitle": "Call from your phone",
+      "scanHint": "Scan with your phone's camera.",
+      "close": "Close"
+    },
+    "offline": {
+      "banner": "No connection — retrying…"
+    },
+    "requests": {
+      "title": "What do you need?",
+      "hours": "Open every day, {start} to {end}.",
+      "notKiosk": "This section is available on your house's tablet.",
+      "detailLabel": "Tell us a bit more (optional)",
+      "messageLabel": "Your message",
+      "send": "Send request",
+      "waTitle": "Prefer to message us on WhatsApp?",
+      "waHint": "Scan to open a chat with the front desk from your phone.",
+      "waText": "Hi, I'm at {casa}",
+      "categories": {
+        "cleaning": "Extra cleaning",
+        "amenities": "Restock amenities",
+        "electricity": "Electricity",
+        "wildlife": "Insects or animals",
+        "checkout": "Late check-out or early check-in",
+        "concierge": "Recommendation or booking",
+        "message": "Free message"
+      }
+    },
+    "response": {
+      "orderTitle": "We got your order",
+      "requestTitle": "We got your request",
+      "officeOrder": "We got your order. We'll confirm in a few minutes.",
+      "officeRequest": "We got your request. We'll reply in a few minutes.",
+      "afterHours": "We got it. Our team is available from {start} to {end} and will see it first thing. For an emergency, use the emergency contacts.",
+      "showContact": "After-hours contact",
+      "backHome": "Back to home",
+      "autoReturn": "Returning on its own in {seconds}s"
     }
+  },
+  "guestForm": {
+    "name": "Name",
+    "whatsappOptional": "WhatsApp (optional)",
+    "required": "Required"
   }
 }
