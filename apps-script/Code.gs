@@ -108,8 +108,18 @@ const CAMPOS = {
   allergies: 'Alergias', preferences: 'Preferencias', dishes: 'Platos elegidos',
   cooking: 'Cocina', groceries: 'Compras', snacksFor: 'Snacks para',
   preferredSnacks: 'Snacks preferidos', produce: 'Lista de productos',
-  notes: 'Notas', guests: 'Huéspedes',
+  notes: 'Notas', guests: 'Huéspedes', produceList: 'Lista de compras',
 };
+
+/*
+ * Campos que NO se muestran tal cual en la hoja ni en el correo.
+ *
+ * `produce` son los 66 ids estables (`fresh-dairy:raw-whole-milk`) — la llave del
+ * contrato, ilegible para una persona. El front manda además `produceList`, ya
+ * agrupada y con las etiquetas reales, y esa es la que se renderiza. Los ids
+ * siguen guardados íntegros en la pestaña Payload, así que no se pierde nada.
+ */
+const CAMPOS_OCULTOS = { produce: true };
 
 const CATEGORIAS = {
   cleaning: 'Limpieza extra', amenities: 'Reposición de amenities',
@@ -766,6 +776,19 @@ function filasDePreferencias_(form) {
     const v = form[k];
     const label = CAMPOS[k] || k;
     if (v === null || v === undefined || v === '') continue;
+    if (CAMPOS_OCULTOS[k]) continue;
+
+    /* La lista de compras: una fila por categoría, no un muro de comas. */
+    if (k === 'produceList' && v && typeof v === 'object' && !Array.isArray(v)) {
+      let total = 0;
+      for (const cat in v) total += (v[cat] || []).length;
+      out.push([label, total + ' productos en ' + Object.keys(v).length + ' categorías']);
+      for (const cat in v) {
+        const items = v[cat] || [];
+        if (items.length) out.push(['   ' + cat + ' (' + items.length + ')', items.join(', ')]);
+      }
+      continue;
+    }
 
     if (Array.isArray(v)) {
       if (!v.length) continue;

@@ -368,9 +368,7 @@
       "themedTab": "Themed Night",
       "guestsLabel": "Number of guests",
       "servicePickHint": "Select a service to see its menu. Click it again to deselect.",
-      "dishesHint": "Select the dishes you'd like — this doesn't change the price, it just tells the chef what to prepare.",
-      "bartenderHeading": "Add a Bartender",
-      "bartenderNone": "None"
+      "dishesHint": "Select the dishes you'd like — this doesn't change the price, it just tells the chef what to prepare."
     },
     "dietaryForm": {
       "heading": "Dietary Restrictions & Preferences",
@@ -931,19 +929,6 @@
             "price": "{{p:privateChef.pricing.themedNights.items.2.priceValue}} total",
             "minGuests": 11,
             "maxGuests": 15
-          }
-        ]
-      },
-      "bartender": {
-        "heading": "Add a Bartender",
-        "items": [
-          {
-            "label": "Sunset only (4–7 PM)",
-            "price": "{{p:privateChef.pricing.bartender.items.0.priceValue}}"
-          },
-          {
-            "label": "Sunset + Dinner (4–9 PM)",
-            "price": "{{p:privateChef.pricing.bartender.items.1.priceValue}}"
           }
         ]
       }
@@ -2657,7 +2642,7 @@
       "invalidPhone": "Please enter a valid phone number",
       "submit": "Send my order",
       "submitting": "Sending…",
-      "disclaimer": "Prices are estimates. We confirm availability and the final quote before your stay — nothing is charged on this site.",
+      "disclaimer": "Prices are estimates. We confirm availability and the final quote with you before your stay.",
       "success": {
         "heading": "Order received",
         "body": "We'll confirm availability and the final quote by WhatsApp or email shortly. We've filed it under reservation {reservation}.",
@@ -2668,7 +2653,8 @@
         "body": "Something went wrong on our side. Your order is still here — please try again, or reach us on WhatsApp.",
         "retry": "Try again"
       },
-      "optional": "(optional)"
+      "optional": "(optional)",
+      "disclaimerTitle": "Nothing is charged on this site"
     },
     "kioskSubtitle": "Check everything over below. Nothing is charged here — we confirm availability and the final quote with you during your stay.",
     "submit": "Send order",

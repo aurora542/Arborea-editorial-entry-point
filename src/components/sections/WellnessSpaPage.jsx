@@ -489,12 +489,22 @@ export default function WellnessSpaPage() {
 
     openCart();
 
-    /* Clear the page so the guest can start a new order with different specs.
-     * The cart keeps the committed line; re-opening via the drawer's Edit link
-     * will re-seed the draft from it (see `seedTrigger` above). */
-    draft.clear();
-    setAllergies("");
-    setNotes("");
+    /* El draft NO se vacía: tiene que seguir siendo el espejo completo de lo que
+     * este servicio tiene en el carrito.
+     *
+     * El commit hace `clearService(SERVICE)` y después agrega todo lo que haya en
+     * el draft, así que el draft es el estado deseado completo, no un incremento.
+     * Vaciarlo aquí significaba que, sin salir de la página, seleccionar algo más
+     * y volver a enviar borraba lo anterior: el `clearService` limpiaba el carrito
+     * y solo se reponía la selección nueva.
+     *
+     * Dejándolo intacto, la página sigue mostrando lo que ya está pedido y agregar
+     * algo más suma en vez de reemplazar.
+     *
+     * Las alergias y las notas tampoco se vacían, por la misma razón y peor:
+     * `clearService` BORRA también el `serviceForms` del servicio. Si el campo
+     * local quedaba vacío, al segundo envío se perdían las alergias ya guardadas
+     * — `clearService` las borraba y no había nada local con qué reponerlas. */
   };
 
   return (

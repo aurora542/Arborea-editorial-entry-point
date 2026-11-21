@@ -440,9 +440,7 @@
       "themedTab": "Noche Temática",
       "guestsLabel": "Número de invitados",
       "servicePickHint": "Selecciona un servicio para ver su menú. Haz clic de nuevo para quitarlo.",
-      "dishesHint": "Selecciona los platillos que quieras — esto no cambia el precio, solo le indica al chef qué preparar.",
-      "bartenderHeading": "Añadir Bartender",
-      "bartenderNone": "Ninguno"
+      "dishesHint": "Selecciona los platillos que quieras — esto no cambia el precio, solo le indica al chef qué preparar."
     },
     "dietaryForm": {
       "heading": "Restricciones Alimentarias y Preferencias",
@@ -1003,19 +1001,6 @@
             "price": "{{p:privateChef.pricing.themedNights.items.2.priceValue}} total",
             "minGuests": 11,
             "maxGuests": 15
-          }
-        ]
-      },
-      "bartender": {
-        "heading": "Añadir Bartender",
-        "items": [
-          {
-            "label": "Solo atardecer (4–7 PM)",
-            "price": "{{p:privateChef.pricing.bartender.items.0.priceValue}}"
-          },
-          {
-            "label": "Atardecer + Cena (4–9 PM)",
-            "price": "{{p:privateChef.pricing.bartender.items.1.priceValue}}"
           }
         ]
       }
@@ -2657,7 +2642,7 @@
       "invalidPhone": "Ingresa un teléfono válido",
       "submit": "Enviar mi pedido",
       "submitting": "Enviando…",
-      "disclaimer": "Los precios son estimados. Confirmamos disponibilidad y la cotización final antes de tu estadía — en este sitio no se cobra nada.",
+      "disclaimer": "Los precios son estimados. Confirmamos disponibilidad y la cotización final contigo antes de tu estadía.",
       "success": {
         "heading": "Pedido recibido",
         "body": "Confirmaremos disponibilidad y la cotización final por WhatsApp o correo en breve. Lo registramos bajo la reserva {reservation}.",
@@ -2668,7 +2653,8 @@
         "body": "Algo falló de nuestro lado. Tu pedido sigue aquí — intenta de nuevo o escríbenos por WhatsApp.",
         "retry": "Intentar de nuevo"
       },
-      "optional": "(opcional)"
+      "optional": "(opcional)",
+      "disclaimerTitle": "En este sitio no se cobra nada"
     },
     "kioskSubtitle": "Revisá todo acá abajo. No se cobra nada en este paso — confirmamos disponibilidad y la cotización final con vos durante tu estadía.",
     "submit": "Enviar pedido",

@@ -316,7 +316,7 @@ La hoja agrupa por este campo. Catorce valores, fijados por el código:
 | `wellness-spa` | `massage`, `facial`, `addon`, `package` |
 | `fishing-tours` | `charter` |
 | `full-fridge` | `stocking-package`, `beverage` |
-| `private-chef` | `chef-service`, `themed-night`, `beverage`, `bartender`, `dessert`, `bakery` |
+| `private-chef` | `chef-service`, `themed-night`, `beverage`, `dessert`, `bakery` |
 
 ### Dedupe y la llave del archivo
 

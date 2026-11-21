@@ -7,6 +7,12 @@ import Navbar from "@/components/layout/navbar";
 import Footer from "@/components/layout/Footer";
 import { useCart } from "@/app/context/CartContext";
 import { skuOf, titleOf, lineIdOf } from "@/lib/sku";
+/*
+ * Se importa el locale español directamente, igual que `sku.js` importa el inglés
+ * y por la misma razón: el valor no debe depender del idioma que el huésped tenga
+ * activo. Aquí es para la lista de compras — ver `listaDeCompras` abajo.
+ */
+import esLocale from "@/i18n/es.json";
 import { money, countLabel } from "@/lib/format";
 import QtyStepper from "@/components/ui/QtyStepper";
 import {
@@ -142,6 +148,34 @@ export default function FullFridgePage() {
    * switching language mid-page orphaned every tick, and the payload carried
    * localised text where the contract expects keys (see docs/ORDERS-BACKEND.md).
    */
+  /*
+   * La lista de compras, legible y agrupada.
+   *
+   * `produce` viaja como ids estables (`fresh-dairy:raw-whole-milk`) porque esa es
+   * la llave del contrato y no depende del idioma. Pero esos ids llegaban crudos a
+   * la hoja de la concierge y al correo: 66 slugs separados por comas, ilegibles.
+   *
+   * Des-sluguificarlos del lado del script no sirve — `natilla-farm-sour-cream` no
+   * vuelve a ser "Natilla (farm sour cream)", y `sheep-s-milk-cheese` pierde el
+   * apóstrofo. Las etiquetas buenas existen en i18n, así que se mandan desde aquí.
+   *
+   * Van en ESPAÑOL a propósito, sin importar el idioma del huésped: es una lista
+   * con la que alguien camina a un mercado en Costa Rica. Difiere de la regla de
+   * `titleEn` (inglés canónico en la hoja) porque el uso es distinto — ahí se
+   * cruzan productos, aquí se compran. Cambiarlo a inglés es cambiar este import.
+   */
+  const listaDeCompras = (ids) => {
+    const cats = esLocale?.fullFridge?.produce?.categories;
+    if (!Array.isArray(cats) || !ids?.length) return {};
+    const elegidos = new Set(ids);
+    const out = {};
+    cats.forEach((cat, ci) => {
+      const items = (cat.items ?? []).filter((_, ii) => elegidos.has(produceKey(ci, ii)));
+      if (items.length) out[cat.title] = items;
+    });
+    return out;
+  };
+
   const produceKey = (catIdx, itemIdx) =>
     `${skuOf("fullFridge.produce.categories", catIdx, "title")}:${skuOf(`fullFridge.produce.categories.${catIdx}.items`, itemIdx)}`;
 
@@ -339,6 +373,7 @@ export default function FullFridgePage() {
       children,
       days,
       produce: selectedProduce,
+      produceList: listaDeCompras(selectedProduce),
       dietary: form.dietary,
       dietaryAllergies: form.dietaryOther.trim(),
       cooking: form.cooking,
@@ -350,24 +385,15 @@ export default function FullFridgePage() {
 
     openCart();
 
-    /* Clear the page so the guest can build a new order with different specs.
-     * The cart keeps the committed state; re-opening via the drawer's Edit link
-     * bumps `seedTrigger` which rehydrates everything from serviceForms + lines. */
-    setAdults(2);
-    setChildren(0);
-    setDays(3);
-    setSelectedProduce([]);
-    setBevQty({});
-    setNotes("");
-    setForm({
-      dietary: [],
-      dietaryOther: "",
-      dietaryPreferences: "",
-      cooking: "",
-      groceries: "",
-      snacksFor: [],
-      preferredSnacks: "",
-    });
+    /* El estado de la página NO se vacía: tiene que seguir siendo el espejo
+     * completo de lo que este servicio tiene en el carrito.
+     *
+     * El commit hace `clearService(SERVICE)` y después repone todo desde este
+     * estado, así que representa el pedido completo, no un incremento. Vaciarlo
+     * aquí significaba que, sin salir de la página, cambiar algo y volver a enviar
+     * borraba lo anterior — y peor con el cuestionario: `clearService` borra
+     * también el `serviceForms`, así que las respuestas ya guardadas se perdían
+     * sin nada local con qué reponerlas. */
   };
 
   return (

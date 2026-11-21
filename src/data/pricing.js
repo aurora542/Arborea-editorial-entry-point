@@ -26,9 +26,7 @@
  */
 
 export const PRICES = {
-  /* ── Private Chef — 13 values ── */
-  "privateChef.pricing.bartender.items.0.priceValue": 170,
-  "privateChef.pricing.bartender.items.1.priceValue": 255,
+  /* ── Private Chef — 11 values ── */
   "privateChef.pricing.perService.items.0.basePrice": 230,
   "privateChef.pricing.perService.items.0.extraPersonPrice": 24,
   "privateChef.pricing.perService.items.1.basePrice": 235,

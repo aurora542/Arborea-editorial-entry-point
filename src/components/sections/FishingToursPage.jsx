@@ -575,10 +575,17 @@ export default function FishingToursPage() {
 
     openCart();
 
-    /* Clear the page so another order can be built. Edit from the cart will
-     * re-seed via `seedTrigger`. */
-    draft.clear();
-    setNotes("");
+    /* El draft NO se vacía: tiene que seguir siendo el espejo completo de lo que
+     * este servicio tiene en el carrito.
+     *
+     * El commit hace `clearService(SERVICE)` y después agrega todo lo que haya en
+     * el draft, así que el draft es el estado deseado completo, no un incremento.
+     * Vaciarlo aquí significaba que, sin salir de la página, seleccionar algo más
+     * y volver a enviar borraba lo anterior: el `clearService` limpiaba el carrito
+     * y solo se reponía la selección nueva.
+     *
+     * Dejándolo intacto, la página sigue mostrando lo que ya está pedido y agregar
+     * algo más suma en vez de reemplazar. */
   };
 
   return (

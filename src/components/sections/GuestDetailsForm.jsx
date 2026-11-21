@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { useForm } from "react-hook-form";
-import { TbAlertCircle, TbSend, TbLoader2 } from "react-icons/tb";
+import { TbAlertCircle, TbSend, TbLoader2, TbReceiptOff } from "react-icons/tb";
 import { useI18n } from "@/app/context/I18nContext";
 import { properties } from "@/data/properties";
 import { RESERVATION_RE } from "@/lib/orderPayload";
@@ -110,7 +110,7 @@ export default function GuestDetailsForm({ onSubmit, submitting }) {
           inputMode="numeric"
           maxLength={5}
           placeholder={t("checkout.form.reservationNumber.placeholder")}
-          className={inputClass(errors.reservationNumber)}
+          className={`w-full ${inputClass(errors.reservationNumber)}`}
           {...register("reservationNumber", {
             ...required,
             pattern: {
@@ -130,7 +130,7 @@ export default function GuestDetailsForm({ onSubmit, submitting }) {
             type="text"
             autoComplete="given-name"
             placeholder={t("checkout.form.firstName.placeholder")}
-            className={inputClass(errors.firstName)}
+            className={`w-full ${inputClass(errors.firstName)}`}
             {...register("firstName", required)}
           />
         </Field>
@@ -140,7 +140,7 @@ export default function GuestDetailsForm({ onSubmit, submitting }) {
             type="text"
             autoComplete="family-name"
             placeholder={t("checkout.form.lastName.placeholder")}
-            className={inputClass(errors.lastName)}
+            className={`w-full ${inputClass(errors.lastName)}`}
             {...register("lastName", required)}
           />
         </Field>
@@ -150,7 +150,7 @@ export default function GuestDetailsForm({ onSubmit, submitting }) {
             type="email"
             autoComplete="email"
             placeholder={t("checkout.form.email.placeholder")}
-            className={inputClass(errors.email)}
+            className={`w-full ${inputClass(errors.email)}`}
             {...register("email", {
               /* `validate` rather than `pattern`: RHF runs `pattern` against the
                * empty string too, so an optional field with a pattern would reject
@@ -165,7 +165,7 @@ export default function GuestDetailsForm({ onSubmit, submitting }) {
           <div className="flex gap-2">
             <select
               aria-label={t("checkout.form.phone.countryLabel")}
-              className={`${inputClass(null)} w-28 shrink-0 px-2`}
+              className={`w-28 shrink-0 px-2 ${inputClass(null)}`}
               {...register("phoneCountry")}
             >
               {COUNTRY_CODES.map((c) => (
@@ -179,7 +179,7 @@ export default function GuestDetailsForm({ onSubmit, submitting }) {
               autoComplete="tel-national"
               inputMode="numeric"
               placeholder={t("checkout.form.phone.placeholder")}
-              className={inputClass(errors.phoneNumber)}
+              className={`w-full min-w-0 ${inputClass(errors.phoneNumber)}`}
               {...register("phoneNumber", {
                 ...required,
                 pattern: { value: PHONE_RE, message: t("checkout.form.invalidPhone") },
@@ -190,7 +190,7 @@ export default function GuestDetailsForm({ onSubmit, submitting }) {
 
         <Field label={t("checkout.form.casa.label")} error={errors.casa?.message}>
           <select
-            className={inputClass(errors.casa)}
+            className={`w-full ${inputClass(errors.casa)}`}
             defaultValue=""
             {...register("casa", required)}
           >
@@ -225,14 +225,35 @@ export default function GuestDetailsForm({ onSubmit, submitting }) {
         <textarea
           rows={3}
           placeholder={t("checkout.form.notes.placeholder")}
-          className={`${inputClass(null)} resize-y min-h-20`}
+          className={`w-full resize-y min-h-20 ${inputClass(null)}`}
           {...register("notes")}
         />
       </Field>
 
-      <p className="font-sans text-xs leading-relaxed text-[#222E2C]/50">
-        {t("checkout.form.disclaimer")}
-      </p>
+      {/*
+        * Esto no puede pasar desapercibido: es la promesa de que enviar el
+        * formulario no cobra nada.
+        *
+        * Antes era `text-xs` al 50% de opacidad sobre la tarjeta — 2.91 de
+        * contraste, por debajo del 4.5 que pide AA para texto normal. No es que
+        * fuera fácil de ignorar: era difícil de leer.
+        *
+        * Ahora va sobre sage, que da 10.0 con la tinta, a 14px, con el titular en
+        * negrita separado del cuerpo para que se entienda de un vistazo aunque
+        * nadie lea la segunda línea. Y justo encima del botón, en el camino de la
+        * mirada hacia el envío.
+        */}
+      <div className="flex items-start gap-3 rounded-xl bg-[#D8DDB8] border border-[#213B2F]/15 px-4 py-3.5">
+        <TbReceiptOff size={20} className="text-[#213B2F] shrink-0 mt-0.5" />
+        <div className="min-w-0">
+          <p className="font-sans text-sm font-semibold text-[#213B2F] leading-snug">
+            {t("checkout.form.disclaimerTitle")}
+          </p>
+          <p className="font-sans text-sm leading-relaxed text-[#222E2C]/85 mt-0.5">
+            {t("checkout.form.disclaimer")}
+          </p>
+        </div>
+      </div>
 
       <button
         type="submit"
@@ -255,9 +276,22 @@ export default function GuestDetailsForm({ onSubmit, submitting }) {
   );
 }
 
+/*
+ * Deliberadamente SIN ancho: el ancho lo pone cada sitio que la usa.
+ *
+ * Antes devolvía `w-full`, y el select de código de país le añadía `w-28`. Las dos
+ * clases quedaban en el mismo elemento y Tailwind emite `.w-full` DESPUÉS de
+ * `.w-28` en la hoja, así que ganaba el 100% sin importar el orden en el atributo:
+ * el select ocupaba toda la fila y el campo del número quedaba de unos pocos
+ * píxeles, imposible de escribir.
+ *
+ * Es la regla de `CLAUDE.md` — nunca partir una familia de utilidades de Tailwind
+ * entre dos trozos de un mismo `className`. La salida aquí es no emitir la familia
+ * en absoluto desde el helper.
+ */
 function inputClass(error) {
   return [
-    "w-full rounded-xl bg-white px-4 py-3 font-sans text-sm text-[#222E2C]",
+    "rounded-xl bg-white px-4 py-3 font-sans text-sm text-[#222E2C]",
     "border-2 transition-colors duration-200 outline-none",
     "placeholder:text-[#222E2C]/35",
     error

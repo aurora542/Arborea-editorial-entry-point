@@ -11,8 +11,7 @@ import { money, countLabel } from "@/lib/format";
 import { DISH_PRICE } from "@/data/pricing";
 import DateField from "@/components/ui/DateField";
 import {
-  TbArrowLeft, TbLeaf, TbCircleCheck, TbBrandWhatsapp, TbCheck,
-  TbGlassCocktail, TbCoffee, TbSalad, TbToolsKitchen2,
+  TbArrowLeft, TbLeaf, TbCircleCheck, TbBrandWhatsapp, TbCheck, TbCoffee, TbSalad, TbToolsKitchen2,
   TbHandClick, TbAdjustments, TbSend, TbListCheck, TbPlus,
   TbNotes, TbShoppingBag, TbTrash,
 } from "react-icons/tb";
@@ -109,7 +108,6 @@ export default function PrivateChefPage() {
   const themedNights    = t("privateChef.themedNights.nights");
   const pricingPS       = t("privateChef.pricing.perService.items");
   const themedTiers     = t("privateChef.pricing.themedNights.items");
-  const pricingBar      = t("privateChef.pricing.bartender.items");
   const ob              = t("privateChef.orderBuilder");
   const sweets          = t("privateChef.sweetsSection");
   const fridgeBeverages = t("fullFridge.beverages");
@@ -141,7 +139,6 @@ export default function PrivateChefPage() {
    */
   const [themedItems, setThemedItems] = useState([]);
   const [bevQty, setBevQty] = useState({});
-  const [bartenderIdx, setBartenderIdx] = useState(null);
   const [dishQty, setDishQty] = useState({});
 
   const nextItemId = () => `psi-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
@@ -248,9 +245,6 @@ export default function PrivateChefPage() {
 
   const changeBevQty = (i, qty) => setBevQty((prev) => ({ ...prev, [i]: Math.max(0, qty) }));
 
-  const pickBartender = (i) => setBartenderIdx((prev) => (prev === i ? null : i));
-
-  const clearBartender = () => setBartenderIdx(null);
 
   const inCart = linesByService.some((g) => g.service.id === SERVICE);
 
@@ -275,7 +269,6 @@ export default function PrivateChefPage() {
     /* Reset first so the restore starts from a clean slate. */
     setServiceItems([]);
     setThemedItems([]);
-    setBartenderIdx(null);
     setBevQty({});
     setDishQty({});
     setNotes("");
@@ -336,11 +329,6 @@ export default function PrivateChefPage() {
       if (restoredThemed.length) setThemedItems(restoredThemed);
     }
 
-    if (Array.isArray(pricingBar)) {
-      pricingBar.forEach((_, i) => {
-        if (bySku.has(skuOf("privateChef.pricing.bartender.items", i, "label"))) setBartenderIdx(i);
-      });
-    }
 
     if (Array.isArray(fridgeBeverages?.items)) {
       const restored = {};
@@ -369,7 +357,7 @@ export default function PrivateChefPage() {
 
   /*
    * Everything priced on this page: the chosen service, a themed night, beverages,
-   * the bartender, and dessert/bakery quantities.
+   * and dessert/bakery quantities.
    *
    * Guest counts drive the price but are NOT folded into the title — they go in
    * `options` so the drawer caption and the sheet keep them as their own field.
@@ -455,25 +443,6 @@ export default function PrivateChefPage() {
       });
     }
 
-    if (bartenderIdx !== null && Array.isArray(pricingBar)) {
-      const item = pricingBar[bartenderIdx];
-      const sku = skuOf("privateChef.pricing.bartender.items", bartenderIdx, "label");
-      const labelEn = titleOf("privateChef.pricing.bartender.items", bartenderIdx, "label");
-      out.push({
-        lineId: lineIdOf(SERVICE, sku),
-        service: SERVICE,
-        sku,
-        title: `Bartender — ${item.label}`,
-        titleEn: `Bartender — ${labelEn || item.label}`,
-        kind: "bartender",
-        qty: 1,
-        unitPrice: item.priceValue,
-        byQuote: false,
-        date: "",
-        options: {},
-        data: {},
-      });
-    }
 
     /* Desserts and bakery share one flat per-item price. */
     for (const [group, path] of [["dessert", "privateChef.desserts.items"], ["bakery", "privateChef.bakery.items"]]) {
@@ -538,7 +507,7 @@ export default function PrivateChefPage() {
 
   /* SKUs that are qty-based add-ons. In add mode these use `addLine` so the
    * guest's existing beverages / desserts / bakery in the cart grow rather
-   * than get overwritten. Per-day items, themed nights and bartender keep
+   * than get overwritten. Per-day items and themed nights keep
    * `setLine` semantics (each either has a unique lineId that just appends, or
    * an idempotent one that should mirror the page's state). */
   const isQtyAddOn = (line) => QTY_ADDON_KINDS.has(line.kind);
@@ -553,7 +522,7 @@ export default function PrivateChefPage() {
       draftLines.forEach(setLine);
     } else {
       /* Add mode: concatenate. Per-day items have fresh unique ids so they
-       * append as new lines; themed-night and bartender are idempotent
+       * append as new lines; themed-night lines are idempotent
        * replacements for their own skus; qty add-ons SUM into existing lines
        * via `addLine`. */
       draftLines.forEach((line) => {
@@ -588,7 +557,6 @@ export default function PrivateChefPage() {
      * concatenates (whether the guest keeps adding days or walks away). */
     setServiceItems([]);
     setThemedItems([]);
-    setBartenderIdx(null);
     setBevQty({});
     setDishQty({});
     setNotes("");
@@ -1032,27 +1000,6 @@ export default function PrivateChefPage() {
                 })}
               </div>
               <p className="font-sans text-xs text-[#222E2C]/45 italic">{fridgeBeverages.note}</p>
-            </div>
-
-            {/* Bartender add-on */}
-            <div className="flex flex-col gap-4 pt-2 border-t border-[#222E2C]/8">
-              <div className="flex flex-col gap-1">
-                <h3 className="flex items-center gap-2 font-sans font-semibold text-base text-[#222E2C]">
-                  <TbGlassCocktail size={17} className="text-[#222E2C]/45" />
-                  {ob.bartenderHeading}
-                </h3>
-              </div>
-              <div className="flex flex-wrap gap-2" role="radiogroup">
-                <RadioPill label={ob.bartenderNone} selected={bartenderIdx === null} onClick={clearBartender} />
-                {Array.isArray(pricingBar) && pricingBar.map((item, i) => (
-                  <RadioPill
-                    key={i}
-                    label={`${item.label} · $${item.priceValue}`}
-                    selected={bartenderIdx === i}
-                    onClick={() => pickBartender(i)}
-                  />
-                ))}
-              </div>
             </div>
           </div>
 
