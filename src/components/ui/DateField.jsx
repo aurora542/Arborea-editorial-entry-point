@@ -133,6 +133,16 @@ const TONES = {
     placeholder: "text-[#D8DDB8]/45",
     icon: "text-[#D8DDB8]/70",
   },
+  /* Terracotta fill for controls on the forest green — see the long note on the
+   * matching tone in QtyStepper for why terracotta works as a fill and not as a
+   * text colour, and why the spa and fishing cards must keep `dark`. */
+  accent: {
+    label: "text-[#D8DDB8]/60",
+    trigger:
+      "bg-[#8B5A3C] border-[#C9974F]/50 text-[#EDE5D8] hover:bg-[#7a4e34] focus-visible:ring-[#C9974F]/40 shadow-sm",
+    placeholder: "text-[#EDE5D8]/60",
+    icon: "text-[#EDE5D8]/85",
+  },
 };
 
 /* ─── main component ────────────────────────────────────────────── */
@@ -140,7 +150,10 @@ const TONES = {
 export default function DateField({
   value = "",
   onChange,
-  label = "Preferred date",
+  /* `null` en vez de un literal: el texto por defecto se resuelve con t() dentro
+   * del componente, donde el hook ya corrió. Pasar `label={null}` explícitamente
+   * sigue ocultando la etiqueta, como hace el formulario del checkout. */
+  label = undefined,
   optional = false,
   tone = "light",
   /* Pass `null` to opt out of the today-minimum. Default below is applied after
@@ -149,7 +162,8 @@ export default function DateField({
   disabled = false,
   className,
 }) {
-  const { locale } = useI18n();
+  const { locale, t } = useI18n();
+  const etiqueta = label === undefined ? t("common.a11y.preferredDate") : label;
   const c = TONES[tone] ?? TONES.light;
 
   const [open, setOpen] = useState(false);
@@ -262,7 +276,7 @@ export default function DateField({
 
   return (
     <div className={cn("relative flex flex-col gap-1.5", className)}>
-      {label && (
+      {etiqueta && (
         <span
           className={cn(
             "flex items-center gap-1.5 font-sans text-[10px] font-semibold uppercase tracking-widest",
@@ -270,7 +284,7 @@ export default function DateField({
           )}
         >
           <TbCalendarEvent size={11} className="shrink-0" />
-          {label}
+          {etiqueta}
           {optional && (
             <span className="font-normal normal-case tracking-normal opacity-70">
               {locale === "es" ? "(opcional)" : "(optional)"}

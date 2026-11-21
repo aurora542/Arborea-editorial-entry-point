@@ -324,7 +324,13 @@
     "totalLabel": "Total",
     "dayLabel": "día",
     "daysLabelPlural": "días",
-    "footerLabel": "¿Dudas sobre la Mula?"
+    "footerLabel": "¿Dudas sobre la Mula?",
+    "ui": {
+      "idealFor": "Ideal para",
+      "partnerRates": "Tarifas de socio preferente",
+      "partnerRatesBody": "Mejores tarifas que reservando directo con las marcas de alquiler",
+      "transportation": "Transporte"
+    }
   },
   "inhouse": {
     "pill": "Experiencias Signature",
@@ -1013,6 +1019,36 @@
           }
         ]
       }
+    },
+    "ui": {
+      "howToHeading": "Cómo armar tu experiencia",
+      "howToSub": "Explora los menús, elige tus platos y envía — tu chef se encarga del resto.",
+      "step1": "Elige un servicio",
+      "step1Body": "Escoge entre Desayuno, Almuerzo, Cena o Día Completo — y define cuántos comensales son.",
+      "step2": "Explora los menús",
+      "step2Body": "Recorre cada tiempo de comida y selecciona los platos que quieres que prepare el chef.",
+      "step3": "Añade tus preferencias",
+      "step3Body": "Cuéntale al chef sobre restricciones alimentarias, alergias o cualquier cosa que prefieras evitar.",
+      "step4": "Revisa y envía",
+      "step4Body": "Baja al resumen del pedido, agrega notas finales para el chef y envía — confirmamos todo antes de tu estadía.",
+      "removeDay": "Quitar día",
+      "serviceType": "Tipo de servicio",
+      "decreaseGuests": "Quitar comensal",
+      "increaseGuests": "Agregar comensal",
+      "dayTotal": "Total del día",
+      "bothOptions": "El chef preparará ambas opciones para tu grupo.",
+      "chooseOne": "Elige 1 plato por tiempo de comida",
+      "chooseOneHint": "Al elegir otro, se reemplaza automáticamente el actual.",
+      "orderSummary": "Resumen del pedido",
+      "nothingSelected": "Aún no has seleccionado nada — explora las secciones de arriba.",
+      "preferencesHeading": "Preferencias y detalles",
+      "notesLabel": "Notas para el chef",
+      "notesPlaceholder": "¿Algo más que el chef deba saber?...",
+      "addNight": "Agregar esta noche",
+      "addAnotherDate": "Agregar otra fecha para esta noche",
+      "menuHint": "Menú — selecciona tus preferencias abajo y menciónalas en las notas",
+      "allIncluded": "Todo incluido",
+      "dessert": "Postre:"
     }
   },
   "fullFridge": {
@@ -1430,6 +1466,14 @@
         "ages": "edades",
         "none": "No especificado"
       }
+    },
+    "ui": {
+      "children": "Niños",
+      "maxReached": "Máximo alcanzado — escríbenos para grupos más grandes",
+      "notesLabel": "Notas adicionales",
+      "notesPlaceholder": "¿Algo más que debamos saber sobre tu estadía?...",
+      "orderSummary": "Resumen del pedido",
+      "nothingSelected": "Selecciona tu paquete y los extras de arriba para ver tu total aquí."
     }
   },
   "tours": {
@@ -1818,7 +1862,21 @@
     "addService": "Agregar servicio",
     "added": "Agregado",
     "email": "concierge@arboreaexperiences.com",
-    "website": "arboreaexperiences.com"
+    "website": "arboreaexperiences.com",
+    "a11y": {
+      "decrease": "Quitar",
+      "increase": "Agregar",
+      "preferredDate": "Fecha preferida",
+      "previous": "Anterior",
+      "next": "Siguiente",
+      "switchLanguage": "Cambiar idioma",
+      "mainMenu": "Menú principal",
+      "logo": "Arbórea Experiences"
+    },
+    "credits": {
+      "madeBy": "Hecho por Aurigital",
+      "designCredit": "Créditos de diseño y desarrollo por Aurigital"
+    }
   },
   "orderForm": {
     "pill": "Arma tu pedido",
@@ -2190,6 +2248,30 @@
       "phone": "+506 8301-0027",
       "website": "www.gvmassagecr.com",
       "instagram": "@gvcostarica"
+    },
+    "ui": {
+      "quantity": "Cantidad",
+      "orderSummary": "Resumen del pedido",
+      "reviewHeading": "Revisa tu selección",
+      "reviewSub": "Revisa los tratamientos que elegiste y agrega alergias o notas, luego añade todo a tu pedido. Tus datos los llenas en el checkout.",
+      "yourSelection": "Tu selección",
+      "nothingSelected": "Aún no has seleccionado servicios — explora las secciones de arriba.",
+      "allergiesLabel": "Alergias o cosas a considerar",
+      "allergiesPlaceholder": "Sensibilidades en la piel, condiciones médicas, lesiones o cualquier cosa que la terapeuta deba saber…",
+      "notesLabel": "Notas adicionales",
+      "notesPlaceholder": "Cualquier otra preferencia o solicitud especial…",
+      "howToHeading": "Cómo reservar tus tratamientos",
+      "howToSub": "Explora, personaliza y envía — nos encargamos del resto antes de tu estadía.",
+      "step1": "Explora los tratamientos",
+      "step1Body": "Recorre los masajes, faciales, paquetes y complementos de abajo.",
+      "step2": "Elige tus opciones",
+      "step2Body": "Escoge una duración, define la cantidad y agrega una fecha preferida opcional.",
+      "step3": "Añade a tu solicitud",
+      "step3Body": "Selecciona todos los servicios que quieras — todos aparecerán en el resumen de tu pedido.",
+      "step4": "Revisa y envía",
+      "step4Body": "Baja al resumen del pedido, agrega alergias o notas, y envía — confirmamos antes de tu estadía.",
+      "enhancements": "Complementos",
+      "enhancementsLocked": "Selecciona un masaje, facial o paquete arriba para desbloquear los complementos."
     }
   },
   "fishingTours": {

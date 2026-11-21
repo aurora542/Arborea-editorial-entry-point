@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { useI18n } from "@/app/context/I18nContext";
 
 /*
  * Replaces the 13 hand-rolled −/+ steppers that lived across the service pages.
@@ -30,6 +31,29 @@ const TONES = {
     value: "text-[#EDE5D8]",
     ring:  "border-white/20 bg-white/10 text-[#D8DDB8]/70 hover:bg-white/15",
   },
+  /*
+   * Terracotta fill, for controls sitting on the forest green (#213B2F).
+   *
+   * `dark` is a translucent white wash: plenty of contrast (8.64 against the green)
+   * but the same muted tonal family as everything else on those cards, so the
+   * control reads as more text instead of as something you operate.
+   *
+   * Terracotta as a TEXT colour on green would be worse, not better — 2.09, below
+   * any threshold. As a filled surface it works: bone content on terracotta is 4.63
+   * (AA), and the gold hairline is 4.63 against the green, which is what makes the
+   * component's edge identifiable — the fill alone is 2.09 against the background,
+   * under the 3:1 that non-text contrast asks for.
+   *
+   * Only for green surfaces. The spa cards are already #8B5A3C and the fishing
+   * cards #6B5A2E; terracotta on those is 1.00 and 1.16 — it would disappear. Those
+   * keep `dark`.
+   */
+  accent: {
+    wrap:  "bg-[#8B5A3C] border border-[#C9974F]/50 shadow-sm",
+    btn:   "text-[#EDE5D8]/85 hover:bg-black/15",
+    value: "text-[#EDE5D8] font-semibold",
+    ring:  "border-[#C9974F]/50 bg-[#8B5A3C] text-[#EDE5D8]/85 hover:bg-[#7a4e34]",
+  },
 };
 
 export default function QtyStepper({
@@ -45,6 +69,7 @@ export default function QtyStepper({
   disabled = false,
   label,
 }) {
+  const { t } = useI18n();
   const s = SIZES[size] ?? SIZES.md;
   const c = TONES[tone] ?? TONES.light;
 
@@ -72,7 +97,7 @@ export default function QtyStepper({
           type="button"
           onClick={() => step(-1)}
           disabled={decDisabled}
-          aria-label="Decrease"
+          aria-label={t("common.a11y.decrease")}
           className={cn(btnBase, "rounded-xl border", c.ring)}
         >
           −
@@ -88,7 +113,7 @@ export default function QtyStepper({
           type="button"
           onClick={() => step(1)}
           disabled={incDisabled}
-          aria-label="Increase"
+          aria-label={t("common.a11y.increase")}
           className={cn(btnBase, "rounded-xl border", c.ring)}
         >
           +
@@ -108,7 +133,7 @@ export default function QtyStepper({
         type="button"
         onClick={() => step(-1)}
         disabled={decDisabled}
-        aria-label="Decrease"
+        aria-label={t("common.a11y.decrease")}
         className={cn(btnBase, c.btn)}
       >
         −
@@ -123,7 +148,7 @@ export default function QtyStepper({
         type="button"
         onClick={() => step(1)}
         disabled={incDisabled}
-        aria-label="Increase"
+        aria-label={t("common.a11y.increase")}
         className={cn(btnBase, c.btn)}
       >
         +

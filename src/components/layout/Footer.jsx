@@ -87,11 +87,9 @@ export default function Footer() {
           target="_blank"
           rel="noopener"
           className="flex justify-center items-center mx-auto w-full"
-          aria-label="Créditos de diseño y desarrollo por Aurigital"
+          aria-label={t("common.credits.designCredit")}
         >
-          <p className="text-white/60 uppercase text-[10px] text-center p-1 hover:text-white/80 transition-colors">
-            Made by Aurigital
-          </p>
+          <p className="text-white/60 uppercase text-[10px] text-center p-1 hover:text-white/80 transition-colors">{t("common.credits.madeBy")}</p>
           <img src="/assets/isotipo.avif" alt="Aurigital" className="h-[18px] w-[18px] ml-1" loading="lazy" decoding="async" />
         </a>
       </div>

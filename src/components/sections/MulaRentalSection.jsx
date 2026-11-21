@@ -196,7 +196,7 @@ function VehicleCard({ vehicle, days, date, cartLine, onDaysChange, onDateChange
         {/* Ideal for — gold accent eyebrow + sand-tinted container to stand out
          * as the editorial note within the forest-green card. */}
         <div className="bg-[#C9974F]/10 border border-[#C9974F]/20 rounded-xl px-3.5 py-3 flex flex-col gap-1">
-          <p className="font-sans text-[10px] font-bold text-[#C9974F] uppercase tracking-widest">Ideal for</p>
+          <p className="font-sans text-[10px] font-bold text-[#C9974F] uppercase tracking-widest">{t("mulaRental.ui.idealFor")}</p>
           <p className={`font-sans text-[#EDE5D8]/85 leading-relaxed ${featured ? "text-sm" : "text-xs"}`}>{vehicle.idealFor}</p>
         </div>
       </div>
@@ -210,10 +210,10 @@ function VehicleCard({ vehicle, days, date, cartLine, onDaysChange, onDateChange
             <label className="font-sans text-[10px] font-semibold text-[#D8DDB8]/50 uppercase tracking-wide">
               {t("cart.days")}
             </label>
-            <QtyStepper value={days} onChange={onDaysChange} min={1} size="md" tone="dark" label={t("cart.days")} />
+            <QtyStepper value={days} onChange={onDaysChange} min={1} size="md" tone="accent" label={t("cart.days")} />
           </div>
           <div className="flex-1 min-w-0">
-            <DateField value={date} onChange={onDateChange} label={t("cart.pickupDate")} tone="dark" />
+            <DateField value={date} onChange={onDateChange} label={t("cart.pickupDate")} tone="accent" />
           </div>
         </div>
 
@@ -286,6 +286,7 @@ function VehicleCard({ vehicle, days, date, cartLine, onDaysChange, onDateChange
 const PARTNER_BRANDS = ["Alamo", "Enterprise", "National Rent a Car"];
 
 function PartnershipBanner() {
+  const { t } = useI18n();
   return (
     <div
       className="rounded-2xl overflow-hidden px-6 md:px-10 py-8 flex flex-col lg:flex-row lg:items-center gap-6 lg:gap-10"
@@ -297,15 +298,11 @@ function PartnershipBanner() {
           <TbTag size={20} className="text-[#C9974F]" />
         </span>
         <div className="flex flex-col gap-2">
-          <p className="font-sans text-[10px] font-bold uppercase tracking-widest text-[#C9974F]">
-            Preferred partner rates
-          </p>
+          <p className="font-sans text-[10px] font-bold uppercase tracking-widest text-[#C9974F]">{t("mulaRental.ui.partnerRates")}</p>
           <h3
             className="text-xl md:text-2xl text-[#EDE5D8] tracking-tight leading-snug"
             style={{ fontFamily: "var(--font-alpina)" }}
-          >
-            Better rates than booking the rental brands directly
-          </h3>
+          >{t("mulaRental.ui.partnerRatesBody")}</h3>
           <p className="font-sans text-sm text-[#D8DDB8]/75 leading-relaxed max-w-2xl">
             We work with three of Costa Rica&apos;s largest rental brands — all under
             the same parent company. Thanks to our commercial agreement with them,
@@ -411,9 +408,7 @@ export default function MulaRentalSection() {
         <h2
           className="text-4xl md:text-5xl text-[#222E2C] tracking-tight leading-tight"
           style={{ fontFamily: "var(--font-alpina)" }}
-        >
-          Transportation
-        </h2>
+        >{t("mulaRental.ui.transportation")}</h2>
       </div>
 
       {/* Partnership banner */}

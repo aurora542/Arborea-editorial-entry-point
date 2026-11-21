@@ -72,14 +72,14 @@ export default function HeroSection() {
           <button
             onClick={() => swiperRef.current?.slidePrev()}
             className="flex items-center justify-center w-16 h-11 rounded-full bg-[#4B4D40] border border-[#4B4D40] text-[#D8DDB8] hover:bg-[#3E4035] transition-all duration-200"
-            aria-label="Previous"
+            aria-label={t("common.a11y.previous")}
           >
             <TbArrowNarrowLeft size={20} />
           </button>
           <button
             onClick={() => swiperRef.current?.slideNext()}
             className="flex items-center justify-center w-16 h-11 rounded-full bg-[#4B4D40] border border-[#4B4D40] text-[#D8DDB8] hover:bg-[#3E4035] transition-all duration-200"
-            aria-label="Next"
+            aria-label={t("common.a11y.next")}
           >
             <TbArrowNarrowRight size={20} />
           </button>

@@ -23,7 +23,10 @@ export default function ActivityCard({ activity, index }) {
   const { t } = useI18n();
   const { getLine, setLine, removeLine, openCart, hydrated } = useCart();
 
-  const { title, description, image, price, priceValue } = activity;
+  /* Solo los campos de cara al huésped. `pricing`, `commission`, `contactName` y
+   * `whatsapp` viven en el mismo objeto y son internos — no se desestructuran aquí
+   * para que no haya forma accidental de renderizarlos. */
+  const { title, description, image, price, priceValue, features } = activity;
 
   const sku = skuOf("tours.activities", index, "title");
   const lineId = lineIdOf("tours", sku);
@@ -100,24 +103,60 @@ export default function ActivityCard({ activity, index }) {
           )}
         </div>
 
-        <div className="flex-1 px-5 py-4 flex flex-col justify-center gap-1 min-w-0">
+        <div
+          className={`flex-1 px-5 py-4 flex flex-col gap-1 min-w-0 ${
+            active ? "justify-start" : "justify-center"
+          }`}
+        >
           <p className={`font-sans font-medium text-base leading-snug ${active ? "text-[#D8DDB8]" : "text-[#222E2C]"}`}>
             {title}
           </p>
-          <p className={`font-sans text-sm leading-relaxed line-clamp-1 ${active ? "text-[#D8DDB8]/60" : "text-[#222E2C]/55"}`}>
+          {/* Collapsed the description is one line so every card in the grid keeps
+              the same height. Expanded it runs in full — the truncation used to
+              apply in both states, which hid most of what we know about the tour. */}
+          <p
+            className={`font-sans text-sm leading-relaxed ${active ? "text-[#D8DDB8]/70" : "line-clamp-1 text-[#222E2C]/55"}`}
+          >
             {description}
           </p>
+
+          {/* What the tour includes. Only rendered expanded, so the collapsed row
+              stays scannable.
+              Deliberately NOT rendered: `pricing`, `commission`, `contactName` and
+              `whatsapp` also live on the activity object. They are the operator's
+              rate card and our margin — internal data that happens to sit in the
+              same i18n node. Never surface them to a guest. */}
+          {active && Array.isArray(features) && features.length > 0 && (
+            <ul className="mt-2.5 grid grid-cols-1 sm:grid-cols-2 gap-x-5 gap-y-1.5">
+              {features.map((f, i) => (
+                <li key={i} className="flex items-start gap-2">
+                  <TbCheck size={14} className="text-[#C9974F] shrink-0 mt-0.5" />
+                  <span className="font-sans text-sm leading-snug text-[#D8DDB8]/75">{f}</span>
+                </li>
+              ))}
+            </ul>
+          )}
+
           {active && total !== null && (
-            <p className="font-sans font-bold text-lg text-[#EDE5D8] mt-1 tabular-nums">{money(total)}</p>
+            <p className="font-sans font-bold text-lg text-[#EDE5D8] mt-3 tabular-nums">
+              {money(total)}
+              {price && (
+                <span className="font-normal text-sm text-[#D8DDB8]/55 ml-2">{price}</span>
+              )}
+            </p>
           )}
         </div>
 
-        <div className="shrink-0 flex flex-col items-end justify-center gap-2 px-5 py-4">
+        <div
+          className={`shrink-0 flex flex-col items-end gap-2 px-5 py-4 ${
+            active ? "justify-start" : "justify-center"
+          }`}
+        >
           {!active && price && (
             <span className="font-sans text-sm font-semibold text-[#222E2C]/50">{price}</span>
           )}
           {active ? (
-            <QtyStepper value={qty} onChange={setQty} min={1} size="md" tone="dark" label={t("cart.quantity")} />
+            <QtyStepper value={qty} onChange={setQty} min={1} size="md" tone="accent" label={t("cart.quantity")} />
           ) : (
             <button
               type="button"
@@ -133,7 +172,7 @@ export default function ActivityCard({ activity, index }) {
 
       {active && (
         <div className="px-5 pb-4 pt-3 border-t border-white/10 flex flex-wrap items-end gap-4">
-          <DateField value={date} onChange={setDate} optional tone="dark" />
+          <DateField value={date} onChange={setDate} optional tone="accent" />
 
           <div className="flex items-center gap-2 ml-auto">
             {cartLine && (

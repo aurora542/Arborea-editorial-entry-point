@@ -458,16 +458,16 @@ export default function FullFridgePage() {
                 </div>
               </div>
               <div className="flex flex-col gap-2">
-                <span className="font-sans text-xs font-semibold text-[#222E2C]/40 uppercase tracking-widest">Children <span className="normal-case tracking-normal font-normal">(under 12)</span></span>
+                <span className="font-sans text-xs font-semibold text-[#222E2C]/40 uppercase tracking-widest">{t("fullFridge.ui.children")}<span className="normal-case tracking-normal font-normal">(under 12)</span></span>
                 <div className="flex items-center gap-3">
                   <QtyStepper value={children} onChange={setChildren} min={0} max={10 - adults}
-                    size="lg" variant="detached" accent="#5C3324" suffix="children" label="Children" />
+                    size="lg" variant="detached" accent="#5C3324" suffix="children" label={t("fullFridge.ui.children")} />
                 </div>
               </div>
               <div className="self-end pb-1 flex flex-col gap-0.5">
                 <span className="font-sans text-xs text-[#222E2C]/35">{totalGuests} / 10 guests total</span>
                 {totalGuests >= 10 && (
-                  <span className="font-sans text-xs text-[#5C3324]/70">Max reached — contact us for larger groups</span>
+                  <span className="font-sans text-xs text-[#5C3324]/70">{t("fullFridge.ui.maxReached")}</span>
                 )}
               </div>
               <div className="flex flex-col gap-2">
@@ -730,21 +730,21 @@ export default function FullFridgePage() {
 
               {/* Notes */}
               <div className="flex flex-col gap-1.5 mt-2">
-                <span className="font-sans text-xs text-[#D8DDB8]/70">Additional notes</span>
+                <span className="font-sans text-xs text-[#D8DDB8]/70">{t("fullFridge.ui.notesLabel")}</span>
                 <textarea
                   rows={3}
                   value={notes}
                   onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Anything else we should know about your stay..."
+                  placeholder={t("fullFridge.ui.notesPlaceholder")}
                   className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 text-[#D8DDB8] placeholder:text-[#D8DDB8]/30 font-sans text-sm focus:outline-none focus:ring-2 focus:ring-[#D8DDB8]/20 resize-none"
                 />
               </div>
 
               {/* Order summary */}
               <div className="rounded-xl bg-white/8 border border-white/10 px-5 py-4 flex flex-col gap-2 mt-2">
-                <p className="font-sans text-xs font-semibold text-[#D8DDB8]/60 uppercase tracking-widest mb-1">Order summary</p>
+                <p className="font-sans text-xs font-semibold text-[#D8DDB8]/60 uppercase tracking-widest mb-1">{t("fullFridge.ui.orderSummary")}</p>
                 {draftLines.length === 0 ? (
-                  <p className="font-sans text-sm italic text-[#D8DDB8]/40">Select your package and any add-ons above to see your total here.</p>
+                  <p className="font-sans text-sm italic text-[#D8DDB8]/40">{t("fullFridge.ui.nothingSelected")}</p>
                 ) : (
                   <>
                     {draftLines.map((line) => (

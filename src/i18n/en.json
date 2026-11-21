@@ -252,7 +252,13 @@
     "totalLabel": "Total",
     "dayLabel": "day",
     "daysLabelPlural": "days",
-    "footerLabel": "Questions about the ride?"
+    "footerLabel": "Questions about the ride?",
+    "ui": {
+      "idealFor": "Ideal for",
+      "partnerRates": "Preferred partner rates",
+      "partnerRatesBody": "Better rates than booking the rental brands directly",
+      "transportation": "Transportation"
+    }
   },
   "inhouse": {
     "pill": "Signature Experiences",
@@ -941,6 +947,36 @@
           }
         ]
       }
+    },
+    "ui": {
+      "howToHeading": "How to build your experience",
+      "howToSub": "Browse the menus, pick your dishes, and submit — your chef handles the rest.",
+      "step1": "Pick a service",
+      "step1Body": "Choose between Breakfast, Lunch, Dinner, or a Full Day — then set your guest count.",
+      "step2": "Browse the menus",
+      "step2Body": "Explore each meal and select the dishes you'd like the chef to prepare.",
+      "step3": "Add preferences",
+      "step3Body": "Let the chef know about dietary restrictions, allergies, or anything you'd rather avoid.",
+      "step4": "Review & submit",
+      "step4Body": "Scroll to the order summary at the bottom, add any final notes for the chef, and submit — we'll confirm everything before your stay.",
+      "removeDay": "Remove day",
+      "serviceType": "Service type",
+      "decreaseGuests": "Decrease guests",
+      "increaseGuests": "Increase guests",
+      "dayTotal": "Day total",
+      "bothOptions": "The chef will prepare both options for your group.",
+      "chooseOne": "Choose 1 dish per meal",
+      "chooseOneHint": "Picking another automatically replaces the current one.",
+      "orderSummary": "Order Summary",
+      "nothingSelected": "No items selected yet — browse the sections above.",
+      "preferencesHeading": "Preferences & Details",
+      "notesLabel": "Notes for the chef",
+      "notesPlaceholder": "Anything else you'd like the chef to know...",
+      "addNight": "Add this night",
+      "addAnotherDate": "Add another date for this night",
+      "menuHint": "Menu — select your preferences below and mention them in the notes",
+      "allIncluded": "Everything included",
+      "dessert": "Dessert:"
     }
   },
   "fullFridge": {
@@ -1358,6 +1394,14 @@
         "ages": "ages",
         "none": "Not specified"
       }
+    },
+    "ui": {
+      "children": "Children",
+      "maxReached": "Max reached — contact us for larger groups",
+      "notesLabel": "Additional notes",
+      "notesPlaceholder": "Anything else we should know about your stay...",
+      "orderSummary": "Order summary",
+      "nothingSelected": "Select your package and any add-ons above to see your total here."
     }
   },
   "tours": {
@@ -1746,7 +1790,21 @@
     "addService": "Add service",
     "added": "Added",
     "email": "concierge@arboreaexperiences.com",
-    "website": "arboreaexperiences.com"
+    "website": "arboreaexperiences.com",
+    "a11y": {
+      "decrease": "Decrease",
+      "increase": "Increase",
+      "preferredDate": "Preferred date",
+      "previous": "Previous",
+      "next": "Next",
+      "switchLanguage": "Switch language",
+      "mainMenu": "Main menu",
+      "logo": "Arbórea Experiences"
+    },
+    "credits": {
+      "madeBy": "Made by Aurigital",
+      "designCredit": "Design and development credits by Aurigital"
+    }
   },
   "orderForm": {
     "pill": "Build your order",
@@ -2190,6 +2248,30 @@
       "phone": "+506 8301-0027",
       "website": "www.gvmassagecr.com",
       "instagram": "@gvcostarica"
+    },
+    "ui": {
+      "quantity": "Quantity",
+      "orderSummary": "Order Summary",
+      "reviewHeading": "Review your selection",
+      "reviewSub": "Review your selected treatments and add any allergies or notes, then add it all to your order. You'll fill in your details at checkout.",
+      "yourSelection": "Your Selection",
+      "nothingSelected": "No services selected yet — browse the sections above.",
+      "allergiesLabel": "Allergies or things to consider",
+      "allergiesPlaceholder": "Skin sensitivities, medical conditions, injuries, or anything the therapist should know…",
+      "notesLabel": "Additional notes",
+      "notesPlaceholder": "Any other preferences or special requests…",
+      "howToHeading": "How to book your treatments",
+      "howToSub": "Browse, customize, and submit — we'll take care of the rest before your stay.",
+      "step1": "Browse treatments",
+      "step1Body": "Scroll through massages, facials, packages, and enhancements below.",
+      "step2": "Choose your options",
+      "step2Body": "Pick a duration, set the quantity, and add an optional preferred date.",
+      "step3": "Add to your request",
+      "step3Body": "Select as many services as you'd like — they'll all appear in your order summary.",
+      "step4": "Review & submit",
+      "step4Body": "Scroll to the order summary at the bottom, add any allergies or notes, and submit — we'll confirm before your stay.",
+      "enhancements": "Enhancements",
+      "enhancementsLocked": "Select a massage, facial, or package above to unlock enhancements."
     }
   },
   "fishingTours": {

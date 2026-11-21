@@ -24,6 +24,7 @@ const SPA_COLOR = "#8B5A3C";
 /* ── sub-components ───────────────────────────────────────── */
 
 function MassageCard({ name, description, image, groupId, durations, draft }) {
+  const { t } = useI18n();
   const selected = draft.get(groupId);
   const qty = selected?.qty ?? 1;
   const date = selected?.date ?? "";
@@ -83,8 +84,8 @@ function MassageCard({ name, description, image, groupId, durations, draft }) {
         {selected && (
           <div className="flex flex-col gap-3 pt-3 border-t border-white/10">
             <div className="flex items-center justify-between">
-              <span className="font-sans text-xs text-[#EDE5D8]/55">Quantity</span>
-              <QtyStepper value={qty} onChange={changeQty} min={1} size="sm" tone="dark" label="Quantity" />
+              <span className="font-sans text-xs text-[#EDE5D8]/55">{t("wellnessSpa.ui.quantity")}</span>
+              <QtyStepper value={qty} onChange={changeQty} min={1} size="sm" tone="dark" label={t("wellnessSpa.ui.quantity")} />
             </div>
             <DateField value={date} onChange={changeDate} optional tone="dark" />
           </div>
@@ -134,6 +135,7 @@ function AddonCard({ name, id, Icon, draft, addonPrice, disabled = false }) {
 }
 
 function FacialItemCard({ item, id, draft }) {
+  const { t } = useI18n();
   const entry = draft.get(id);
   const qty = entry?.qty ?? 0;
   const date = entry?.date ?? "";
@@ -178,7 +180,7 @@ function FacialItemCard({ item, id, draft }) {
               <span className={`font-sans font-bold text-2xl ${selected ? "text-[#EDE5D8]" : "text-[#C9974F]"}`}>${item.priceValue}</span>
               <p className={`font-sans text-xs uppercase tracking-wide ${selected ? "text-[#EDE5D8]/50" : "text-[#222E2C]/45"}`}>{item.duration}</p>
             </div>
-            <QtyStepper value={qty} onChange={changeQty} min={0} size="sm" tone={selected ? "dark" : "light"} label="Quantity" />
+            <QtyStepper value={qty} onChange={changeQty} min={0} size="sm" tone={selected ? "dark" : "light"} label={t("wellnessSpa.ui.quantity")} />
           </div>
           {selected && <DateField value={date} onChange={changeDate} optional tone="dark" />}
         </div>
@@ -188,6 +190,7 @@ function FacialItemCard({ item, id, draft }) {
 }
 
 function PackageCard({ pkg, qty, onQtyChange, entry, onDateChange }) {
+  const { t } = useI18n();
   const selected = qty > 0;
   const date = entry?.date ?? "";
 
@@ -206,7 +209,7 @@ function PackageCard({ pkg, qty, onQtyChange, entry, onDateChange }) {
           <h3 className={`font-sans font-semibold text-lg leading-snug ${selected ? "text-[#EDE5D8]" : "text-[#222E2C]"}`}>{pkg.name}</h3>
         </div>
         <div className="shrink-0">
-          <QtyStepper value={qty} onChange={onQtyChange} min={0} size="md" tone={selected ? "dark" : "light"} label="Quantity" />
+          <QtyStepper value={qty} onChange={onQtyChange} min={0} size="md" tone={selected ? "dark" : "light"} label={t("wellnessSpa.ui.quantity")} />
         </div>
       </div>
 
@@ -243,21 +246,19 @@ function SpaSummary({ lines, total, allergies, onAllergiesChange, notes, onNotes
   return (
     <div id="checkout" className="scroll-mt-24 flex flex-col gap-6">
       <div className="border-b border-[#213B2F]/15 pb-4">
-        <p className="font-sans text-xs font-semibold text-[#213B2F]/50 uppercase tracking-widest mb-1">Order Summary</p>
-        <h2 className="font-sans font-semibold text-xl md:text-2xl text-[#213B2F] tracking-tight">Review your selection</h2>
-        <p className="font-sans text-sm text-[#213B2F]/55 mt-2 max-w-2xl">
-          Review your selected treatments and add any allergies or notes, then add it all to your order. You&apos;ll fill in your details at checkout.
-        </p>
+        <p className="font-sans text-xs font-semibold text-[#213B2F]/50 uppercase tracking-widest mb-1">{t("wellnessSpa.ui.orderSummary")}</p>
+        <h2 className="font-sans font-semibold text-xl md:text-2xl text-[#213B2F] tracking-tight">{t("wellnessSpa.ui.reviewHeading")}</h2>
+        <p className="font-sans text-sm text-[#213B2F]/55 mt-2 max-w-2xl">{t("wellnessSpa.ui.reviewSub")}</p>
       </div>
 
       <div className="rounded-2xl px-6 md:px-10 py-8 flex flex-col gap-8" style={{ backgroundColor: SPA_COLOR }}>
 
         {/* Selected services */}
         <div className="flex flex-col gap-3">
-          <h3 className="font-sans font-semibold text-sm text-[#EDE5D8]">Your Selection</h3>
+          <h3 className="font-sans font-semibold text-sm text-[#EDE5D8]">{t("wellnessSpa.ui.yourSelection")}</h3>
           {lines.length === 0 ? (
             <div className="rounded-xl border border-dashed border-white/20 px-4 py-5 text-center">
-              <p className="font-sans text-sm italic text-[#EDE5D8]/40">No services selected yet — browse the sections above.</p>
+              <p className="font-sans text-sm italic text-[#EDE5D8]/40">{t("wellnessSpa.ui.nothingSelected")}</p>
             </div>
           ) : (
             <div className="rounded-xl bg-white/8 divide-y divide-white/10 overflow-hidden">
@@ -280,14 +281,12 @@ function SpaSummary({ lines, total, allergies, onAllergiesChange, notes, onNotes
         {/* Allergies / considerations */}
         <label className="flex flex-col gap-1.5">
           <span className="font-sans text-xs font-medium text-[#EDE5D8]/60 flex items-center gap-1.5">
-            <TbAlertTriangle size={12} />
-            Allergies or things to consider
-          </span>
+            <TbAlertTriangle size={12} />{t("wellnessSpa.ui.allergiesLabel")}</span>
           <textarea
             rows={2}
             value={allergies}
             onChange={(e) => onAllergiesChange(e.target.value)}
-            placeholder="Skin sensitivities, medical conditions, injuries, or anything the therapist should know…"
+            placeholder={t("wellnessSpa.ui.allergiesPlaceholder")}
             className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 font-sans text-sm text-[#EDE5D8] placeholder:text-[#EDE5D8]/35 focus:outline-none focus:ring-2 focus:ring-white/25 focus:border-transparent transition-all duration-200 resize-none"
           />
         </label>
@@ -295,14 +294,12 @@ function SpaSummary({ lines, total, allergies, onAllergiesChange, notes, onNotes
         {/* Notes */}
         <label className="flex flex-col gap-1.5">
           <span className="font-sans text-xs font-medium text-[#EDE5D8]/60 flex items-center gap-1.5">
-            <TbNotes size={12} />
-            Additional notes
-          </span>
+            <TbNotes size={12} />{t("wellnessSpa.ui.notesLabel")}</span>
           <textarea
             rows={3}
             value={notes}
             onChange={(e) => onNotesChange(e.target.value)}
-            placeholder="Any other preferences or special requests…"
+            placeholder={t("wellnessSpa.ui.notesPlaceholder")}
             className="w-full px-4 py-3 rounded-xl bg-white/10 border border-white/10 font-sans text-sm text-[#EDE5D8] placeholder:text-[#EDE5D8]/35 focus:outline-none focus:ring-2 focus:ring-white/25 focus:border-transparent transition-all duration-200 resize-none"
           />
         </label>
@@ -548,19 +545,15 @@ export default function WellnessSpaPage() {
           {/* How it works */}
           <div className="flex flex-col gap-6" data-aos="fade-up">
             <div className="flex flex-col gap-2 max-w-xl">
-              <h2 className="text-3xl md:text-4xl text-[#213B2F] tracking-tight leading-tight" style={{ fontFamily: "var(--font-alpina)" }}>
-                How to book your treatments
-              </h2>
-              <p className="font-sans text-sm text-[#213B2F]/55 leading-relaxed">
-                Browse, customize, and submit — we&apos;ll take care of the rest before your stay.
-              </p>
+              <h2 className="text-3xl md:text-4xl text-[#213B2F] tracking-tight leading-tight" style={{ fontFamily: "var(--font-alpina)" }}>{t("wellnessSpa.ui.howToHeading")}</h2>
+              <p className="font-sans text-sm text-[#213B2F]/55 leading-relaxed">{t("wellnessSpa.ui.howToSub")}</p>
             </div>
             <div className="flex flex-col sm:flex-row gap-3">
               {[
-                { Icon: TbHandClick,  step: "Browse treatments",   body: "Scroll through massages, facials, packages, and enhancements below." },
-                { Icon: TbAdjustments, step: "Choose your options", body: "Pick a duration, set the quantity, and add an optional preferred date." },
-                { Icon: TbCirclePlus,  step: "Add to your request", body: "Select as many services as you'd like — they'll all appear in your order summary." },
-                { Icon: TbSend,        step: "Review & submit",     body: "Scroll to the order summary at the bottom, add any allergies or notes, and submit — we'll confirm before your stay." },
+                { Icon: TbHandClick,  step: t("wellnessSpa.ui.step1"),   body: t("wellnessSpa.ui.step1Body") },
+                { Icon: TbAdjustments, step: t("wellnessSpa.ui.step2"), body: t("wellnessSpa.ui.step2Body") },
+                { Icon: TbCirclePlus,  step: t("wellnessSpa.ui.step3"), body: t("wellnessSpa.ui.step3Body") },
+                { Icon: TbSend,        step: t("wellnessSpa.ui.step4"),     body: t("wellnessSpa.ui.step4Body") },
               ].map(({ Icon, step, body }, i) => (
                 <div key={i} className="flex-1 flex flex-col gap-3 bg-white rounded-2xl px-5 py-5 border border-[#213B2F]/8">
                   <div className="flex items-center gap-3">
@@ -612,7 +605,7 @@ export default function WellnessSpaPage() {
           <div className="flex flex-col gap-6" data-aos="fade-up">
             <div className="border-b border-[#213B2F]/15 pb-4">
               <p className="font-sans text-xs font-semibold text-[#213B2F]/50 uppercase tracking-widest mb-1">{t("wellnessSpa.facials.addons.heading")}</p>
-              <h2 className="font-sans font-semibold text-xl md:text-2xl text-[#213B2F] tracking-tight">Enhancements</h2>
+              <h2 className="font-sans font-semibold text-xl md:text-2xl text-[#213B2F] tracking-tight">{t("wellnessSpa.ui.enhancements")}</h2>
             </div>
 
             <div className="flex flex-col items-center gap-4 text-center py-6">
@@ -623,9 +616,7 @@ export default function WellnessSpaPage() {
             </div>
 
             {!hasOtherService && (
-              <p className="font-sans text-xs text-[#213B2F]/45 italic text-center">
-                Select a massage, facial, or package above to unlock enhancements.
-              </p>
+              <p className="font-sans text-xs text-[#213B2F]/45 italic text-center">{t("wellnessSpa.ui.enhancementsLocked")}</p>
             )}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
               {Array.isArray(addonItems) && addonItems.map((name, i) => (

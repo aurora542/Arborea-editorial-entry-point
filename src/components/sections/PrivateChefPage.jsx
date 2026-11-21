@@ -685,19 +685,15 @@ export default function PrivateChefPage() {
             {/* How it works — steps */}
             <div className="flex flex-col gap-6" data-aos="fade-up">
               <div className="flex flex-col gap-2 max-w-xl">
-                <h2 className="text-3xl md:text-4xl text-[#213B2F] tracking-tight leading-tight" style={{ fontFamily: "var(--font-alpina)" }}>
-                  How to build your experience
-                </h2>
-                <p className="font-sans text-sm text-[#222E2C]/50 leading-relaxed">
-                  Browse the menus, pick your dishes, and submit — your chef handles the rest.
-                </p>
+                <h2 className="text-3xl md:text-4xl text-[#213B2F] tracking-tight leading-tight" style={{ fontFamily: "var(--font-alpina)" }}>{t("privateChef.ui.howToHeading")}</h2>
+                <p className="font-sans text-sm text-[#222E2C]/50 leading-relaxed">{t("privateChef.ui.howToSub")}</p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
                 {[
-                  { Icon: TbHandClick,     step: "Pick a service",      body: "Choose between Breakfast, Lunch, Dinner, or a Full Day — then set your guest count." },
-                  { Icon: TbListCheck,     step: "Browse the menus",    body: "Explore each meal and select the dishes you'd like the chef to prepare." },
-                  { Icon: TbAdjustments,   step: "Add preferences",     body: "Let the chef know about dietary restrictions, allergies, or anything you'd rather avoid." },
-                  { Icon: TbSend,          step: "Review & submit",     body: "Scroll to the order summary at the bottom, add any final notes for the chef, and submit — we'll confirm everything before your stay." },
+                  { Icon: TbHandClick,     step: t("privateChef.ui.step1"),      body: t("privateChef.ui.step1Body") },
+                  { Icon: TbListCheck,     step: t("privateChef.ui.step2"),    body: t("privateChef.ui.step2Body") },
+                  { Icon: TbAdjustments,   step: t("privateChef.ui.step3"),     body: t("privateChef.ui.step3Body") },
+                  { Icon: TbSend,          step: t("privateChef.ui.step4"),     body: t("privateChef.ui.step4Body") },
                 ].map(({ Icon, step, body }, i) => (
                   <div key={i} className="flex-1 flex flex-col gap-3 bg-white rounded-2xl px-5 py-5 border border-[#222E2C]/8">
                     <div className="flex items-center gap-3">
@@ -767,16 +763,12 @@ export default function PrivateChefPage() {
                           aria-label={`Remove Day ${idx + 1}`}
                           className="inline-flex items-center gap-1.5 shrink-0 px-3 py-1.5 rounded-full font-sans text-xs font-medium text-[#222E2C]/55 hover:text-red-700 hover:bg-red-700/8 transition-colors"
                         >
-                          <TbTrash size={13} />
-                          Remove day
-                        </button>
+                          <TbTrash size={13} />{t("privateChef.ui.removeDay")}</button>
                       </div>
 
                       {/* Service type picker — per item */}
                       <div className="px-6 py-5 border-b border-[#213B2F]/8 flex flex-col gap-3">
-                        <p className="font-sans text-[10px] font-semibold uppercase tracking-widest text-[#222E2C]/45">
-                          Service type
-                        </p>
+                        <p className="font-sans text-[10px] font-semibold uppercase tracking-widest text-[#222E2C]/45">{t("privateChef.ui.serviceType")}</p>
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                           {Array.isArray(pricingPS) && pricingPS.map((opt, i) => {
                             const active = it.serviceIdx === i;
@@ -814,7 +806,7 @@ export default function PrivateChefPage() {
                             <button
                               type="button"
                               onClick={() => updateServiceItem(it.id, { guests: Math.max(2, (it.guests || 2) - 1) })}
-                              aria-label="Decrease guests"
+                              aria-label={t("privateChef.ui.decreaseGuests")}
                               className="size-9 flex items-center justify-center rounded-full border-2 border-[#213B2F]/25 text-[#213B2F] font-sans text-lg hover:bg-[#213B2F]/8 transition-colors select-none"
                             >−</button>
                             <div className="flex items-center justify-center px-4 py-2 rounded-full bg-[#213B2F] min-w-[3rem]">
@@ -823,7 +815,7 @@ export default function PrivateChefPage() {
                             <button
                               type="button"
                               onClick={() => updateServiceItem(it.id, { guests: (it.guests || 2) + 1 })}
-                              aria-label="Increase guests"
+                              aria-label={t("privateChef.ui.increaseGuests")}
                               className="size-9 flex items-center justify-center rounded-full border-2 border-[#213B2F]/25 text-[#213B2F] font-sans text-lg hover:bg-[#213B2F]/8 transition-colors select-none"
                             >+</button>
                           </div>
@@ -838,7 +830,7 @@ export default function PrivateChefPage() {
                         />
 
                         <div className="ml-auto flex flex-col items-end gap-0.5">
-                          <span className="font-sans text-[10px] text-[#222E2C]/40 uppercase tracking-widest">Day total</span>
+                          <span className="font-sans text-[10px] text-[#222E2C]/40 uppercase tracking-widest">{t("privateChef.ui.dayTotal")}</span>
                           <span className="font-sans font-bold text-2xl tabular-nums" style={{ color: "#C9974F" }}>
                             ${lineTotal.toLocaleString("en-US")}
                           </span>
@@ -856,12 +848,12 @@ export default function PrivateChefPage() {
                               {itemMaxDishes === 2 ? (
                                 <>
                                   <p className="font-sans font-semibold text-sm text-[#D8DDB8]">With {it.guests} guests, choose up to 2 dishes per meal</p>
-                                  <p className="font-sans text-xs text-[#D8DDB8]/70 mt-0.5">The chef will prepare both options for your group.</p>
+                                  <p className="font-sans text-xs text-[#D8DDB8]/70 mt-0.5">{t("privateChef.ui.bothOptions")}</p>
                                 </>
                               ) : (
                                 <>
-                                  <p className="font-sans font-semibold text-sm text-[#222E2C]">Choose 1 dish per meal</p>
-                                  <p className="font-sans text-xs text-[#222E2C]/60 mt-0.5">Picking another automatically replaces the current one.</p>
+                                  <p className="font-sans font-semibold text-sm text-[#222E2C]">{t("privateChef.ui.chooseOne")}</p>
+                                  <p className="font-sans text-xs text-[#222E2C]/60 mt-0.5">{t("privateChef.ui.chooseOneHint")}</p>
                                 </>
                               )}
                             </div>
@@ -1333,10 +1325,10 @@ function ChefSummary({ lines, infoLines = [], total, notes, onNotesChange, onAdd
 
         {/* Priced summary */}
         <div className="flex flex-col gap-3">
-          <h3 className="font-sans font-semibold text-sm text-[#D8DDB8]">Order Summary</h3>
+          <h3 className="font-sans font-semibold text-sm text-[#D8DDB8]">{t("privateChef.ui.orderSummary")}</h3>
           {lines.length === 0 ? (
             <div className="rounded-xl border border-dashed border-[#D8DDB8]/25 px-4 py-5 text-center">
-              <p className="font-sans text-sm italic text-[#D8DDB8]/45">No items selected yet — browse the sections above.</p>
+              <p className="font-sans text-sm italic text-[#D8DDB8]/45">{t("privateChef.ui.nothingSelected")}</p>
             </div>
           ) : (
             <div className="rounded-xl bg-white/8 divide-y divide-[#D8DDB8]/10 overflow-hidden">
@@ -1359,7 +1351,7 @@ function ChefSummary({ lines, infoLines = [], total, notes, onNotesChange, onAdd
         {/* Preferences & dish picks */}
         {infoLines.length > 0 && (
           <div className="flex flex-col gap-3">
-            <h3 className="font-sans font-semibold text-sm text-[#D8DDB8]">Preferences & Details</h3>
+            <h3 className="font-sans font-semibold text-sm text-[#D8DDB8]">{t("privateChef.ui.preferencesHeading")}</h3>
             <div className="rounded-xl border border-[#D8DDB8]/15 px-4 py-3 flex flex-col gap-2">
               {infoLines.map((line, i) => (
                 <div key={i} className="flex items-start gap-2">
@@ -1416,14 +1408,14 @@ function ChefSummary({ lines, infoLines = [], total, notes, onNotesChange, onAdd
 
         {/* Notes */}
         <label className="flex flex-col gap-1.5">
-          <span className="font-sans text-xs font-medium text-[#D8DDB8]/60">Notes for the chef</span>
+          <span className="font-sans text-xs font-medium text-[#D8DDB8]/60">{t("privateChef.ui.notesLabel")}</span>
           <div className="relative">
             <TbNotes size={16} className="absolute left-3.5 top-3.5 pointer-events-none text-[#D8DDB8]/35" />
             <textarea
               rows={3}
               value={notes}
               onChange={(e) => onNotesChange(e.target.value)}
-              placeholder="Anything else you'd like the chef to know..."
+              placeholder={t("privateChef.ui.notesPlaceholder")}
               className="w-full pl-10 pr-4 py-3 rounded-xl bg-white/10 border border-white/10 shadow-sm font-sans text-sm text-[#D8DDB8] placeholder:text-[#D8DDB8]/40 focus:outline-none focus:ring-2 focus:ring-[#D8DDB8]/40 focus:border-transparent transition-all duration-200 resize-none"
             />
           </div>
@@ -1479,6 +1471,7 @@ const NIGHT_IMAGES = [
 ];
 
 function ThemedNightPanel({ night, image, instances = [], onAddInstance, onUpdateInstance, onRemoveInstance, priceOf }) {
+  const { t } = useI18n();
   const selected = instances.length > 0;
 
   const clampGuests = (g) => Math.max(2, Math.min(15, g));
@@ -1517,9 +1510,7 @@ function ThemedNightPanel({ night, image, instances = [], onAddInstance, onUpdat
             <div className="px-6 py-5 flex flex-col items-end justify-center gap-2 shrink-0">
               <span className="font-sans text-xs text-[#222E2C]/40">from $530</span>
               <span className="inline-flex items-center gap-1.5 px-4 py-2 rounded-full border border-[#213B2F]/20 text-[#213B2F] font-sans text-sm font-medium">
-                <TbPlus size={13} />
-                Add this night
-              </span>
+                <TbPlus size={13} />{t("privateChef.ui.addNight")}</span>
             </div>
           </button>
         </div>
@@ -1568,14 +1559,14 @@ function ThemedNightPanel({ night, image, instances = [], onAddInstance, onUpdat
                         <button
                           type="button"
                           onClick={() => onUpdateInstance(instance.id, { guests: clampGuests(instance.guests - 1) })}
-                          aria-label="Decrease guests"
+                          aria-label={t("privateChef.ui.decreaseGuests")}
                           className="size-10 flex items-center justify-center font-sans text-xl leading-none text-[#D8DDB8]/70 hover:bg-white/10 transition-colors select-none"
                         >−</button>
                         <span className="w-10 text-center font-sans text-sm font-bold text-[#EDE5D8] tabular-nums">{instance.guests}</span>
                         <button
                           type="button"
                           onClick={() => onUpdateInstance(instance.id, { guests: clampGuests(instance.guests + 1) })}
-                          aria-label="Increase guests"
+                          aria-label={t("privateChef.ui.increaseGuests")}
                           className="size-10 flex items-center justify-center font-sans text-xl leading-none text-[#D8DDB8]/70 hover:bg-white/10 transition-colors select-none"
                         >+</button>
                       </div>
@@ -1589,7 +1580,7 @@ function ThemedNightPanel({ night, image, instances = [], onAddInstance, onUpdat
                         value={instance.date}
                         onChange={(d) => onUpdateInstance(instance.id, { date: d })}
                         optional
-                        tone="dark"
+                        tone="accent"
                         className="min-w-[12rem]"
                       />
                     </div>
@@ -1623,9 +1614,7 @@ function ThemedNightPanel({ night, image, instances = [], onAddInstance, onUpdat
                 onClick={onAddInstance}
                 className="w-fit inline-flex items-center gap-2 px-4 py-2 rounded-full border border-dashed border-[#D8DDB8]/40 text-[#D8DDB8] hover:bg-white/10 hover:border-[#D8DDB8]/70 transition-colors font-sans text-sm font-semibold"
               >
-                <TbPlus size={14} />
-                Add another date for this night
-              </button>
+                <TbPlus size={14} />{t("privateChef.ui.addAnotherDate")}</button>
             </div>
 
             {/* Menu content */}
@@ -1633,9 +1622,7 @@ function ThemedNightPanel({ night, image, instances = [], onAddInstance, onUpdat
               {night.menu ? (
                 /* Nights with selectable menus: show sections + "Choose N" badge */
                 <div className="flex flex-col gap-8">
-                  <p className="font-sans text-xs font-semibold uppercase tracking-widest text-[#213B2F]/50">
-                    Menu — select your preferences below and mention them in the notes
-                  </p>
+                  <p className="font-sans text-xs font-semibold uppercase tracking-widest text-[#213B2F]/50">{t("privateChef.ui.menuHint")}</p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     {night.menu.map((section, si) => {
                       const choiceLabel = getChoiceCount(section.heading);
@@ -1667,9 +1654,7 @@ function ThemedNightPanel({ night, image, instances = [], onAddInstance, onUpdat
               ) : (
                 /* All-inclusive nights: just show what's included */
                 <div className="flex flex-col gap-4">
-                  <p className="font-sans text-xs font-semibold uppercase tracking-widest text-[#213B2F]/50 pb-3 border-b-2 border-[#213B2F]/15">
-                    Everything included
-                  </p>
+                  <p className="font-sans text-xs font-semibold uppercase tracking-widest text-[#213B2F]/50 pb-3 border-b-2 border-[#213B2F]/15">{t("privateChef.ui.allIncluded")}</p>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-1.5 gap-x-8">
                     {night.includes.map((item, i) => (
                       <div key={i} className="flex items-start gap-2">
@@ -1680,7 +1665,7 @@ function ThemedNightPanel({ night, image, instances = [], onAddInstance, onUpdat
                   </div>
                   {night.dessert && (
                     <div className="pt-4 border-t border-[#213B2F]/12 flex items-center gap-2">
-                      <span className="font-sans font-semibold text-sm text-[#222E2C]">Dessert:</span>
+                      <span className="font-sans font-semibold text-sm text-[#222E2C]">{t("privateChef.ui.dessert")}</span>
                       <span className="font-sans text-sm text-[#222E2C]/65">{night.dessert}</span>
                     </div>
                   )}

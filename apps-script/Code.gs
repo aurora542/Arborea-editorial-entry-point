@@ -820,7 +820,7 @@ function generarPedidoDePrueba() {
     guest: {
       reservationNumber: '99001',  /* 5 dígitos, como los reales */
       firstName: 'Ana', lastName: 'Rodríguez',
-      email: '', phone: '+506 8888 8888',
+      email: 'marce@aurigital.com', phone: '+506 8888 8888',
       casa: 'casa-mango', checkInDate: '2026-12-02',
     },
     cart: [
