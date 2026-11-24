@@ -107,12 +107,17 @@
       },
       {
         "type": "medical",
-        "title": "Dr. Solano (Médico de guardia)",
+        "title": "Dra. Nikol S. Vargas (Médico de guardia)",
         "subtitle": null,
         "rows": [
           {
-            "label": "WhatsApp:",
-            "value": "+506 8579-5097"
+            "label": "Teléfono:",
+            "value": "+506 8750-9118"
+          },
+          {
+            "label": "Sitio web:",
+            "value": "vargasmedicalcenter.com",
+            "href": "https://vargasmedicalcenter.com"
           }
         ]
       },
@@ -1845,6 +1850,11 @@
     "bedrooms": "Habitaciones",
     "baths": "Baños",
     "addService": "Agregar servicio",
+    "add": "Agregar",
+    "buildMenuStart": "Empieza a armar tu menú",
+    "buildMenuStartHint": "Elige un día y un tipo de comida. Puedes combinar varios durante una estadía larga.",
+    "buildMenuAnother": "Agregar un menú para otro día",
+    "buildMenuAnotherHint": "Ideal para estadías largas: cada día tiene su propio servicio, número de huéspedes y platos.",
     "added": "Agregado",
     "email": "concierge@arboreaexperiences.com",
     "website": "arboreaexperiences.com",
@@ -2065,12 +2075,14 @@
         {
           "name": "Facial Natural",
           "description": "Tratamiento formulado con té blanco como ingrediente base. Nutre y protege la piel con antioxidantes naturales mientras la revitaliza desde adentro. Ideal para todo tipo de piel, especialmente sensible o deshidratada.",
-          "duration": "60 min"
+          "duration": "60 min",
+          "image": "/assets/Facials/NaturalFacial.avif"
         },
         {
           "name": "Limpieza Facial Profunda",
           "description": "Un tratamiento completo de 60 minutos que incluye limpieza, exfoliación, vapor, extracción, tónico, peeling ultrasónico y una máscara especializada según tu tipo de piel. El reset que tu rostro necesita.",
           "duration": "60 min",
+          "image": "/assets/Facials/DeepFacialCleansing.avif",
           "features": [
             "Limpieza · Exfoliación · Vapor",
             "Extracción · Tónico",
@@ -2303,7 +2315,7 @@
       "departureLabel": "Salida",
       "capacityLabel": "Capacidad",
       "pickGroupLabel": "Tamaño del grupo",
-      "selectTourLabel": "Seleccionar tour",
+      "selectTourLabel": "Ver detalles",
       "selectedLabel": "Seleccionado",
       "fromLabel": "desde",
       "items": [
@@ -2559,6 +2571,8 @@
       "preferencesHeading": "Tus preferencias"
     },
     "addToCart": "Agregar al carrito",
+    "seeDetails": "Ver detalles",
+    "requestQuote": "Solicitar cotización",
     "addToOrder": "Agregar al pedido actual",
     "update": "Actualizar pedido",
     "inOrder": "En tu pedido",

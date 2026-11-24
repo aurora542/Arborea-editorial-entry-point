@@ -264,7 +264,7 @@ function VehicleCard({ vehicle, days, date, cartLine, onDaysChange, onDateChange
                 <TbCirclePlus size={15} />
                 {cartLine
                   ? t("cart.update")
-                  : isPriced ? t("cart.addToCart") : "Request quote"}
+                  : isPriced ? t("cart.addToCart") : t("cart.requestQuote")}
               </button>
             ) : (
               <span className="flex items-center gap-1.5 rounded-xl px-4 py-2.5 font-sans text-sm font-semibold whitespace-nowrap bg-[#D8DDB8]/15 ring-1 ring-[#D8DDB8]/35 text-[#D8DDB8]">

@@ -894,12 +894,10 @@ export default function PrivateChefPage() {
                   </span>
                   <div className="flex flex-col items-center gap-1">
                     <span className="font-sans font-semibold text-base text-[#213B2F]">
-                      {serviceItems.length === 0 ? "Start building your menu" : "Add a menu for another day"}
+                      {serviceItems.length === 0 ? t("common.buildMenuStart") : t("common.buildMenuAnother")}
                     </span>
                     <span className="font-sans text-sm text-[#222E2C]/60">
-                      {serviceItems.length === 0
-                        ? "Pick a day and meal type. You can combine several across a long stay."
-                        : `Great for long stays — each day has its own service, guest count and dish picks.`}
+                      {serviceItems.length === 0 ? t("common.buildMenuStartHint") : t("common.buildMenuAnotherHint")}
                     </span>
                   </div>
                 </button>
@@ -986,7 +984,7 @@ export default function PrivateChefPage() {
                           <button type="button" onClick={() => changeBevQty(i, 1)}
                             className="flex items-center gap-1.5 px-4 py-2 rounded-full bg-[#213B2F] text-[#D8DDB8] font-sans text-xs font-semibold hover:bg-[#213B2F]/85 transition-colors">
                             <TbPlus size={11} />
-                            Add
+                            {t("common.add")}
                           </button>
                         )}
                         {active && (
@@ -1138,6 +1136,7 @@ function MenuSection({ heading, items, note, group, dishes, onToggle, maxDishes 
 }
 
 function SimpleMenuSection({ heading, subheading, items, group, dishQty, onQtyChange }) {
+  const { t } = useI18n();
   return (
     <div className="flex flex-col gap-4">
       <div className="border-b border-[#222E2C]/15 pb-3">
@@ -1177,7 +1176,7 @@ function SimpleMenuSection({ heading, subheading, items, group, dishQty, onQtyCh
                   <button type="button" onClick={() => onQtyChange(id, 1)}
                     className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-[#213B2F] text-[#D8DDB8] font-sans text-xs font-semibold hover:bg-[#213B2F]/85 transition-colors">
                     <TbPlus size={11} />
-                    Add
+                    {t("common.add")}
                   </button>
                 )}
               </div>
@@ -1336,7 +1335,7 @@ function ChefSummary({ lines, infoLines = [], total, notes, onNotesChange, onAdd
                     ) : (
                       <button type="button" onClick={() => changeRestrictionCount(opt, 1)} className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white/10 text-[#D8DDB8]/70 font-sans text-xs font-semibold hover:bg-white/15 transition-colors shrink-0">
                         <TbPlus size={10} />
-                        Add
+                        {t("common.add")}
                       </button>
                     )}
                   </div>

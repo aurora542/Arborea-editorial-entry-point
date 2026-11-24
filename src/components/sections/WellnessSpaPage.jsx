@@ -53,7 +53,7 @@ function MassageCard({ name, description, image, groupId, durations, draft }) {
       style={selected ? { backgroundColor: SPA_COLOR } : undefined}
       className={`rounded-2xl overflow-hidden flex flex-col h-full border transition-all duration-200 ${selected ? "border-[#C9974F]/40 ring-1 ring-[#C9974F]/20" : "bg-white border-[#213B2F]/10"}`}
     >
-      <div className="h-44 bg-[#D8CEBC] flex items-center justify-center shrink-0 overflow-hidden">
+      <div className="aspect-[4/3] bg-[#D8CEBC] flex items-center justify-center shrink-0 overflow-hidden">
         {image ? <img src={image} alt={name} className="w-full h-full object-cover" loading="lazy" decoding="async" /> : <TbPhoto size={28} className="text-[#222E2C]/20" />}
       </div>
 
@@ -156,7 +156,7 @@ function FacialItemCard({ item, id, draft }) {
       style={selected ? { backgroundColor: SPA_COLOR } : undefined}
       className={`rounded-2xl overflow-hidden flex flex-col h-full border transition-all duration-200 ${selected ? "border-[#C9974F]/40 ring-1 ring-[#C9974F]/20" : "bg-white border-[#213B2F]/10"}`}
     >
-      <div className="h-52 bg-[#D8CEBC] flex items-center justify-center shrink-0 overflow-hidden">
+      <div className="aspect-[4/3] bg-[#D8CEBC] flex items-center justify-center shrink-0 overflow-hidden">
         {item.image ? <img src={item.image} alt={item.name} className="w-full h-full object-cover" loading="lazy" decoding="async" /> : <TbPhoto size={28} className="text-[#222E2C]/20" />}
       </div>
       <div className="px-6 pt-6 pb-6 flex flex-col gap-4 flex-1">

@@ -3,7 +3,7 @@
 import { useState, useMemo } from "react";
 import {
   TbPhone, TbChevronDown, TbBrandWhatsapp, TbAlertTriangle,
-  TbMapPin, TbStarFilled, TbShieldCheck, TbBuildingHospital,
+  TbWorld, TbMapPin, TbStarFilled, TbShieldCheck, TbBuildingHospital,
 } from "react-icons/tb";
 import { useI18n } from "@/app/context/I18nContext";
 
@@ -88,6 +88,23 @@ function RowActions({ rows, tone = "light", callLabel }) {
   return (
     <div className="flex flex-col gap-2.5">
       {rows.map((row, i) => {
+        if (row.href) {
+          const toneClass = tone === "dark"
+            ? "bg-white/10 border-white/20 text-[#EDE5D8] hover:bg-white/20"
+            : "bg-white border-[#213B2F]/20 text-[#213B2F] hover:bg-[#213B2F]/5";
+          return (
+            <a
+              key={i}
+              href={row.href}
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`inline-flex w-fit items-center gap-2 rounded-xl border px-3.5 py-2.5 font-sans text-sm font-semibold transition-colors ${toneClass}`}
+            >
+              <TbWorld size={15} className="shrink-0" />
+              <span>{row.value}</span>
+            </a>
+          );
+        }
         const l = (row.label || "").toLowerCase();
         const isWhatsApp = l.includes("whatsapp");
         return (

@@ -109,6 +109,7 @@ const CAMPOS = {
   cooking: 'Cocina', groceries: 'Compras', snacksFor: 'Snacks para',
   preferredSnacks: 'Snacks preferidos', produce: 'Lista de productos',
   notes: 'Notas', guests: 'Huéspedes', produceList: 'Lista de compras',
+  dietary: 'Restricciones alimentarias', dietaryAllergies: 'Alergias / otra restricción',
 };
 
 /*
@@ -412,7 +413,7 @@ function escribirPestanaPedido_(ss, p, numero, ahora) {
   const t = p.totals || {};
   fila('', '', '', 'Subtotal', t.subtotal || 0, 'total');
   if (t.quotePending) fila('', '', '', 'Por cotizar', t.quotePending + ' ítem(s)', 'nota');
-  fila('', '', '', 'Ítems', t.itemCount || 0, 'nota');
+  fila('', '', '', 'Ítems', t.itemCount || 0, 'cuenta');
 
   h.getRange(1, 1, filas.length, 5).setValues(filas);
   aplicarEstilos_(h, estilos, filas.length);
@@ -445,6 +446,8 @@ function aplicarEstilos_(h, estilos, nFilas) {
       h.getRange(s.fila, 1).setFontWeight('bold').setFontColor(C.ORO);
     } else if (s.tipo === 'dato') {
       h.getRange(s.fila, 1).setFontColor(C.GRIS);
+    } else if (s.tipo === 'cuenta') {
+      h.getRange(s.fila, 5).setNumberFormat('0');
     } else if (s.tipo === 'total') {
       h.getRange(s.fila, 4, 1, 2).setFontWeight('bold');
     }

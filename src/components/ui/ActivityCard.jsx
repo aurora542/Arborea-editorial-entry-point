@@ -164,7 +164,7 @@ export default function ActivityCard({ activity, index }) {
               className="flex items-center gap-2 rounded-full px-4 py-2.5 font-sans text-sm font-medium transition-colors duration-200 whitespace-nowrap bg-[#222E2C] text-white hover:bg-[#213B2F]"
             >
               <TbCirclePlus size={15} />
-              {t("cart.addToCart")}
+              {t("cart.seeDetails")}
             </button>
           )}
         </div>

@@ -21,6 +21,10 @@ const ORDER = [
 /* Keys that are long id lists — shown as a count, never as raw slugs. */
 const COUNT_ONLY = new Set(["produce"]);
 
+/* Payload-only: the Spanish shopping list for the concierge sheet. The guest already sees
+ * `produce` as a count, so showing this would print the raw key and a duplicate list. */
+const HIDDEN = new Set(["produceList"]);
+
 function isBlank(value) {
   if (value === null || value === undefined) return true;
   if (typeof value === "string") return value.trim() === "";
@@ -67,6 +71,7 @@ export function describeServiceForm(form, t) {
 
   const out = [];
   for (const key of ordered) {
+    if (HIDDEN.has(key)) continue;
     const raw = form[key];
     if (isBlank(raw)) continue;
 
