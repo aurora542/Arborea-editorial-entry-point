@@ -86,26 +86,26 @@ export default function Navbar() {
   return (
     <>
       <header
-        className={`fixed top-0 left-0 w-full z-40 flex items-center justify-between px-6 md:px-10 lg:px-14 py-4 transition-transform duration-300 pointer-events-none ${
+        className={`fixed top-0 left-0 w-full z-40 flex items-center justify-between px-4 sm:px-6 md:px-10 lg:px-14 py-4 transition-transform duration-300 pointer-events-none ${
           visible ? "translate-y-0" : "-translate-y-full"
         }`}
       >
         {/* Left: logo + language */}
-        <div className="flex items-center gap-3 pointer-events-auto">
-          <Link href="/" className="inline-block bg-[#E0D4C4] p-2 rounded-xl hover:bg-[#E0D4C4]/80 transition-colors">
+        <div className="flex items-center gap-2 sm:gap-3 pointer-events-auto">
+          <Link href="/" className="inline-block bg-[#E0D4C4] p-1.5 sm:p-2 rounded-xl hover:bg-[#E0D4C4]/80 transition-colors">
             <object
               type="image/svg+xml"
               data="/assets/logos/LogoNavbar.svg"
               width={142}
               height={55}
               aria-label="Arborea Experiences"
-              className="pointer-events-none"
+              className="pointer-events-none w-[108px] h-[42px] sm:w-[142px] sm:h-[55px]"
             />
           </Link>
 
           <button
             onClick={toggleLocale}
-            className="flex items-center gap-1.5 bg-[#213B2F] rounded-xl px-3.5 py-2 font-sans text-xs lg:text-sm font-semibold text-[#D8DDB8] hover:bg-[#213B2F]/80 transition-colors"
+            className="flex items-center gap-1 sm:gap-1.5 bg-[#213B2F] rounded-xl px-2.5 sm:px-3.5 py-2 font-sans text-xs lg:text-sm font-semibold text-[#D8DDB8] hover:bg-[#213B2F]/80 transition-colors"
             aria-label={t("common.a11y.switchLanguage")}
           >
             <span className={locale === "en" ? "opacity-100" : "opacity-40"}>EN</span>
