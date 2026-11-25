@@ -71,11 +71,19 @@ function TourCard({ tour, image, groupId, draft, labels }) {
     });
   };
 
+  /* Al expandir la tarjeta se preselecciona el tier de 4 personas, no el primero.
+   *
+   * Antes `tiers[0]` ERA el de 4, porque era el grupo más pequeño que se ofrecía.
+   * Al añadir la opción de 2 personas —que cuesta lo mismo que la de 4— el primero
+   * pasó a ser ese, y el precio por persona que vería el huésped de entrada saltaba
+   * al doble ($650 en vez de $325) sin que nadie hubiera pedido ese cambio de
+   * presentación. Se fija por `guests`, no por índice, para que insertar o
+   * reordenar tiers no vuelva a moverlo. */
   const toggleCard = () => {
     if (selected) {
       draft.remove(groupId);
     } else if (tiers.length) {
-      pickTier(tiers[0]);
+      pickTier(tiers.find((tr) => tr.guests === 4) ?? tiers[0]);
     }
   };
 

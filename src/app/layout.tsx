@@ -21,13 +21,23 @@ const inter = Inter({
 
 import JsonLd from "@/components/JsonLd";
 
+/*
+ * Esto es el WELCOME, no el sitio de marketing: la metadata describe el servicio de
+ * servicios de la estadía para huéspedes que ya reservaron, no las casas en
+ * alquiler. La versión
+ * anterior describía las casas y aparecía así en WhatsApp.
+ *
+ * Va en inglés porque el sitio arranca en inglés (`useState("en")` en I18nContext)
+ * y la metadata es estática: se resuelve en el servidor y no puede reaccionar al
+ * idioma que el huésped elija después.
+ */
 export const metadata: Metadata = {
   title: {
-    default: "Arbórea Experiences | Casas en la Península de Osa, Costa Rica",
+    default: "Welcome to Arbórea Experiences",
     template: "%s | Arbórea Experiences",
   },
-  description: "Casas privadas de lujo en la Península de Osa, Costa Rica. Rodeadas de selva tropical y con vistas al Océano Pacífico. Reserva tu experiencia única en naturaleza.",
-  keywords: ["casas Costa Rica", "Península de Osa", "alquiler casa lujo", "Arborea Experiences", "casas vacaciones Costa Rica", "Pacífico Sur Costa Rica"],
+  description:
+    "Everything for your stay in one place: a private chef, a stocked fridge, spa treatments, fishing, tours and vehicles — arranged before you arrive.",
   authors: [{ name: "Arbórea Experiences", url: "https://welcome.arboreaexperiences.com" }],
   creator: "Arbórea Experiences",
   publisher: "Arbórea Experiences",
@@ -37,25 +47,30 @@ export const metadata: Metadata = {
   },
   openGraph: {
     type: "website",
-    locale: "es_CR",
+    /* El sitio es bilingüe y arranca en inglés; el español se declara como
+     * alternativo en vez de como principal, que es lo que decía antes. */
+    locale: "en_US",
+    alternateLocale: "es_CR",
     url: "/",
     siteName: "Arbórea Experiences",
-    title: "Arbórea Experiences | Casas en la Península de Osa, Costa Rica",
-    description: "Casas privadas de lujo en la Península de Osa, Costa Rica. Rodeadas de selva tropical y con vistas al Océano Pacífico.",
+    title: "Welcome to Arbórea Experiences",
+    description:
+      "Private chef, stocked fridge, spa, fishing, tours and vehicles — arranged before you arrive.",
     images: [
       {
-        url: "/assets/cover.png",
+        url: "/assets/og-welcome.jpg",
         width: 1200,
         height: 630,
-        alt: "Arbórea Experiences — Casas privadas en la Península de Osa",
+        alt: "Welcome to Arbórea Experiences",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Arbórea Experiences | Casas en la Península de Osa",
-    description: "Casas privadas de lujo en la Península de Osa, Costa Rica. Rodeadas de selva tropical y con vistas al Pacífico.",
-    images: ["/assets/cover.png"],
+    title: "Welcome to Arbórea Experiences",
+    description:
+      "Private chef, stocked fridge, spa, fishing, tours and vehicles — arranged before you arrive.",
+    images: ["/assets/og-welcome.jpg"],
     creator: "@arboreaexperiences",
   },
   robots: {

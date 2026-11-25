@@ -2329,6 +2329,9 @@
           "departure": "Sierpe Town",
           "tiers": [
             {
+              "guests": 2
+            },
+            {
               "guests": 4
             },
             {
@@ -2345,6 +2348,9 @@
           "duration": "Full Day · 7:00 am – 3:00 pm",
           "departure": "Sierpe Town",
           "tiers": [
+            {
+              "guests": 2
+            },
             {
               "guests": 4
             },
@@ -2363,6 +2369,9 @@
           "departure": "Sierpe Town",
           "tiers": [
             {
+              "guests": 2
+            },
+            {
               "guests": 4
             },
             {
@@ -2379,6 +2388,9 @@
           "duration": "Half Day · 7:00 am – 12:00 pm",
           "departure": "Sierpe Town",
           "tiers": [
+            {
+              "guests": 2
+            },
             {
               "guests": 4
             },
@@ -2404,6 +2416,9 @@
           "departure": "Sierpe Town",
           "capacityNote": "Maximum capacity: 8 guests.",
           "tiers": [
+            {
+              "guests": 2
+            },
             {
               "guests": 4
             },
@@ -2431,6 +2446,9 @@
           "departure": "Sierpe Town",
           "wildlifeNote": "This is a wild marine wildlife expedition and all encounters take place in the animals' natural environment. Dolphin sightings, close interactions, and opportunities to swim alongside them cannot be guaranteed — wildlife behavior and ocean conditions are naturally unpredictable.",
           "tiers": [
+            {
+              "guests": 2
+            },
             {
               "guests": 4
             },

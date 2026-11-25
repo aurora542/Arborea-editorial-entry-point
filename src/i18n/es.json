@@ -2329,6 +2329,9 @@
           "departure": "Pueblo de Sierpe",
           "tiers": [
             {
+              "guests": 2
+            },
+            {
               "guests": 4
             },
             {
@@ -2345,6 +2348,9 @@
           "duration": "Día Completo · 7:00 am – 3:00 pm",
           "departure": "Pueblo de Sierpe",
           "tiers": [
+            {
+              "guests": 2
+            },
             {
               "guests": 4
             },
@@ -2363,6 +2369,9 @@
           "departure": "Pueblo de Sierpe",
           "tiers": [
             {
+              "guests": 2
+            },
+            {
               "guests": 4
             },
             {
@@ -2379,6 +2388,9 @@
           "duration": "Medio Día · 7:00 am – 12:00 pm",
           "departure": "Pueblo de Sierpe",
           "tiers": [
+            {
+              "guests": 2
+            },
             {
               "guests": 4
             },
@@ -2404,6 +2416,9 @@
           "departure": "Pueblo de Sierpe",
           "capacityNote": "Capacidad máxima: 8 personas.",
           "tiers": [
+            {
+              "guests": 2
+            },
             {
               "guests": 4
             },
@@ -2431,6 +2446,9 @@
           "departure": "Pueblo de Sierpe",
           "wildlifeNote": "Esta es una expedición de vida silvestre marina salvaje y todos los encuentros ocurren en el ambiente natural de los animales. Los avistamientos de delfines, las interacciones cercanas y las oportunidades de nadar junto a ellos no pueden garantizarse — el comportamiento de la fauna y las condiciones oceánicas son naturalmente impredecibles.",
           "tiers": [
+            {
+              "guests": 2
+            },
             {
               "guests": 4
             },
